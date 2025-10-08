@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embodied Without a Body: Collaborative Emotion Exploration</title>
+    <title>Embodied Without a Body: Human-AI Emotional Dialogue</title>
     <style>
         @font-face {
             font-family: 'Orator Std';
@@ -12,189 +12,201 @@
             src: local('Orator Std'), url('https://fonts.cdnfonts.com/s/13889/OratorStd.woff') format('woff');
         }
         
+        :root {
+            --primary: #20B2AA;
+            --secondary: #5C4B99;
+            --accent: #E6B422;
+            --light: #f9f8e9;
+            --dark: #333;
+            --joy-blue: #4361EE;
+            --joy-green: #2A9D8F;
+            --joy-red: #FF6B6B;
+            --joy-yellow: #FFDE59;
+            --pause-blue: #6FA7C9;
+            --pause-grey: #B6B2A8;
+            --pause-ember: #D87A3C;
+        }
+        
         body {
-                 font-family: 'Orator Std', 'Courier New', monospace;
-                 background-color: #f9f8e9;
-                 margin: 0;
-                 padding: 20px;
-                 background-image:
-                     linear-gradient(#20B2AA 1px, transparent 1px),
-                     linear-gradient(90deg, #20B2AA 1px, transparent 1px),
-                     linear-gradient(#FFB6C1 1px, transparent 1px),
-                     linear-gradient(90deg, #FFB6C1 1px, transparent 1px),
-                     linear-gradient(rgba(32, 178, 170, 0.3) 1px, transparent 1px),
-                     linear-gradient(90deg, rgba(32, 178, 170, 0.3) 1px, transparent 1px);
-                background-size: 25px 25px;
-                color: #333;
-                max-width: 800px;
-                margin: 0 auto;
-        }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border: 1px solid #5C4B99;
-            letter-spacing: 1px;
-            font-weight: normal;
-        }
-        
-        h2 {
-            text-align: center;
-            color: #333;
-            margin: 40px 0 20px 0;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border: 1px solid #5C4B99;
-            letter-spacing: 1px;
-            font-weight: normal;
-        }
-        
-        .introduction {
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 0;
-            padding: 20px;
-            box-shadow: 5px 5px 0 rgba(92, 75, 153, 0.3);
-            border: 1px solid #E6B422;
-            margin-bottom: 40px;
-        }
-        
-        .intro-text {
-            font-style: italic;
-            margin-bottom: 15px;
+            font-family: 'Orator Std', 'Courier New', monospace;
+            background-color: var(--light);
+            margin: 0;
+            padding: 0;
+            color: var(--dark);
             line-height: 1.6;
+            background-image:
+                linear-gradient(var(--primary) 1px, transparent 1px),
+                linear-gradient(90deg, var(--primary) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-attachment: fixed;
+            background-position: center;
         }
         
-        .highlight-box {
-            background-color: rgba(230, 180, 34, 0.1);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--joy-blue), var(--joy-green), var(--joy-red), var(--joy-yellow));
+        }
+        
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .pulse {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(230, 180, 34, 0.1);
+            z-index: 0;
+            animation: pulse 8s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.1; }
+            100% { transform: scale(1); opacity: 0.3; }
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: normal;
+            margin: 0;
+            letter-spacing: 1px;
+            z-index: 2;
+            position: relative;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            font-weight: normal;
+            margin: 10px 0 0 0;
+            color: var(--secondary);
+            z-index: 2;
+            position: relative;
+        }
+        
+        .nav-section {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 30px 0 0;
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.95);
             padding: 15px;
-            border-left: 3px solid #E6B422;
+            z-index: 100;
+            border-bottom: 1px solid rgba(230, 180, 34, 0.3);
+        }
+        
+        .nav-button {
+            background-color: transparent;
+            border: 1px solid var(--secondary);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'Orator Std', 'Courier New', monospace;
+            transition: all 0.3s ease;
+            color: var(--secondary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-button:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(92, 75, 153, 0.1);
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        
+        .nav-button:hover:before {
+            left: 0;
+        }
+        
+        .nav-button:hover {
+            color: var(--secondary);
+            border-color: var(--accent);
+        }
+        
+        .nav-button.active {
+            background-color: rgba(230, 180, 34, 0.2);
+            border-color: var(--accent);
+            color: var(--dark);
+        }
+        
+        section {
+            margin: 60px 0;
+            position: relative;
+        }
+        
+        .section-content {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 3px;
+            padding: 40px;
+            box-shadow: 5px 5px 0 rgba(92, 75, 153, 0.2);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(230, 180, 34, 0.3);
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: normal;
+            margin: 0 0 30px 0;
+            color: var(--dark);
+            border-bottom: 2px solid rgba(230, 180, 34, 0.5);
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .highlight {
+            background-color: rgba(230, 180, 34, 0.1);
+            padding: 20px;
+            border-left: 3px solid var(--accent);
             margin: 20px 0;
         }
         
-        .prompt-container {
-            margin-bottom: 40px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 0;
-            padding: 20px;
-            box-shadow: 5px 5px 0 rgba(92, 75, 153, 0.3);
-            border: 1px solid #E6B422;
-        }
-        
-        .prompt-title {
-            font-size: 22px;
-            font-weight: normal;
-            margin-bottom: 15px;
-            color: #5C4B99;
-            border-bottom: 2px dotted #E6B422;
-            padding-bottom: 5px;
-            letter-spacing: 0.5px;
-        }
-        
-        .prompt-intro {
-            font-style: italic;
-            margin-bottom: 20px;
-            color: #555;
-            background-color: rgba(92, 75, 153, 0.1);
-            padding: 10px;
-            border-left: 3px solid #5C4B99;
-        }
-        
-        .findings-section {
-            margin-top: 25px;
-            border-top: 2px dotted #E6B422;
-            padding-top: 15px;
-        }
-        
-        .findings-title {
-            font-size: 18px;
-            font-weight: normal;
-            color: #5C4B99;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .findings-title:after {
-            content: "";
-            flex-grow: 1;
-            height: 1px;
-            background-color: rgba(92, 75, 153, 0.3);
-            margin-left: 10px;
-        }
-        
-        .findings-content {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .findings-images {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-            justify-content: center;
-        }
-        
-        .findings-image {
-            width: 100%;
-            max-width: 250px;
-            border: 1px solid #5C4B99;
-            box-shadow: 3px 3px 0 rgba(230, 180, 34, 0.5);
-            cursor: pointer;
-        }
-        
-        .findings-text {
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-left: 3px solid #E6B422;
-            margin-bottom: 15px;
-            font-style: italic;
-            color: #555;
-        }
-        
-        .findings-attribute {
-            background-color: rgba(92, 75, 153, 0.1);
-            padding: 8px;
-            margin-bottom: 10px;
-            border-left: 3px solid #5C4B99;
-        }
-        
-        .findings-attribute-title {
-            font-weight: normal;
-            color: #5C4B99;
-            margin-right: 5px;
-        }
-        
-        .section-separator {
-            margin-bottom: 60px;
-            border-bottom: 3px dotted #E6B422;
-            padding-bottom: 30px;
-            width: 100%;
-            clear: both;
-        }
-        
-        /* Collapsible section styles */
         .collapsible {
             background-color: rgba(255, 255, 255, 0.8);
             cursor: pointer;
-            padding: 12px;
+            padding: 18px;
             width: 100%;
             border: none;
             text-align: left;
             outline: none;
-            font-size: 16px;
+            font-size: 1rem;
             font-family: 'Orator Std', 'Courier New', monospace;
-            border-left: 3px solid #5C4B99;
-            margin-bottom: 2px;
+            position: relative;
             transition: 0.4s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: var(--secondary);
+            border-left: 3px solid var(--primary);
+            margin-bottom: 2px;
         }
         
         .collapsible:after {
@@ -202,12 +214,21 @@
             font-weight: bold;
             float: right;
             margin-left: 5px;
-            color: #5C4B99;
+            transition: transform 0.3s ease;
+        }
+        
+        .collapsible:hover {
+            background-color: rgba(92, 75, 153, 0.05);
+        }
+        
+        .active {
+            background-color: rgba(92, 75, 153, 0.1);
+            border-left: 3px solid var(--accent);
         }
         
         .active:after {
             content: '−';
-            color: #E6B422;
+            color: var(--accent);
         }
         
         .collapsible-content {
@@ -218,93 +239,16 @@
             background-color: rgba(255, 255, 255, 0.7);
         }
         
-        .active {
-            background-color: rgba(92, 75, 153, 0.1);
-            border-left: 3px solid #E6B422;
-        }
-        
-        /* Navigation for emotion sections */
-        .nav-section {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 20px 0;
-            position: sticky;
-            top: 0;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            z-index: 100;
-            border-bottom: 1px solid #E6B422;
-        }
-        
-        .nav-button {
-            background-color: rgba(255, 255, 255, 0.8);
-            border: 1px solid #5C4B99;
-            padding: 8px 12px;
-            border-radius: 0;
-            cursor: pointer;
-            font-family: 'Orator Std', 'Courier New', monospace;
-            transition: all 0.3s ease;
-            color: #5C4B99;
-        }
-        
-        .nav-button:hover {
-            background-color: rgba(92, 75, 153, 0.2);
-        }
-        
-        .nav-button.active {
-            background-color: rgba(230, 180, 34, 0.3);
-            border-color: #E6B422;
-        }
-        
-        .visual-content {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border: 1px solid #E6B422;
-        }
-        
-        .template-box {
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid #5C4B99;
-            padding: 15px;
-            margin-top: 20px;
-            font-family: monospace;
-            white-space: pre-wrap;
-        }
-        
-        .color-swatch {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
-            border: 1px solid #333;
-            vertical-align: middle;
-        }
-        
-        .collaboration-example {
-            margin-top: 30px;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 20px;
-            border: 1px solid #E6B422;
-            box-shadow: 5px 5px 0 rgba(92, 75, 153, 0.3);
-        }
-        
-        .example-image {
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid #5C4B99;
-            box-shadow: 3px 3px 0 rgba(230, 180, 34, 0.5);
-            margin: 15px auto;
-            display: block;
+        .collapsible-content.active {
+            padding: 18px;
+            border-bottom: 1px solid rgba(230, 180, 34, 0.3);
         }
         
         .two-column {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            margin-top: 20px;
+            gap: 30px;
+            margin-top: 30px;
         }
         
         .column {
@@ -312,113 +256,583 @@
             min-width: 300px;
         }
         
-        /* For smaller screens */
-        @media (max-width: 600px) {
-            .prompt-title {
-                font-size: 18px;
+        .attribute {
+            background-color: rgba(92, 75, 153, 0.05);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--secondary);
+        }
+        
+        .attribute-title {
+            font-weight: bold;
+            color: var(--secondary);
+            margin-right: 5px;
+        }
+        
+        .image-container {
+            position: relative;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--secondary);
+            box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);
+        }
+        
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .image-container:hover .image-overlay {
+            opacity: 1;
+        }
+        
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border: 1px solid rgba(0,0,0,0.2);
+            vertical-align: middle;
+            border-radius: 50%;
+        }
+        
+        .palette-container {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .palette-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 12px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .emotion-example {
+            margin-top: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 3px;
+            border: 1px solid rgba(230, 180, 34, 0.3);
+            box-shadow: 5px 5px 0 rgba(92, 75, 153, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .emotion-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(230, 180, 34, 0.3);
+        }
+        
+        .emotion-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            font-size: 1.5rem;
+        }
+        
+        .joy-icon {
+            background: linear-gradient(135deg, var(--joy-yellow), var(--joy-red));
+            color: white;
+        }
+        
+        .pause-icon {
+            background: linear-gradient(135deg, var(--pause-blue), var(--pause-ember));
+            color: white;
+        }
+        
+        .emotion-title {
+            font-size: 1.8rem;
+            font-weight: normal;
+            margin: 0;
+        }
+        
+        .emotion-type {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            background: rgba(92, 75, 153, 0.1);
+            padding: 4px 10px;
+            border-radius: 30px;
+            margin-left: auto;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+        }
+        
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: normal;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        .result-flex {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .result-item {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .result-caption {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+        
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%; /* 1:1 Aspect Ratio */
+            height: 0;
+            border: 1px solid var(--secondary);
+        }
+        
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .analysis {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(32, 178, 170, 0.05);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .analysis-title {
+            font-size: 1.2rem;
+            font-weight: normal;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .quote {
+            font-style: italic;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-left: 3px solid var(--accent);
+            margin: 20px 0;
+        }
+        
+        .color-mapping {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .color-map-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 12px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .audio-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 3px;
+            border: 1px solid rgba(230, 180, 34, 0.3);
+        }
+        
+        .audio-controls {
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .insight-card {
+            background: white;
+            padding: 20px;
+            border-radius: 3px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            border-top: 3px solid var(--accent);
+            transition: transform 0.3s;
+        }
+        
+        .insight-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .insight-title {
+            font-weight: normal;
+            color: var(--secondary);
+            margin-top: 0;
+            font-size: 1.1rem;
+        }
+        
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .emotion-card {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 3px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .emotion-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .emotion-card.basic {
+            border-top: 3px solid var(--joy-blue);
+        }
+        
+        .emotion-card.social {
+            border-top: 3px solid var(--joy-green);
+        }
+        
+        .emotion-card.complex {
+            border-top: 3px solid var(--joy-red);
+        }
+        
+        .emotion-card.cultural {
+            border-top: 3px solid var(--joy-yellow);
+        }
+        
+        .emotion-emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .emotion-name {
+            font-weight: normal;
+            margin: 0;
+        }
+        
+        .emotion-category {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            margin-top: 5px;
+        }
+        
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 0;
+            margin-top: 60px;
+            border-top: 1px solid rgba(230, 180, 34, 0.3);
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer-title {
+            font-size: 1.2rem;
+            margin: 0 0 20px 0;
+            color: var(--secondary);
+        }
+        
+        .footer-nav {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .footer-nav a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-nav a:hover {
+            color: var(--accent);
+        }
+        
+        .copyright {
+            font-size: 0.9rem;
+            color: var(--dark);
+            margin-top: 20px;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .section-content {
+                padding: 20px;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .nav-section {
+                gap: 10px;
+                padding: 10px;
             }
             
             .nav-button {
-                font-size: 12px;
-                padding: 6px 8px;
+                padding: 6px 12px;
+                font-size: 0.9rem;
             }
+            
+            .emotion-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .emotion-type {
+                margin-left: 0;
+            }
+        }
+        
+        /* Animation for elements */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate {
+            opacity: 0;
+            animation: fadeIn 0.8s forwards;
+        }
+        
+        .delay-1 {
+            animation-delay: 0.2s;
+        }
+        
+        .delay-2 {
+            animation-delay: 0.4s;
+        }
+        
+        .delay-3 {
+            animation-delay: 0.6s;
         }
     </style>
 </head>
 <body>
-    <h1>Embodied Without a Body</h1>
-    <h2>Human-AI Collaborative Emotion Exploration</h2>
-    
-    <div class="introduction">
-        <p class="intro-text">
-            This project explores the dialogue between human and AI interpretations of emotions through visual collaboration. Building on our previous research into how different AI systems process emotional content, we now create a direct artistic conversation about emotional concepts.
-        </p>
-        
-        <div class="highlight-box">
-            <p><strong>Research Foundation:</strong> This approach is informed by Dylan Evans' "A Short Introduction to Emotion," examining how emotions evolved as adaptive mechanisms and exploring the distinction between universal and culturally specific emotional expressions.</p>
-            
-            <p><strong>Key Insight:</strong> Emotions may not have universal "fingerprints" across cultures or species. By collaborating with AI on emotional concepts, we can discover new perspectives on how emotions are processed, represented, and communicated across different forms of intelligence.</p>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="pulse"></div>
+                <div class="pulse" style="animation-delay: 2s;"></div>
+                <div class="pulse" style="animation-delay: 4s;"></div>
+                <h1 class="title">Embodied Without a Body</h1>
+                <p class="subtitle">A Human-AI Emotional Dialogue</p>
+            </div>
         </div>
-        
-        <p class="intro-text">
-            The method involves creating a human collage based on an emotional concept, then asking an AI to generate a visual overlay in response. This creates a genuine dialogue between human artistic expression and machine interpretation, revealing fascinating insights about both forms of intelligence.
-        </p>
-    </div>
+    </header>
     
-    <!-- Navigation buttons for emotion sections -->
     <div class="nav-section">
-        <button class="nav-button" onclick="scrollToSection('framework')">Theoretical Framework</button>
-        <button class="nav-button" onclick="scrollToSection('method')">Collaboration Method</button>
-        <button class="nav-button" onclick="scrollToSection('emotion-types')">Emotion Categories</button>
-        <button class="nav-button" onclick="scrollToSection('examples')">Collaboration Examples</button>
-    </div>
-    
-    <div id="framework" class="prompt-container">
-        <div class="prompt-title">Theoretical Framework: Dylan Evans' Emotion Theory</div>
-        
-        <button class="collapsible">Key Concepts from Evans' "A Short Introduction to Emotion"</button>
-        <div class="collapsible-content">
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Evolutionary Perspective:</span>
-                <span>Evans examines emotions as adaptive mechanisms that evolved to help organisms respond to environmental challenges. Different emotions serve different evolutionary functions, from fear (danger avoidance) to joy (reward reinforcement).</span>
-            </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Universal vs. Cultural Emotions:</span>
-                <span>Evans distinguishes between emotions that appear universal across cultures (basic emotions like fear, anger, disgust, joy, sadness, surprise) and those that are more culturally specific or complex (shame, guilt, pride, nostalgia).</span>
-            </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Cognitive Appraisal Theory:</span>
-                <span>Emotions involve cognitive evaluations of situations. Different emotions result from different appraisals of events in relation to one's goals and concerns.</span>
-            </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Basic vs. Complex Emotions:</span>
-                <span>Evans distinguishes between primary emotions (fear, anger, joy, sadness) and more complex, blended emotional states that may involve multiple components or cognitive elaboration.</span>
-            </div>
-        </div>
-        
-        <button class="collapsible">Application to Human-AI Collaboration</button>
-        <div class="collapsible-content">
-            <div class="findings-text">
-                <p>Evans' framework provides a structured approach for our human-AI collaboration on emotional concepts:</p>
-                
-                <p><b>1. Emotion Selection:</b> We organize our exploration using Evans' categorization of basic, social, and complex emotions, allowing us to examine how AI systems interpret different types of emotional experiences.</p>
-                
-                <p><b>2. Processing Comparison:</b> The comparison between human collage and AI overlay reveals fundamental differences in how emotions are processed by biological versus artificial systems.</p>
-                
-                <p><b>3. Appraisal Analysis:</b> We can examine how AI systems perform cognitive appraisals differently from humans, identifying unique patterns in their evaluation of emotional stimuli.</p>
-                
-                <p><b>4. Cultural Dimensionality:</b> By exploring culturally specific emotions, we can assess how AI systems handle emotional concepts that may not be universal or easily defined.</p>
-            </div>
-        </div>
-        
-        <div class="visual-content">
-            <div class="findings-title">Theoretical Model Visualization</div>
-            <img src="visualizations/evans-emotion-framework.jpg" alt="Diagram of Evans' emotion framework applied to AI-human collaboration" style="width: 100%; max-width: 600px; margin: 0 auto; display: block;">
+        <div class="container" style="display: flex; justify-content: center;">
+            <button class="nav-button active" onclick="scrollToSection('introduction')">Introduction</button>
+            <button class="nav-button" onclick="scrollToSection('framework')">Theoretical Framework</button>
+            <button class="nav-button" onclick="scrollToSection('method')">Collaboration Method</button>
+            <button class="nav-button" onclick="scrollToSection('joy-exploration')">Joy Exploration</button>
+            <button class="nav-button" onclick="scrollToSection('pause-exploration')">Pause Exploration</button>
+            <button class="nav-button" onclick="scrollToSection('emotion-map')">Emotion Map</button>
         </div>
     </div>
     
-    <div id="method" class="prompt-container">
-        <div class="prompt-title">Collaboration Method: Human Collage + AI Overlay</div>
+    <main class="container">
+        <section id="introduction" class="animate">
+            <div class="section-content">
+                <h2 class="section-title">Introduction</h2>
+                
+                <p>This project explores the dialogue between human and AI interpretations of emotions through visual and auditory collaboration. By creating physical collages of emotional concepts and inviting AI systems to respond with digital overlays, we reveal fascinating insights into both forms of intelligence.</p>
+                
+                <div class="highlight">
+                    <p><strong>Research Foundation:</strong> This approach is informed by Dylan Evans' "A Short Introduction to Emotion," examining how emotions evolved as adaptive mechanisms and exploring the distinction between universal and culturally specific emotional expressions.</p>
+                    
+                    <p><strong>Key Insight:</strong> Emotions may not have universal "fingerprints" across cultures or species. By collaborating with AI on emotional concepts, we can discover new perspectives on how emotions are processed, represented, and communicated across different forms of intelligence.</p>
+                </div>
+                
+                <p>The result is not merely an artistic experiment, but a window into the comparative emotional processing systems of humans and AI—revealing both similarities and profound differences in how we understand and express fundamental emotional states.</p>
+            </div>
+        </section>
         
-        <button class="collapsible">Process Overview</button>
-        <div class="collapsible-content">
-            <ol style="line-height: 1.6;">
-                <li><b>Select an emotional concept</b> from Evans' categories (basic, social, or complex emotions)</li>
-                <li><b>Create a human collage</b> expressing your interpretation of that emotion</li>
-                <li><b>Define a color palette</b> with 3-4 colors that represent aspects of the emotion</li>
-                <li><b>Select an appropriate constraint</b> from the list that matches the emotion type</li>
-                <li><b>Present to an AI</b> using the template prompt</li>
-                <li><b>Analyze the AI response</b> in comparison to your own interpretation</li>
-                <li><b>Create a visual synthesis</b> by having Claude generate a visual response</li>
-            </ol>
-        </div>
+        <section id="framework" class="animate delay-1">
+            <div class="section-content">
+                <h2 class="section-title">Theoretical Framework</h2>
+                
+                <button class="collapsible">Key Concepts from Evans' "A Short Introduction to Emotion"</button>
+                <div class="collapsible-content">
+                    <div class="attribute">
+                        <span class="attribute-title">Evolutionary Perspective:</span>
+                        <span>Evans examines emotions as adaptive mechanisms that evolved to help organisms respond to environmental challenges. Different emotions serve different evolutionary functions, from fear (danger avoidance) to joy (reward reinforcement).</span>
+                    </div>
+                    
+                    <div class="attribute">
+                        <span class="attribute-title">Universal vs. Cultural Emotions:</span>
+                        <span>Evans distinguishes between emotions that appear universal across cultures (basic emotions like fear, anger, disgust, joy, sadness, surprise) and those that are more culturally specific or complex (shame, guilt, pride, nostalgia).</span>
+                    </div>
+                    
+                    <div class="attribute">
+                        <span class="attribute-title">Cognitive Appraisal Theory:</span>
+                        <span>Emotions involve cognitive evaluations of situations. Different emotions result from different appraisals of events in relation to one's goals and concerns.</span>
+                    </div>
+                    
+                    <div class="attribute">
+                        <span class="attribute-title">Basic vs. Complex Emotions:</span>
+                        <span>Evans distinguishes between primary emotions (fear, anger, joy, sadness) and more complex, blended emotional states that may involve multiple components or cognitive elaboration.</span>
+                    </div>
+                </div>
+                
+                <button class="collapsible">Application to Human-AI Collaboration</button>
+                <div class="collapsible-content">
+                    <p>Evans' framework provides a structured approach for our human-AI collaboration on emotional concepts:</p>
+                    
+                    <div class="two-column">
+                        <div class="column">
+                            <div class="attribute">
+                                <span class="attribute-title">Emotion Selection:</span>
+                                <span>We organize our exploration using Evans' categorization of basic, social, and complex emotions, allowing us to examine how AI systems interpret different types of emotional experiences.</span>
+                            </div>
+                            
+                            <div class="attribute">
+                                <span class="attribute-title">Processing Comparison:</span>
+                                <span>The comparison between human collage and AI overlay reveals fundamental differences in how emotions are processed by biological versus artificial systems.</span>
+                            </div>
+                        </div>
+                        
+                        <div class="column">
+                            <div class="attribute">
+                                <span class="attribute-title">Appraisal Analysis:</span>
+                                <span>We can examine how AI systems perform cognitive appraisals differently from humans, identifying unique patterns in their evaluation of emotional stimuli.</span>
+                            </div>
+                            
+                            <div class="attribute">
+                                <span class="attribute-title">Cultural Dimensionality:</span>
+                                <span>By exploring culturally specific emotions, we can assess how AI systems handle emotional concepts that may not be universal or easily defined.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="image-container">
+                    <img src="visualizations/evans-emotion-framework.jpg" alt="Theoretical framework visualization">
+                    <div class="image-overlay">
+                        <div>Click to enlarge</div>
+                    </div>
+                </div>
+            </div>
+        </section>
         
-        <button class="collapsible">Bot Prompt Template</button>
-        <div class="collapsible-content">
-            <div class="template-box">Looking only at my collage image for '[EMOTION]' and using only my palette [Color A #HEX, Color B #HEX, Color C #HEX], describe in one short paragraph (4–6 sentences) how you, as a system, process this emotional concept based on Evans' framework in "A Short Introduction to Emotion." Address: 
+        <section id="method" class="animate delay-2">
+            <div class="section-content">
+                <h2 class="section-title">Collaboration Method</h2>
+                
+                <p>This research employs a structured dialogic method where both human and AI contribute to the interpretation of emotional concepts through their distinct processing systems.</p>
+                
+                <div class="two-column">
+                    <div class="column">
+                        <button class="collapsible">Process Overview</button>
+                        <div class="collapsible-content">
+                            <ol style="line-height: 1.6;">
+                                <li><b>Select an emotional concept</b> from Evans' categories</li>
+                                <li><b>Create a human collage</b> expressing your interpretation of that emotion</li>
+                                <li><b>Define a color palette</b> with 3-4 colors that represent aspects of the emotion</li>
+                                <li><b>Select an appropriate constraint</b> from the list that matches the emotion type</li>
+                                <li><b>Present to an AI</b> using the template prompt</li>
+                                <li><b>Analyze the AI response</b> in comparison to your own interpretation</li>
+                                <li><b>Create a visual synthesis</b> by having Claude generate a visual response</li>
+                                <li><b>Generate complementary audio</b> to create a multi-sensory expression</li>
+                            </ol>
+                        </div>
+                        
+                        <button class="collapsible">Constraints System</button>
+                        <div class="collapsible-content">
+                            <div class="attribute">
+                                <span class="attribute-title">Basic Emotions:</span>
+                                <span>"maintain consistent intensity across transitions"</span>
+                            </div>
+                            
+                            <div class="attribute">
+                                <span class="attribute-title">Social Emotions:</span>
+                                <span>"modulate expression based on contextual elements"</span>
+                            </div>
+                            
+                            <div class="attribute">
+                                <span class="attribute-title">Complex Emotions:</span>
+                                <span>"blend component states with diminishing prominence"</span>
+                            </div>
+                            
+                            <div class="attribute">
+                                <span class="attribute-title">Additional Constraints:</span>
+                                <ul style="margin-top: 5px; margin-bottom: 5px;">
+                                    <li><b>Appraisal:</b> "first evaluate significance, then build appropriate intensity"</li>
+                                    <li><b>Regulation:</b> "calibrate response magnitude to stimulus features"</li>
+                                    <li><b>Adaptation:</b> "decrease response to sustained patterns; amplify novel elements"</li>
+                                    <li><b>Contagion:</b> "spread influence between elements with diminishing intensity"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="column">
+                        <button class="collapsible">Bot Prompt Template</button>
+                        <div class="collapsible-content">
+                            <div style="background-color: rgba(255, 255, 255, 0.7); padding: 15px; border-left: 3px solid var(--secondary); font-family: monospace; white-space: pre-wrap; font-size: 0.9rem; line-height: 1.5;">Looking only at my collage image for '[EMOTION]' and using only my palette [Color A #HEX, Color B #HEX, Color C #HEX], describe in one short paragraph (4–6 sentences) how you, as a system, process this emotional concept based on Evans' framework in "A Short Introduction to Emotion." Address: 
 (1) How you recognize patterns associated with this emotion in my image
 (2) How you evaluate its significance and intensity
 (3) How you would generate an appropriate response
@@ -431,182 +845,437 @@ End with a mapping that connects each color to a specific aspect of emotional pr
 [Color A] = [specific action related to recognition]
 [Color B] = [specific action related to evaluation]
 [Color C] = [specific action related to response]</div>
-        </div>
+                        </div>
+                        
+                        <button class="collapsible">Claude Visualization Instruction</button>
+                        <div class="collapsible-content">
+                            <div style="background-color: rgba(255, 255, 255, 0.7); padding: 15px; border-left: 3px solid var(--accent); font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">Create a quiet visual–sound response to '[EMOTION]' using only [palette]. Follow the bot's paragraph literally—one behavior per color, slow, no on-screen text.</div>
+                        </div>
+                        
+                        <button class="collapsible">Audio Generation Approach</button>
+                        <div class="collapsible-content">
+                            <div class="attribute">
+                                <span class="attribute-title">Technology:</span>
+                                <span>Stable Audio is used to create soundscapes that complement the visual elements, creating a multi-sensory emotional representation.</span>
+                            </div>
+                            
+                            <div class="attribute">
+                                <span class="attribute-title">Prompting Strategy:</span>
+                                <span>Audio prompts are designed to capture the essential qualities identified in both human collage and AI overlay, with special attention to the tension points between them.</span>
+                            </div>
+                            
+                            <div class="attribute">
+                                <span class="attribute-title">Integration:</span>
+                                <span>The audio is designed to be looped seamlessly, creating an ambient soundscape that enhances without dominating the visual experience.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="image-container">
+                    <img src="visualizations/collaboration-process.jpg" alt="Collaboration process diagram">
+                </div>
+            </div>
+        </section>
         
-        <button class="collapsible">Constraints System</button>
-        <div class="collapsible-content">
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Basic Emotions:</span>
-                <span>"maintain consistent intensity across transitions"</span>
+        <section id="joy-exploration" class="animate delay-3">
+            <div class="section-content">
+                <h2 class="section-title">Joy Exploration</h2>
+                
+                <div class="emotion-example">
+                    <div class="emotion-header">
+                        <div class="emotion-icon joy-icon">✨</div>
+                        <h3 class="emotion-title">Joy</h3>
+                        <div class="emotion-type">Basic Universal Emotion</div>
+                    </div>
+                    
+                    <button class="collapsible">Human Collage Creation</button>
+                    <div class="collapsible-content">
+                        <p>For this exploration, I selected "Joy" - one of Evans' basic universal emotions. My collage approach was to create a multi-layered representation incorporating physical elements (buttons, paperclip, strings) alongside handwritten text. The collage uses graph paper as a structured foundation, but with elements that transcend this grid - representing how joy emerges within structure but often exceeds its boundaries.</p>
+                        
+                        <p>The yellow elements represent the bright, uplifting aspects of joy, while green elements suggest growth and stability. Blue represents the movement patterns associated with joy, and red accents mark moments of intensity. The hand drawing illustrates the embodied nature of joy, while the textual elements frame joy as "a pleasant emotional state that reflects contentment and satisfaction."</p>
+                        
+                        <div class="palette-container">
+                            <div class="palette-item">
+                                <span class="color-swatch" style="background-color: #4361EE;"></span>
+                                <span>Blue #4361EE</span>
+                            </div>
+                            <div class="palette-item">
+                                <span class="color-swatch" style="background-color: #2A9D8F;"></span>
+                                <span>Green #2A9D8F</span>
+                            </div>
+                            <div class="palette-item">
+                                <span class="color-swatch" style="background-color: #FF6B6B;"></span>
+                                <span>Red #FF6B6B</span>
+                            </div>
+                            <div class="palette-item">
+                                <span class="color-swatch" style="background-color: #FFDE59;"></span>
+                                <span>Yellow #FFDE59</span>
+                            </div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <span class="attribute-title">Constraint:</span>
+                            <span>"maintain consistent intensity across transitions" (Basic Emotion constraint)</span>
+                        </div>
+                    </div>
+                    
+                    <button class="collapsible">AI Interpretation Response</button>
+                    <div class="collapsible-content">
+                        <div class="quote">
+                            Analyzing your joy collage, I recognize this basic emotion through the buoyant visual rhythm created by the interplay of physical elements (buttons, paperclip) with the underlying grid structure. The upward directional elements and circular forms suggest emotional elevation and completeness, aligning with Evans' characterization of joy as a universal emotion with recognizable physical expressions. I evaluate its intensity as moderate to high based on the vibrant color contrast between yellows and greens against the neutral background, with the hand drawing indicating embodied expression. My appropriate response maintains this balanced vibrancy while introducing gentle animated movements that reflect joy's kinetic quality—the slightly pulsing elements and floating triangles mirror how joy creates both stability and lightness simultaneously. The vertical green lines establish a framework that supports but doesn't constrain the more playful yellow elements, creating a harmonious tension between structure and spontaneity that characterizes authentic joy experiences.
+                        </div>
+                        
+                        <div class="color-mapping">
+                            <div class="color-map-item">
+                                <span class="color-swatch" style="background-color: #4361EE;"></span>
+                                <span>Blue = detect vertical movement patterns</span>
+                            </div>
+                            <div class="color-map-item">
+                                <span class="color-swatch" style="background-color: #2A9D8F;"></span>
+                                <span>Green = assess stability-to-buoyancy ratio</span>
+                            </div>
+                            <div class="color-map-item">
+                                <span class="color-swatch" style="background-color: #FF6B6B; background: linear-gradient(to right, #FF6B6B 50%, #FFDE59 50%);"></span>
+                                <span>Pink/Yellow = generate complementary connection</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-container">
+                        <h4 class="result-title">Visual Collaboration Result</h4>
+                        
+                        <div class="result-flex">
+                            <div class="result-item">
+                                <img src="joy-collage.jpg" alt="Joy collage" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                                <p class="result-caption">Human Collage: Physical materials on graph paper</p>
+                            </div>
+                            
+                            <div class="result-item">
+                                <div class="iframe-container">
+                                    <iframe src="joy-overlay.html" frameborder="0"></iframe>
+                                </div>
+                                <p class="result-caption">AI Response: Animated overlay with color-coded behaviors</p>
+                            </div>
+                        </div>
+                        
+                        <div class="audio-section">
+                            <h4 style="margin-top: 0;">Audio Dimension</h4>
+                            <p>To complement the visual collaboration, I used Stable Audio to create a soundscape that captures the essence of joy as revealed through our human-AI dialogue:</p>
+                            
+                            <div class="quote">
+                                "Soft ambient joy soundscape with gentle bell tones, light piano notes, and occasional subtle wind chimes creating a sense of elevation. Includes warm organic textures with slight movement, conveying contentment and satisfaction. No vocals or lyrics."
+                            </div>
+                            
+                            <p>The resulting audio creates a sonic environment that mirrors key aspects of the visual collaboration: gentle bell tones reflect the "pulsing" quality identified in joy, piano notes provide structure similar to the green vertical elements, wind chimes create moments of elevation analogous to the floating triangles, and the overall warm texture maintains the "consistent intensity" specified in our constraint.</p>
+                            
+                            <audio controls class="audio-controls">
+                                <source src="joy-sound.mp3" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis">
+                        <h4 class="analysis-title">Theoretical Analysis</h4>
+                        
+                        <p>This collaboration provides valuable insights into how joy functions as one of Evans' basic universal emotions:</p>
+                        
+                        <div class="insight-grid">
+                            <div class="insight-card">
+                                <h5 class="insight-title">Universality with Variation</h5>
+                                <p>The AI recognized joy's universal characteristics (upward movement, circular completeness) but interpreted them through unique processing mechanisms, suggesting that even "basic" emotions manifest differently across different forms of intelligence.</p>
+                            </div>
+                            
+                            <div class="insight-card">
+                                <h5 class="insight-title">Cognitive-Physical Integration</h5>
+                                <p>Both the human collage and AI response acknowledge that joy involves both physical expressions (represented by the hand drawing and movement patterns) and cognitive evaluation (the definitional text and color-coded processing functions).</p>
+                            </div>
+                            
+                            <div class="insight-card">
+                                <h5 class="insight-title">Adaptive Function</h5>
+                                <p>The AI's emphasis on stability-to-buoyancy ratio suggests an understanding of joy's evolutionary function—to encourage beneficial behaviors while maintaining sufficient stability for continued functioning.</p>
+                            </div>
+                            
+                            <div class="insight-card">
+                                <h5 class="insight-title">Intensity Gradient</h5>
+                                <p>Our collaboration reveals joy as existing on a spectrum from quiet contentment to more exuberant expression, challenging simplistic views of basic emotions as having fixed intensities.</p>
+                            </div>
+                        </div>
+                        
+                        <p style="margin-top: 30px;">The AI's processing of joy reveals a systematic approach that balances pattern detection (blue), stability assessment (green), and connection generation (pink/yellow)—suggesting that even in artificial systems, joy involves complex multi-component processing rather than a singular response.</p>
+                    </div>
+                </div>
             </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Social Emotions:</span>
-                <span>"modulate expression based on contextual elements"</span>
-            </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Complex Emotions:</span>
-                <span>"blend component states with diminishing prominence"</span>
-            </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Additional Constraints:</span>
-                <ul style="margin-top: 5px; margin-bottom: 5px;">
-                    <li><b>Appraisal:</b> "first evaluate significance, then build appropriate intensity"</li>
-                    <li><b>Regulation:</b> "calibrate response magnitude to stimulus features"</li>
-                    <li><b>Adaptation:</b> "decrease response to sustained patterns; amplify novel elements"</li>
-                    <li><b>Contagion:</b> "spread influence between elements with diminishing intensity"</li>
-                </ul>
-            </div>
-        </div>
+        </section>
         
-        <button class="collapsible">Claude Visualization Instruction</button>
-        <div class="collapsible-content">
-            <div class="template-box">Create a quiet visual–sound response to '[EMOTION]' using only [palette]. Follow the bot's paragraph literally—one behavior per color, slow, no on-screen text.</div>
-        </div>
+        <section id="pause-exploration" class="animate delay-3">
+            <div class="section-content">
+                <h2 class="section-title">Pause Exploration</h2>
+                
+                <div class="emotion-example">
+                    <div class="emotion-header">
+                        <div class="emotion-icon pause-icon">⏸️</div>
+                        <h3 class="emotion-title">Pause</h3>
+                        <div class="emotion-type">Complex Emotional State</div>
+                    </div>
+                    
+                    <button class="collapsible">Human Collage Creation</button>
+                    <div class="collapsible-content">
+                        <p>For my second exploration, I chose the concept of "pause" - a complex emotional state that involves both physical and mental aspects. I created a collage that expressed my personal understanding of pause as a state that isn't about complete stillness, but rather about a different kind of attention and energy flow.</p>
+                        
+                        <p>The collage uses primarily blue tones to represent calmness, with dotted lines showing the continued flow of energy even in a paused state. The empty spaces represent mental clarity, while the overlapping elements suggest layered thoughts temporarily held in suspension.</p>
+                        
+                        <div class="palette-container">
+                            <div class="palette-item">
+                                <span class="color-swatch" style="background-color: #6FA7C9;"></span>
+                                <span>Hush Blue #6FA7C9</span>
+                            </div>
+                            <div class="palette-item">
+                                <span class="color-swatch" style="background-color: #B6B2A8;"></span>
+                                <span>Warm Grey #B6B2A8</span>
+                            </div>
+                            <div class="palette-item">
+                                <span class="color-swatch" style="background-color: #D87A3C;"></span>
+                                <span>Ember #D87A3C</span>
+                            </div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <span class="attribute-title">Constraint:</span>
+                            <span>"preserve nonzero micro-motion and prefer long fades"</span>
+                        </div>
+                    </div>
+                    
+                    <button class="collapsible">AI Interpretation Response</button>
+                    <div class="collapsible-content">
+                        <div class="quote">
+                            In processing your collage for "pause," I detect this complex emotional state through the interplay of flowing lines and deliberate spaces. The suspended linear elements suggest a temporary holding pattern rather than complete cessation, which aligns with Evans' framework of complex emotions having cognitive components beyond basic affect. I evaluate this pause as moderate intensity but high significance—the subtle Warm Grey negative space indicates contemplative depth while Hush Blue pathways maintain continuous flow even in stillness. My appropriate response would be to maintain this delicate balance: acknowledging the ongoing micro-movements represented by dotted sequences while respecting the deliberate slowing indicated by the compositional breathing room. The Ember accents signal points of potential resumption, creating a temporal dimension to this spatial arrangement.
+                        </div>
+                        
+                        <div class="color-mapping">
+                            <div class="color-map-item">
+                                <span class="color-swatch" style="background-color: #6FA7C9;"></span>
+                                <span>Hush Blue = trace continuous pathways while decelerating</span>
+                            </div>
+                            <div class="color-map-item">
+                                <span class="color-swatch" style="background-color: #B6B2A8;"></span>
+                                <span>Warm Grey = expand negative space to enhance contemplative capacity</span>
+                            </div>
+                            <div class="color-map-item">
+                                <span class="color-swatch" style="background-color: #D87A3C;"></span>
+                                <span>Ember = maintain potential energy at transition points for eventual resumption</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-container">
+                        <h4 class="result-title">Visual Collaboration Result</h4>
+                        
+                        <div class="result-flex">
+                            <div class="result-item">
+                                <img src="visualizations/pause-human-collage.jpg" alt="Pause collage" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                                <p class="result-caption">Human Collage: Layered elements with negative space</p>
+                            </div>
+                            
+                            <div class="result-item">
+                                <img src="visualizations/pause-ai-overlay.jpg" alt="AI Pause visualization" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                                <p class="result-caption">AI Response: Emphasis on micro-movements and potential energy</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis">
+                        <h4 class="analysis-title">Comparative Analysis</h4>
+                        
+                        <p>When compared with the Joy exploration, several interesting contrasts emerge:</p>
+                        
+                        <div class="two-column">
+                            <div class="column">
+                                <div class="attribute">
+                                    <span class="attribute-title">Movement Patterns:</span>
+                                    <span>Joy's movements show consistent intensity with complementary directions (floating upward, pulsing outward), whereas pause maintains micro-movements within a more contained field. This aligns with Evans' distinction between basic emotions (direct, consistent response patterns) and complex emotional states (layered, more contextual responses).</span>
+                                </div>
+                                
+                                <div class="attribute">
+                                    <span class="attribute-title">Visual Language:</span>
+                                    <span>The AI used different visual strategies for each emotion—for joy, elements move with buoyancy and regular pulsing; for pause, elements maintain potential energy with subtle shifts in size and opacity. These different visual languages suggest the AI has developed distinct processing schemas for different emotional categories.</span>
+                                </div>
+                            </div>
+                            
+                            <div class="column">
+                                <div class="attribute">
+                                    <span class="attribute-title">Color Function Assignment:</span>
+                                    <span>In both cases, the AI assigned specific processing functions to colors, but these functions differ significantly between emotions. This suggests the AI recognizes that different emotions require different types of cognitive-perceptual processing—supporting Evans' view that emotions involve distinct appraisal patterns.</span>
+                                </div>
+                                
+                                <div class="attribute">
+                                    <span class="attribute-title">Temporal Dimension:</span>
+                                    <span>Joy is represented as a more present-focused state, while pause has a strong temporal component (potential energy for "eventual resumption"). This reveals how complex emotional states often incorporate time perception in ways that basic emotions may not.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
         
-        <div class="visual-content">
-            <div class="findings-title">Process Diagram</div>
-            <img src="visualizations/collaboration-process.jpg" alt="Diagram of the human-AI collaboration process" style="width: 100%; max-width: 600px; margin: 0 auto; display: block;">
-        </div>
-    </div>
+        <section id="emotion-map" class="animate">
+            <div class="section-content">
+                <h2 class="section-title">Emotion Map</h2>
+                
+                <p>Our exploration continues with a systematic investigation of emotions across Evans' categorization. Each emotion presents unique challenges and insights for human-AI collaboration.</p>
+                
+                <div class="emotion-grid">
+                    <!-- Basic Emotions -->
+                    <div class="emotion-card basic">
+                        <div class="emotion-emoji">😊</div>
+                        <h4 class="emotion-name">Joy</h4>
+                        <div class="emotion-category">Basic</div>
+                    </div>
+                    
+                    <div class="emotion-card basic">
+                        <div class="emotion-emoji">😢</div>
+                        <h4 class="emotion-name">Sadness</h4>
+                        <div class="emotion-category">Basic</div>
+                    </div>
+                    
+                    <div class="emotion-card basic">
+                        <div class="emotion-emoji">😡</div>
+                        <h4 class="emotion-name">Anger</h4>
+                        <div class="emotion-category">Basic</div>
+                    </div>
+                    
+                    <div class="emotion-card basic">
+                        <div class="emotion-emoji">😨</div>
+                        <h4 class="emotion-name">Fear</h4>
+                        <div class="emotion-category">Basic</div>
+                    </div>
+                    
+                    <div class="emotion-card basic">
+                        <div class="emotion-emoji">🤢</div>
+                        <h4 class="emotion-name">Disgust</h4>
+                        <div class="emotion-category">Basic</div>
+                    </div>
+                    
+                    <div class="emotion-card basic">
+                        <div class="emotion-emoji">😲</div>
+                        <h4 class="emotion-name">Surprise</h4>
+                        <div class="emotion-category">Basic</div>
+                    </div>
+                    
+                    <!-- Social Emotions -->
+                    <div class="emotion-card social">
+                        <div class="emotion-emoji">😳</div>
+                        <h4 class="emotion-name">Embarrassment</h4>
+                        <div class="emotion-category">Social</div>
+                    </div>
+                    
+                    <div class="emotion-card social">
+                        <div class="emotion-emoji">😔</div>
+                        <h4 class="emotion-name">Shame</h4>
+                        <div class="emotion-category">Social</div>
+                    </div>
+                    
+                    <div class="emotion-card social">
+                        <div class="emotion-emoji">😌</div>
+                        <h4 class="emotion-name">Pride</h4>
+                        <div class="emotion-category">Social</div>
+                    </div>
+                    
+                    <div class="emotion-card social">
+                        <div class="emotion-emoji">😟</div>
+                        <h4 class="emotion-name">Guilt</h4>
+                        <div class="emotion-category">Social</div>
+                    </div>
+                    
+                    <div class="emotion-card social">
+                        <div class="emotion-emoji">😏</div>
+                        <h4 class="emotion-name">Contempt</h4>
+                        <div class="emotion-category">Social</div>
+                    </div>
+                    
+                    <!-- Complex Emotions -->
+                    <div class="emotion-card complex">
+                        <div class="emotion-emoji">⏸️</div>
+                        <h4 class="emotion-name">Pause</h4>
+                        <div class="emotion-category">Complex</div>
+                    </div>
+                    
+                    <div class="emotion-card complex">
+                        <div class="emotion-emoji">🥺</div>
+                        <h4 class="emotion-name">Nostalgia</h4>
+                        <div class="emotion-category">Complex</div>
+                    </div>
+                    
+                    <div class="emotion-card complex">
+                        <div class="emotion-emoji">✨</div>
+                        <h4 class="emotion-name">Hope</h4>
+                        <div class="emotion-category">Complex</div>
+                    </div>
+                    
+                    <div class="emotion-card complex">
+                        <div class="emotion-emoji">☺️</div>
+                        <h4 class="emotion-name">Contentment</h4>
+                        <div class="emotion-category">Complex</div>
+                    </div>
+                    
+                    <div class="emotion-card complex">
+                        <div class="emotion-emoji">🙁</div>
+                        <h4 class="emotion-name">Disappointment</h4>
+                        <div class="emotion-category">Complex</div>
+                    </div>
+                    
+                    <div class="emotion-card complex">
+                        <div class="emotion-emoji">🧠</div>
+                        <h4 class="emotion-name">Anticipation</h4>
+                        <div class="emotion-category">Complex</div>
+                    </div>
+                    
+                    <!-- Cultural Emotions -->
+                    <div class="emotion-card cultural">
+                        <div class="emotion-emoji">🤗</div>
+                        <h4 class="emotion-name">Hygge</h4>
+                        <div class="emotion-category">Cultural (Danish)</div>
+                    </div>
+                    
+                    <div class="emotion-card cultural">
+                        <div class="emotion-emoji">💭</div>
+                        <h4 class="emotion-name">Saudade</h4>
+                        <div class="emotion-category">Cultural (Portuguese)</div>
+                    </div>
+                    
+                    <div class="emotion-card cultural">
+                        <div class="emotion-emoji">😏</div>
+                        <h4 class="emotion-name">Schadenfreude</h4>
+                        <div class="emotion-category">Cultural (German)</div>
+                    </div>
+                </div>
+                
+                <div class="highlight" style="margin-top: 40px;">
+                    <p><strong>Next Steps:</strong> Our ongoing research will continue to map emotional processing across human and AI systems, with particular focus on cross-cultural emotions that challenge universal categorization. Future collaborations will involve multiple AI systems to compare different approaches to emotional interpretation.</p>
+                </div>
+            </div>
+        </section>
+    </main>
     
-    <div id="emotion-types" class="prompt-container">
-        <div class="prompt-title">Emotion Categories for Exploration</div>
-        
-        <div class="two-column">
-            <div class="column">
-                <button class="collapsible">Basic Emotions (Universal)</button>
-                <div class="collapsible-content">
-                    <ul style="line-height: 1.6;">
-                        <li><b>Joy/Happiness</b> - A pleasant emotional state that reflects contentment and satisfaction</li>
-                        <li><b>Fear</b> - An unpleasant emotion caused by perceived threat or danger</li>
-                        <li><b>Anger</b> - A strong feeling of displeasure and usually antagonism</li>
-                        <li><b>Disgust</b> - A strong feeling of dislike or disapproval</li>
-                        <li><b>Surprise</b> - A brief emotional state experienced as the result of an unexpected event</li>
-                        <li><b>Sadness</b> - An emotional state characterized by feelings of disappointment, grief, or hopelessness</li>
-                    </ul>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <h3 class="footer-title">Embodied Without a Body</h3>
+                <div class="footer-nav">
+                    <a href="#introduction">Introduction</a>
+                    <a href="#framework">Framework</a>
+                    <a href="#method">Method</a>
+                    <a href="#joy-exploration">Joy</a>
+                    <a href="#pause-exploration">Pause</a>
+                    <a href="#emotion-map">Emotion Map</a>
                 </div>
-                
-                <button class="collapsible">Social Emotions (Culturally Influenced)</button>
-                <div class="collapsible-content">
-                    <ul style="line-height: 1.6;">
-                        <li><b>Pride</b> - A feeling of satisfaction derived from one's achievements or qualities</li>
-                        <li><b>Shame</b> - A painful emotion caused by consciousness of guilt, shortcoming, or impropriety</li>
-                        <li><b>Embarrassment</b> - Self-consciousness, discomfort, or awkwardness from concern about social evaluation</li>
-                        <li><b>Guilt</b> - A feeling of responsibility for wrongdoing</li>
-                        <li><b>Contempt</b> - The feeling that a person or thing is beneath consideration or worthless</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="column">
-                <button class="collapsible">Complex Emotional States (Cognitive-Emotional Blends)</button>
-                <div class="collapsible-content">
-                    <ul style="line-height: 1.6;">
-                        <li><b>Nostalgia</b> - A sentimental longing for the past</li>
-                        <li><b>Anticipation</b> - A state of looking forward expectantly</li>
-                        <li><b>Contentment</b> - A state of peaceful happiness and satisfaction</li>
-                        <li><b>Melancholy</b> - A pensive sadness, typically with no obvious cause</li>
-                        <li><b>Hope</b> - A feeling of expectation and desire for a certain thing to happen</li>
-                        <li><b>Disappointment</b> - Sadness or displeasure caused by the non-fulfillment of hopes or expectations</li>
-                    </ul>
-                </div>
-                
-                <button class="collapsible">Cross-Cultural Emotional Concepts</button>
-                <div class="collapsible-content">
-                    <ul style="line-height: 1.6;">
-                        <li><b>Fago (Ifaluk)</b> - A blend of compassion, love, and sadness</li>
-                        <li><b>Schadenfreude (German)</b> - Pleasure derived from another's misfortune</li>
-                        <li><b>Saudade (Portuguese)</b> - A deep longing for something absent that might never return</li>
-                        <li><b>Hygge (Danish)</b> - A quality of coziness and comfortable conviviality</li>
-                        <li><b>Amae (Japanese)</b> - Dependence upon another's benevolence</li>
-                    </ul>
-                </div>
+                <p>A Human-AI Collaborative Research Project</p>
+                <p class="copyright">© 2025 - A collaborative exploration of emotion through human and artificial intelligence</p>
             </div>
         </div>
-        
-        <div class="visual-content">
-            <div class="findings-title">Emotion Mapping Visualization</div>
-            <img src="visualizations/emotion-categories.jpg" alt="Visual map of emotion categories based on Evans' framework" style="width: 100%; max-width: 600px; margin: 0 auto; display: block;">
-        </div>
-    </div>
-    
-    <div id="examples" class="prompt-container">
-        <div class="prompt-title">Collaboration Example: "Pause"</div>
-        
-        <button class="collapsible">Human Collage Creation</button>
-        <div class="collapsible-content">
-            <div class="findings-text">
-                <p>For my first exploration, I chose the concept of "pause" - a complex emotional state that involves both physical and mental aspects. I created a collage that expressed my personal understanding of pause as a state that isn't about complete stillness, but rather about a different kind of attention and energy flow.</p>
-                
-                <p>The collage uses primarily blue tones to represent calmness, with dotted lines showing the continued flow of energy even in a paused state. The empty spaces represent mental clarity, while the overlapping elements suggest layered thoughts temporarily held in suspension.</p>
-            </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Selected Palette:</span>
-                <span>
-                    <span class="color-swatch" style="background-color: #6FA7C9;"></span>Hush Blue #6FA7C9, 
-                    <span class="color-swatch" style="background-color: #B6B2A8;"></span>Warm Grey #B6B2A8, 
-                    <span class="color-swatch" style="background-color: #D87A3C;"></span>Ember #D87A3C
-                </span>
-            </div>
-            
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Constraint:</span>
-                <span>"preserve nonzero micro-motion and prefer long fades"</span>
-            </div>
-        </div>
-        
-        <button class="collapsible">AI Interpretation Response</button>
-        <div class="collapsible-content">
-            <div class="findings-attribute">
-                <span class="findings-attribute-title">Bot Response:</span>
-                <span>In processing your collage for "pause," I detect this complex emotional state through the interplay of flowing lines and deliberate spaces. The suspended linear elements suggest a temporary holding pattern rather than complete cessation, which aligns with Evans' framework of complex emotions having cognitive components beyond basic affect. I evaluate this pause as moderate intensity but high significance—the subtle Warm Grey negative space indicates contemplative depth while Hush Blue pathways maintain continuous flow even in stillness. My appropriate response would be to maintain this delicate balance: acknowledging the ongoing micro-movements represented by dotted sequences while respecting the deliberate slowing indicated by the compositional breathing room. The Ember accents signal points of potential resumption, creating a temporal dimension to this spatial arrangement. Hush Blue = trace continuous pathways while decelerating, Warm Grey = expand negative space to enhance contemplative capacity, Ember = maintain potential energy at transition points for eventual resumption.</span>
-            </div>
-        </div>
-        
-        <div class="visual-content">
-            <div class="findings-title">Collaboration Result</div>
-            
-            <div class="two-column">
-                <div class="column">
-                    <h3 style="text-align: center;">Human Collage</h3>
-                    <img src="visualizations/pause-human-collage.jpg" alt="Human collage representing pause" class="example-image">
-                </div>
-                
-                <div class="column">
-                    <h3 style="text-align: center;">AI Overlay Response</h3>
-                    <img src="visualizations/pause-ai-overlay.jpg" alt="AI visualization overlay for pause" class="example-image">
-                </div>
-            </div>
-            
-            <div class="findings-text" style="margin-top: 20px;">
-                <p><b>Analysis:</b> The AI's interpretation revealed a fascinating perspective on "pause" - seeing it not as absence of motion but as a different quality of movement. While my human collage emphasized the structural elements of pause, the AI focused on the dynamic aspects, detecting "micro-movements" and "potential energy at transition points."</p>
-                
-                <p>What emerged was a more nuanced understanding of pause as a state where energy continues to flow but in a more contained, deliberate way. The AI overlay visualized this by adding animated dots that move along the lines I had drawn - growing larger or smaller as a way of representing the continued processing that happens during a pause.</p>
-                
-                <p>This collaboration suggested that for both humans and AI systems, a pause is never truly static - there is always some form of continued processing or energy flow, just at a different rhythm and intensity.</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="prompt-container">
-        <div class="prompt-title">Next Steps in Exploration</div>
-        
-        <div class="findings-text">
-            <p>This collaborative exploration of emotional concepts through human-AI artistic dialogue is just beginning. The next phase will involve:</p>
-            
-            <p><b>1. Systematic Exploration:</b> Working through multiple emotions from each category (basic, social, complex) to build a comprehensive understanding of how AI systems interpret different types of emotional experiences.</p>
-            
-            <p><b>2. Cross-AI Comparison:</b> Comparing how different AI systems (Claude, GPT, Gemini) interpret the same human collage, revealing their unique approaches to emotional processing.</p>
-            
-            <p><b>3. Theoretical Analysis:</b> Deepening the connection to Evans' framework by analyzing how AI emotional processing relates to evolutionary and cultural dimensions of emotion.</p>
-            
-            <p><b>4. Interactive Installation:</b> Developing a physical exhibition where visitors can interact with these human-AI emotional collaborations, creating a tactile interface between biological and artificial emotional processing.</p>
-        </div>
-    </div>
+    </footer>
     
     <script>
         // JavaScript for collapsible sections
@@ -636,6 +1305,48 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                 }
                 event.target.classList.add("active");
             }
+            
+            // Image overlays
+            var images = document.querySelectorAll('.image-container img');
+            images.forEach(function(img) {
+                img.addEventListener('click', function() {
+                    // Create a full-screen overlay with the image
+                    var overlay = document.createElement('div');
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.width = '100%';
+                    overlay.style.height = '100%';
+                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                    overlay.style.display = 'flex';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.alignItems = 'center';
+                    overlay.style.zIndex = '1000';
+                    overlay.style.cursor = 'pointer';
+                    
+                    var imgClone = document.createElement('img');
+                    imgClone.src = img.src;
+                    imgClone.style.maxWidth = '90%';
+                    imgClone.style.maxHeight = '90%';
+                    imgClone.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.2)';
+                    
+                    overlay.appendChild(imgClone);
+                    document.body.appendChild(overlay);
+                    
+                    // Close the overlay when clicked
+                    overlay.addEventListener('click', function() {
+                        document.body.removeChild(overlay);
+                    });
+                });
+            });
+            
+            // Emotion cards hover effect
+            var emotionCards = document.querySelectorAll('.emotion-card');
+            emotionCards.forEach(function(card) {
+                card.addEventListener('click', function() {
+                    alert('Future research: This emotion will be explored in upcoming collaborations.');
+                });
+            });
         });
     </script>
 </body>

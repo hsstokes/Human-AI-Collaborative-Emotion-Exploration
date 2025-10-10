@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pause - Emotional Interruption</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f8f8;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        canvas {
+            max-width: 100%;
+            max-height: 100vh;
+            object-fit: contain;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(80, 80, 80, 0.7);
+            font-family: 'Orator Std', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">Pause · Emotional Interruption</div>
+    
+    <script>
+        let pauseImage; // Background image holder
+        let isAnimating = true; // Start in animation mode
+        let soundEnabled = true;
+        let soundPlaying = false;
+        let pauseSound;
+        let soundLoaded = false;
+        
+        // Color palette from the analysis
+        const colors = {
+            black: [0, 0, 0],
+            orange: [216, 122, 60],
+            brown: [139, 90, 43]
+        };
+        
+        // Elements for each behavior
+        let interruptionPoints = []; // Black elements - points of interruption
+        let temporalElements = []; // Orange elements - assess duration
+        let transitionElements = []; // Brown elements - facilitate transition
+        
+        // Dotted lines that occasionally pause
+        let dottedLines = [];
+        
+        function preload() {
+            // Pre-load any assets
+            pauseImage = loadImage('pause.jpg'); // or whatever your image file is named
+            soundLoaded = false;
+            pauseSound = loadSound('pause_ambient.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                    
+                    // Start sound if autoplay is enabled
+                    if (isAnimating && soundEnabled) {
+                        try {
+                            pauseSound.loop();
+                            pauseSound.setVolume(0);
+                            pauseSound.setVolume(0.8, 2); // Fade in over 2 seconds
+                            soundPlaying = true;
+                        } catch(e) {
+                            console.error("Error starting audio:", e);
+                        }
+                    }
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Create black elements - points of complete interruption
+            for (let i = 0; i < 5; i++) {
+                interruptionPoints.push({
+                    x: random(width * 0.2, width * 0.8),
+                    y: random(height * 0.2, height * 0.8),
+                    size: random(20, 60),
+                    type: random() > 0.5 ? 'rect' : 'circle',
+                    opacity: random(180, 255),
+                    duration: random(2000, 5000),
+                    startTime: random(0, 2000),
+                    visible: false
+                });
+            }
+            
+            // Create orange elements - assess temporal duration
+            for (let i = 0; i < 3; i++) {
+                temporalElements.push({
+                    x: random(width * 0.3, width * 0.7),
+                    y: random(height * 0.3, height * 0.7),
+                    size: random(30, 80),
+                    pulseRate: random(0.001, 0.003),
+                    opacity: random(100, 200),
+                    startTime: random(0, 3000)
+                });
+            }
+            
+            // Create brown elements - transition between states
+            for (let i = 0; i < 4; i++) {
+                transitionElements.push({
+                    x1: random(width * 0.1, width * 0.4),
+                    y1: random(height * 0.2, height * 0.8),
+                    x2: random(width * 0.6, width * 0.9),
+                    y2: random(height * 0.2, height * 0.8),
+                    thickness: random(1, 3),
+                    opacity: random(120, 200),
+                    progress: 0,
+                    speed: random(0.0005, 0.002),
+                    delay: random(1000, 3000)
+                });
+            }
+            
+            // Create dotted lines that occasionally pause
+            for (let i = 0; i < 8; i++) {
+                dottedLines.push({
+                    x: random(width * 0.1, width * 0.9),
+                    y: random(height * 0.1, height * 0.9),
+                    length: random(100, 300),
+                    angle: random(0, TWO_PI),
+                    dotSize: random(2, 4),
+                    dotSpacing: random(8, 15),
+                    progress: 0,
+                    speed: random(0.002, 0.005),
+                    pauseAt: random(0.3, 0.7),
+                    pauseDuration: random(1000, 3000),
+                    isPaused: false,
+                    pauseStart: 0,
+                    opacity: random(150, 220)
+                });
+            }
+            
+            // Initialize audio context for better mobile support
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+        }
+
+        function draw() {
+            // Clear the canvas with a warm white background
+            background(248, 247, 242);
+
+            // Display the background image with proper aspect ratio
+            let imgRatio = pauseImage.width / pauseImage.height;
+            let canvasRatio = width / height;
+    
+            if (imgRatio > canvasRatio) {
+            // Image is wider than canvas relative to height
+            let newHeight = width / imgRatio;
+            image(pauseImage, 0, (height - newHeight) / 2, width, newHeight);
+            } else {
+            // Image is taller than canvas relative to width
+            let newWidth = height * imgRatio;
+            image(pauseImage, (width - newWidth) / 2, 0, newWidth, height);
+            }
+            
+            // Draw the dotted lines that occasionally pause
+            drawDottedLines();
+            
+            // Draw black elements - points of complete interruption
+            drawInterruptionPoints();
+            
+            // Draw orange elements - assess temporal duration
+            drawTemporalElements();
+            
+            // Draw brown elements - transitions between states
+            drawTransitionElements();
+            
+            // Sound control button
+            drawSoundButton();
+        }
+
+        function drawInterruptionPoints() {
+            // Black elements that create complete interruptions
+            noStroke();
+            
+            for (let point of interruptionPoints) {
+                // Check if this point should be visible based on its timing
+                if (millis() > point.startTime) {
+                    point.visible = true;
+                }
+                
+                if (point.visible) {
+                    fill(colors.black[0], colors.black[1], colors.black[2], point.opacity);
+                    
+                    if (point.type === 'rect') {
+                        rectMode(CENTER);
+                        rect(point.x, point.y, point.size, point.size);
+                    } else {
+                        ellipse(point.x, point.y, point.size);
+                    }
+                    
+                    // Add a subtle pulse to the opacity for some visual interest
+                    if (isAnimating) {
+                        point.opacity = map(sin(millis() * 0.0005), -1, 1, 180, 255);
+                    }
+                }
+            }
+        }
+
+        function drawTemporalElements() {
+            // Orange elements that assess temporal duration
+            noStroke();
+            
+            for (let element of temporalElements) {
+                // Only start rendering after the delay
+                if (millis() > element.startTime) {
+                    // Calculate pulsing size and opacity
+                    let pulseAmount = sin(millis() * element.pulseRate);
+                    let currentSize = element.size + pulseAmount * 10;
+                    let currentOpacity = element.opacity + pulseAmount * 40;
+                    
+                    // Draw with soft edges for a glowing effect
+                    for (let i = 0; i < 3; i++) {
+                        let size = currentSize - i * 10;
+                        let opacity = currentOpacity - i * 30;
+                        if (size > 0 && opacity > 0) {
+                            fill(colors.orange[0], colors.orange[1], colors.orange[2], opacity);
+                            ellipse(element.x, element.y, size);
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawTransitionElements() {
+            // Brown elements that facilitate transition
+            for (let element of transitionElements) {
+                // Only start rendering after the delay
+                if (millis() > element.delay) {
+                    if (isAnimating) {
+                        element.progress += element.speed;
+                        if (element.progress > 1) {
+                            element.progress = 0;
+                        }
+                    }
+                    
+                    // Draw the line
+                    stroke(colors.brown[0], colors.brown[1], colors.brown[2], element.opacity);
+                    strokeWeight(element.thickness);
+                    line(element.x1, element.y1, 
+                         lerp(element.x1, element.x2, element.progress), 
+                         lerp(element.y1, element.y2, element.progress));
+                    
+                    // Draw small circles at the endpoints
+                    noStroke();
+                    fill(colors.brown[0], colors.brown[1], colors.brown[2], element.opacity * 0.7);
+                    ellipse(element.x1, element.y1, element.thickness * 3);
+                    
+                    // Draw a moving circle that represents the transition point
+                    fill(colors.brown[0], colors.brown[1], colors.brown[2], element.opacity);
+                    ellipse(lerp(element.x1, element.x2, element.progress), 
+                            lerp(element.y1, element.y2, element.progress), 
+                            element.thickness * 4);
+                }
+            }
+        }
+
+        function drawDottedLines() {
+            // Dotted lines that occasionally pause
+            for (let line of dottedLines) {
+                // Update progress if not paused
+                if (isAnimating && !line.isPaused) {
+                    line.progress += line.speed;
+                    
+                    // Check if we should pause
+                    if (line.progress > line.pauseAt && line.progress < (line.pauseAt + 0.1)) {
+                        line.isPaused = true;
+                        line.pauseStart = millis();
+                    }
+                    
+                    // Reset progress when complete
+                    if (line.progress > 1) {
+                        line.progress = 0;
+                    }
+                }
+                
+                // Check if we should resume from pause
+                if (line.isPaused && millis() > line.pauseStart + line.pauseDuration) {
+                    line.isPaused = false;
+                }
+                
+                // Draw the dotted line
+                noFill();
+                stroke(80, 80, 80, line.opacity);
+                strokeWeight(1);
+                
+                // Calculate starting point
+                let startX = line.x;
+                let startY = line.y;
+                
+                // Calculate direction vector
+                let dx = cos(line.angle);
+                let dy = sin(line.angle);
+                
+                // Draw dots along the line
+                for (let i = 0; i < line.length; i += line.dotSpacing) {
+                    let x = startX + dx * i;
+                    let y = startY + dy * i;
+                    
+                    // Only draw dots up to the current progress
+                    if (i / line.length <= line.progress) {
+                        fill(80, 80, 80, line.opacity);
+                        noStroke();
+                        ellipse(x, y, line.dotSize);
+                    }
+                }
+                
+                // Visual indicator of pause
+                if (line.isPaused) {
+                    // Draw a small pause indicator
+                    let pauseX = startX + dx * (line.length * line.pauseAt);
+                    let pauseY = startY + dy * (line.length * line.pauseAt);
+                    
+                    // Pulsing effect on the pause point
+                    let pulseSize = map(sin(millis() * 0.01), -1, 1, 5, 10);
+                    
+                    noFill();
+                    stroke(colors.orange[0], colors.orange[1], colors.orange[2], 180);
+                    strokeWeight(1);
+                    ellipse(pauseX, pauseY, pulseSize);
+                }
+            }
+        }
+        
+        function drawSoundButton() {
+            // Sound control button
+            let buttonX = width - 50;
+            let buttonY = height - 50;
+            let buttonSize = 30;
+
+            // Button background
+            noStroke();
+            fill(240, 240, 240, 180);
+            rect(buttonX, buttonY, buttonSize, buttonSize, 5);
+
+            // Sound icon
+            if (soundEnabled) {
+                // Sound on icon
+                fill(60, 60, 60);
+                noStroke();
+                // Speaker base
+                rect(buttonX + 10, buttonY + 12, 4, 6);
+                // Speaker cone
+                beginShape();
+                vertex(buttonX + 10, buttonY + 12);
+                vertex(buttonX + 16, buttonY + 8);
+                vertex(buttonX + 16, buttonY + 22);
+                vertex(buttonX + 10, buttonY + 18);
+                endShape(CLOSE);
+                // Sound waves
+                noFill();
+                stroke(60, 60, 60);
+                strokeWeight(1.5);
+                arc(buttonX + 18, buttonY + 15, 6, 8, -PI/3, PI/3);
+                arc(buttonX + 18, buttonY + 15, 10, 14, -PI/3, PI/3);
+            } else {
+                // Sound off icon
+                fill(60, 60, 60);
+                noStroke();
+                // Speaker base
+                rect(buttonX + 10, buttonY + 12, 4, 6);
+                // Speaker cone
+                beginShape();
+                vertex(buttonX + 10, buttonY + 12);
+                vertex(buttonX + 16, buttonY + 8);
+                vertex(buttonX + 16, buttonY + 22);
+                vertex(buttonX + 10, buttonY + 18);
+                endShape(CLOSE);
+                // X over the speaker
+                stroke(60, 60, 60);
+                strokeWeight(1.5);
+                line(buttonX + 19, buttonY + 10, buttonX + 24, buttonY + 20);
+                line(buttonX + 24, buttonY + 10, buttonX + 19, buttonY + 20);
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            
+            // Reposition elements
+            for (let point of interruptionPoints) {
+                point.x = random(width * 0.2, width * 0.8);
+                point.y = random(height * 0.2, height * 0.8);
+            }
+            
+            for (let element of temporalElements) {
+                element.x = random(width * 0.3, width * 0.7);
+                element.y = random(height * 0.3, height * 0.7);
+            }
+            
+            for (let element of transitionElements) {
+                element.x1 = random(width * 0.1, width * 0.4);
+                element.y1 = random(height * 0.2, height * 0.8);
+                element.x2 = random(width * 0.6, width * 0.9);
+                element.y2 = random(height * 0.2, height * 0.8);
+            }
+            
+            for (let line of dottedLines) {
+                line.x = random(width * 0.1, width * 0.9);
+                line.y = random(height * 0.1, height * 0.9);
+            }
+        }
+        
+        function mousePressed() {
+            // Check if sound button was clicked
+            let buttonX = width - 50;
+            let buttonY = height - 50;
+            let buttonSize = 30;
+            
+            if (mouseX > buttonX && mouseX < buttonX + buttonSize && 
+                mouseY > buttonY && mouseY < buttonY + buttonSize) {
+                
+                soundEnabled = !soundEnabled;
+                
+                if (!soundEnabled && soundPlaying) {
+                    // Fade out and stop sound
+                    pauseSound.setVolume(0, 1);
+                    setTimeout(() => {
+                        pauseSound.stop();
+                        soundPlaying = false;
+                    }, 1000);
+                } else if (soundEnabled && isAnimating && !soundPlaying && soundLoaded) {
+                    // Start sound
+                    try {
+                        pauseSound.loop();
+                        pauseSound.setVolume(0);
+                        pauseSound.setVolume(0.8, 1);
+                        soundPlaying = true;
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                return false;
+            }
+            
+            // Toggle animation state when canvas is clicked
+            isAnimating = !isAnimating;
+            
+            // Handle sound based on animation state
+            if (!isAnimating && soundPlaying) {
+                pauseSound.setVolume(0, 1);
+                setTimeout(() => {
+                    pauseSound.pause();
+                    soundPlaying = false;
+                }, 1000);
+            } else if (isAnimating && soundEnabled && !soundPlaying && soundLoaded) {
+                try {
+                    pauseSound.loop();
+                    pauseSound.setVolume(0);
+                    pauseSound.setVolume(0.8, 1);
+                    soundPlaying = true;
+                } catch(e) {
+                    console.error("Error playing sound:", e);
+                }
+            }
+            
+            return false;
+        }
+        
+        // Support touch events
+        function touchStarted() {
+            // Initialize audio context for iOS
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+    </script>
+</body>
+</html>

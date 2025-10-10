@@ -414,7 +414,7 @@
         .iframe-container {
             position: relative;
             width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            padding-bottom: 75%; /* Changed to taller aspect ratio */
             height: 0;
             border: 1px solid var(--secondary);
         }
@@ -667,6 +667,26 @@
         
         .delay-3 {
             animation-delay: 0.6s;
+        }
+        
+        /* Physical-Digital Bridge elements */
+        .nfc-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            background: rgba(216, 122, 60, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .nfc-icon {
+            background: rgba(216, 122, 60, 0.2);
+            padding: 15px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -1075,17 +1095,33 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                         
                         <div class="result-flex">
                             <div class="result-item">
-                                <img src="pause.jpg" alt="Pause collage" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
-                                <p class="result-caption">Human Collage: Layered elements with negative space</p>
+                                <img src="pause-sketchbook.jpg" alt="Pause collage in physical sketchbook" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                                <p class="result-caption">Physical Sketchbook: Collage with embedded NFC tag</p>
                             </div>
                             
                             <div class="result-item">
-                                <div class="iframe-container">
-                                    <iframe src="pause-overlay.html" frameborder="0"></iframe>
-                                </div>
-                                <p class="result-caption">AI Response: Interactive visualization with preserved micro-movements</p>
+                                <img src="pause.jpg" alt="Pause collage digital scan" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                                <p class="result-caption">Digital Scan: Layered elements with negative space</p>
                             </div>
                         </div>
+                        
+                        <div class="highlight" style="margin: 30px 0;">
+                            <h4 style="margin-top: 0;">Physical-Digital Bridge</h4>
+                            <p>The physical collage in my sketchbook includes an embedded NFC tag that, when scanned with a smartphone, launches the interactive digital visualization. This creates a seamless bridge between the tangible artwork and its digital interpretation, allowing viewers to experience both the material qualities of the original collage and the temporal, interactive elements of the AI's response.</p>
+                            
+                            <div class="nfc-container">
+                                <div class="nfc-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D87A3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.32a7.43 7.43 0 0 1 0 7.36"/><path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58"/><path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8"/><path d="M16.37 2a20.16 20.16 0 0 1 0 20"/></svg>
+                                </div>
+                                <p style="margin: 0; flex: 1;"><strong>How to Experience:</strong> Scan the NFC tag on the physical collage with an NFC-enabled smartphone to launch the interactive visualization directly in your browser.</p>
+                            </div>
+                        </div>
+                        
+                        <h4 class="result-title">Interactive Digital Visualization</h4>
+                        <div class="iframe-container" style="padding-bottom: 75%;">
+                            <iframe src="pause-overlay.html" frameborder="0"></iframe>
+                        </div>
+                        <p class="result-caption">AI Response: Interactive visualization with preserved micro-movements</p>
                         
                         <div class="audio-section">
                             <h4 style="margin-top: 0;">Audio Dimension</h4>

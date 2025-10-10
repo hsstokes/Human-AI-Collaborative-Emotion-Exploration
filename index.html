@@ -688,26 +688,6 @@
         .delay-3 {
             animation-delay: 0.6s;
         }
-        
-        /* Physical-Digital Bridge elements */
-        .nfc-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 15px;
-            background: rgba(216, 122, 60, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-        }
-        
-        .nfc-icon {
-            background: rgba(216, 122, 60, 0.2);
-            padding: 15px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
     </style>
 </head>
 <body>
@@ -1111,25 +1091,25 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <div class="result-container">
-                         <h4 class="result-title">Visual Collaboration Result</h4>
-    
-                         <div class="result-flex">
-                             <div class="result-item">
-                                  <img src="pause.jpg" alt="Pause collage" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
-                                  <p class="result-caption">Human Collage: Layered elements with negative space</p>
-                             </div>
-        
-                             <div class="result-item">
-                                 <div class="iframe-container">
-                                      <iframe src="pause-overlay.html" frameborder="0"></iframe>
-                                 </div>
-                                 <p class="result-caption">AI Response: Interactive visualization with preserved micro-movements</p>
+                        <h4 class="result-title">Visual Collaboration Result</h4>
+                        
+                        <div class="result-flex">
+                            <div class="result-item">
+                                <img src="pause.jpg" alt="Pause collage with NFC tag" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                                <p class="result-caption">Physical Collage: Layered elements with NFC tag</p>
                             </div>
-                         </div>
+                            
+                            <div class="result-item">
+                                <div class="iframe-container" style="padding-bottom: 75%;">
+                                    <iframe src="pause-overlay.html" frameborder="0"></iframe>
+                                </div>
+                                <p class="result-caption">AI Response: Interactive visualization with preserved micro-movements</p>
+                            </div>
+                        </div>
                         
                         <div class="highlight" style="margin: 30px 0;">
                             <h4 style="margin-top: 0;">Physical-Digital Bridge</h4>
-                            <p>The physical collage in my sketchbook includes an embedded NFC tag that, when scanned with a smartphone, launches the interactive digital visualization. This creates a seamless bridge between the tangible artwork and its digital interpretation, allowing viewers to experience both the material qualities of the original collage and the temporal, interactive elements of the AI's response.</p>
+                            <p>The physical collage includes an embedded NFC tag that, when scanned with a smartphone, launches the interactive digital visualization. This creates a seamless bridge between the tangible artwork and its digital interpretation, allowing viewers to experience both the material qualities of the original collage and the temporal, interactive elements of the AI's response.</p>
                             
                             <div class="nfc-container">
                                 <div class="nfc-icon">
@@ -1138,12 +1118,6 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                                 <p style="margin: 0; flex: 1;"><strong>How to Experience:</strong> Scan the NFC tag on the physical collage with an NFC-enabled smartphone to launch the interactive visualization directly in your browser.</p>
                             </div>
                         </div>
-                        
-                        <h4 class="result-title">Interactive Digital Visualization</h4>
-                        <div class="iframe-container" style="padding-bottom: 75%;">
-                            <iframe src="pause-overlay.html" frameborder="0"></iframe>
-                        </div>
-                        <p class="result-caption">AI Response: Interactive visualization with preserved micro-movements</p>
                         
                         <div class="audio-section">
                             <h4 style="margin-top: 0;">Audio Dimension</h4>

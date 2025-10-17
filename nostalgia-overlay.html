@@ -82,9 +82,6 @@
             points: []
         };
         
-        // Delicate black lines representing memory fragments
-        let memoryFragments = [];
-        
         function preload() {
             // Pre-load assets
             nostalgiaImage = loadImage('nostalgia_collage.jpg');
@@ -121,33 +118,19 @@
             handOutline.y = height * 0.5;
             handOutline.size = min(width, height) * 0.32;
             
-            // Create memory fragments (delicate black lines)
-            for (let i = 0; i < 12; i++) {
-                memoryFragments.push({
-                    x1: random(width * 0.1, width * 0.9),
-                    y1: random(height * 0.1, height * 0.9),
-                    x2: random(width * 0.1, width * 0.9),
-                    y2: random(height * 0.1, height * 0.9),
-                    opacity: random(40, 100),
-                    thickness: random(0.5, 1.8),
-                    startTime: i * 2000 + 8000,
-                    visible: false
-                });
-            }
-            
-            // Create purple elements - recognition of memory patterns
-            for (let i = 0; i < 15; i++) {
+            // Create purple elements - recognition of memory patterns (increased number)
+            for (let i = 0; i < 18; i++) {
                 recognitionElements.push({
-                    x: random(width * 0.1, width * 0.8),
+                    x: random(width * 0.1, width * 0.9),
                     y: random(height * 0.1, height * 0.9),
                     size: random(5, 15),
                     opacity: random(150, 230),
-                    startTime: i * 800,
+                    startTime: i * 700,
                     visible: false
                 });
             }
             
-            // Create memory pathways connecting recognition elements
+            // Create memory pathways connecting recognition elements (more pathways)
             for (let i = 0; i < recognitionElements.length - 1; i++) {
                 memoryPathways.push({
                     start: i,
@@ -161,34 +144,53 @@
                 });
             }
             
-            // Create yellow elements - evaluate significance
-            for (let i = 0; i < 8; i++) {
-                let isCircle = random() > 0.5;
+            // Add some additional random connections between dots
+            for (let i = 0; i < 5; i++) {
+                let startIndex = floor(random(recognitionElements.length));
+                let endIndex = floor(random(recognitionElements.length));
+                
+                if (startIndex !== endIndex) {
+                    memoryPathways.push({
+                        start: startIndex,
+                        end: endIndex,
+                        progress: 0,
+                        speed: random(0.0008, 0.002),
+                        opacity: random(100, 160),
+                        dotSize: random(2, 3.5),
+                        dotSpacing: random(10, 18),
+                        startTime: 15000 + i * 1200
+                    });
+                }
+            }
+            
+            // Create yellow elements - evaluate significance (increased number)
+            for (let i = 0; i < 10; i++) {
+                let isCircle = random() > 0.4;
                 evaluationElements.push({
-                    x: random(width * 0.2, width * 0.8),
-                    y: random(height * 0.2, height * 0.8),
+                    x: random(width * 0.1, width * 0.9),
+                    y: random(height * 0.1, height * 0.9),
                     width: isCircle ? random(20, 40) : random(30, 60),
                     height: isCircle ? undefined : random(15, 30),
                     isCircle: isCircle,
                     pulseRate: random(0.001, 0.003),
                     opacity: random(150, 200),
-                    startTime: 12000 + i * 1000,
+                    startTime: 10000 + i * 900,
                     visible: false
                 });
             }
             
             // Create bronze elements - response generation
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 7; i++) {
                 let shapeType = floor(random(3)); // 0: rectangle, 1: arc, 2: line
                 responseElements.push({
-                    x: random(width * 0.3, width * 0.9),
-                    y: random(height * 0.3, height * 0.7),
+                    x: random(width * 0.2, width * 0.9),
+                    y: random(height * 0.2, height * 0.8),
                     width: random(30, 60),
                     height: shapeType === 0 ? random(40, 60) : 
                             shapeType === 1 ? random(15, 30) : random(3, 8),
                     shapeType: shapeType,
                     opacity: random(150, 220),
-                    startTime: 20000 + i * 1500,
+                    startTime: 18000 + i * 1400,
                     visible: false
                 });
             }
@@ -241,16 +243,13 @@
                 image(nostalgiaImage, (width - newWidth) / 2, 0, newWidth, height);
             }
             
-            // Layer 1: Memory fragments (delicate black lines)
-            drawMemoryFragments();
-            
-            // Layer 2: Update and draw all elements
+            // Layer 1: Update and draw all elements
             drawMemoryPathways();
             drawRecognitionElements();
             drawEvaluationElements();
             drawResponseElements();
             
-            // Layer 3: Hand outline
+            // Layer 2: Hand outline
             drawHandOutline();
             
             // Sound control button
@@ -371,21 +370,6 @@
                         rectMode(CENTER);
                         rect(element.x, element.y, element.width, element.height);
                     }
-                }
-            }
-        }
-        
-        function drawMemoryFragments() {
-            // Delicate black lines representing memory fragments
-            for (let fragment of memoryFragments) {
-                if (millis() > fragment.startTime) {
-                    fragment.visible = true;
-                }
-                
-                if (fragment.visible) {
-                    stroke(30, 30, 30, fragment.opacity);
-                    strokeWeight(fragment.thickness);
-                    line(fragment.x1, fragment.y1, fragment.x2, fragment.y2);
                 }
             }
         }

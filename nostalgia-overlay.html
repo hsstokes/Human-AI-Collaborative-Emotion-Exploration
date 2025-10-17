@@ -249,7 +249,7 @@
             drawEvaluationElements();
             drawResponseElements();
             
-            // Layer 2: Hand outline
+            // Layer 2: Hand outline - just the outline, no internal lines
             drawHandOutline();
             
             // Sound control button
@@ -376,6 +376,7 @@
 
         function drawHandOutline() {
             // Hand outline that appears gradually - more delicate approach
+            // WITHOUT the internal lines (life line and heart line)
             if (millis() > 25000) {
                 // Increase opacity gradually, but keep it subtle
                 handOutline.opacity = min(150, handOutline.opacity + 0.4);
@@ -398,29 +399,7 @@
                 }
                 endShape();
                 
-                // Add some interior delicate lines to the hand for additional sensitivity
-                if (handOutline.drawProgress > 0.5) {
-                    // Life line
-                    stroke(60, 60, 60, handOutline.opacity * 0.7);
-                    strokeWeight(1);
-                    noFill();
-                    beginShape();
-                    curveVertex(handOutline.x - handOutline.size * 0.05, handOutline.y + handOutline.size * 0.2);
-                    curveVertex(handOutline.x - handOutline.size * 0.05, handOutline.y + handOutline.size * 0.2);
-                    curveVertex(handOutline.x - handOutline.size * 0.1, handOutline.y);
-                    curveVertex(handOutline.x - handOutline.size * 0.15, handOutline.y - handOutline.size * 0.1);
-                    curveVertex(handOutline.x - handOutline.size * 0.15, handOutline.y - handOutline.size * 0.1);
-                    endShape();
-                    
-                    // Heart line
-                    beginShape();
-                    curveVertex(handOutline.x + handOutline.size * 0.2, handOutline.y + handOutline.size * 0.1);
-                    curveVertex(handOutline.x + handOutline.size * 0.2, handOutline.y + handOutline.size * 0.1);
-                    curveVertex(handOutline.x, handOutline.y - handOutline.size * 0.05);
-                    curveVertex(handOutline.x - handOutline.size * 0.2, handOutline.y - handOutline.size * 0.1);
-                    curveVertex(handOutline.x - handOutline.size * 0.2, handOutline.y - handOutline.size * 0.1);
-                    endShape();
-                }
+                // Removed the internal hand lines (life line and heart line)
             }
         }
         

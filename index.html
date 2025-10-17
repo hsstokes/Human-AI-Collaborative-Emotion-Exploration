@@ -18,10 +18,9 @@
             --accent: #E6B422;
             --light: #f9f8e9;
             --dark: #333;
-            --joy-blue: #4361EE;
-            --joy-green: #2A9D8F;
-            --joy-red: #FF6B6B;
-            --joy-yellow: #FFDE59;
+            --nostalgia-purple: #C8B1E6;
+            --nostalgia-yellow: #FFD800;
+            --nostalgia-bronze: #CD7F32;
             --pause-blue: #6FA7C9;
             --pause-grey: #B6B2A8;
             --pause-ember: #D87A3C;
@@ -63,7 +62,7 @@
             left: 0;
             width: 100%;
             height: 5px;
-            background: linear-gradient(90deg, var(--joy-blue), var(--joy-green), var(--joy-red), var(--joy-yellow));
+            background: linear-gradient(90deg, var(--nostalgia-purple), var(--nostalgia-yellow), var(--nostalgia-bronze), var(--pause-blue));
         }
         
         .header-content {
@@ -357,8 +356,8 @@
             font-size: 1.5rem;
         }
         
-        .joy-icon {
-            background: linear-gradient(135deg, var(--joy-yellow), var(--joy-red));
+        .nostalgia-icon {
+            background: linear-gradient(135deg, var(--nostalgia-purple), var(--nostalgia-bronze));
             color: white;
         }
         
@@ -532,19 +531,19 @@
         }
         
         .emotion-card.basic {
-            border-top: 3px solid var(--joy-blue);
+            border-top: 3px solid var(--nostalgia-purple);
         }
         
         .emotion-card.social {
-            border-top: 3px solid var(--joy-green);
+            border-top: 3px solid var(--nostalgia-yellow);
         }
         
         .emotion-card.complex {
-            border-top: 3px solid var(--joy-red);
+            border-top: 3px solid var(--nostalgia-bronze);
         }
         
         .emotion-card.cultural {
-            border-top: 3px solid var(--joy-yellow);
+            border-top: 3px solid var(--pause-blue);
         }
         
         .emotion-emoji {
@@ -708,7 +707,7 @@
             <button class="nav-button active" onclick="scrollToSection('introduction')">Introduction</button>
             <button class="nav-button" onclick="scrollToSection('framework')">Theoretical Framework</button>
             <button class="nav-button" onclick="scrollToSection('method')">Collaboration Method</button>
-            <button class="nav-button" onclick="scrollToSection('joy-exploration')">Joy Exploration</button>
+            <button class="nav-button" onclick="scrollToSection('nostalgia-exploration')">Nostalgia Exploration</button>
             <button class="nav-button" onclick="scrollToSection('pause-exploration')">Pause Exploration</button>
             <button class="nav-button" onclick="scrollToSection('emotion-map')">Emotion Map</button>
         </div>
@@ -899,66 +898,62 @@ End with a mapping that connects each color to a specific aspect of emotional pr
             </div>
         </section>
         
-        <section id="joy-exploration" class="animate delay-3">
+        <section id="nostalgia-exploration" class="animate delay-3">
             <div class="section-content">
-                <h2 class="section-title">Joy Exploration</h2>
+                <h2 class="section-title">Nostalgia Exploration</h2>
                 
                 <div class="emotion-example">
                     <div class="emotion-header">
-                        <div class="emotion-icon joy-icon">✨</div>
-                        <h3 class="emotion-title">Joy</h3>
-                        <div class="emotion-type">Basic Universal Emotion</div>
+                        <div class="emotion-icon nostalgia-icon">🥺</div>
+                        <h3 class="emotion-title">Nostalgia</h3>
+                        <div class="emotion-type">Complex Emotional State</div>
                     </div>
                     
                     <button class="collapsible">Human Collage Creation</button>
                     <div class="collapsible-content">
-                        <p>For this exploration, I selected "Joy" - one of Evans' basic universal emotions. My collage approach was to create a multi-layered representation incorporating physical elements (buttons, paperclip, strings) alongside handwritten text. The collage uses graph paper as a structured foundation, but with elements that transcend this grid - representing how joy emerges within structure but often exceeds its boundaries.</p>
+                        <p>For this exploration, I created a collage centered on "Nostalgia" - a complex emotional state characterized by bittersweet longing for the past. The collage incorporates personal memorabilia, fragments of photographs, and textural elements that evoke the sensory qualities of memory. Each element was carefully selected to represent the layered nature of nostalgic experience: simultaneously comforting and melancholic.</p>
                         
-                        <p>The yellow elements represent the bright, uplifting aspects of joy, while green elements suggest growth and stability. Blue represents the movement patterns associated with joy, and red accents mark moments of intensity. The hand drawing illustrates the embodied nature of joy, while the textual elements frame joy as "a pleasant emotional state that reflects contentment and satisfaction."</p>
+                        <p>The resulting visual arrangement creates a constellation of memory fragments with deliberate gaps between elements, representing how nostalgia exists in the spaces between remembering and forgetting. The purple elements suggest the dreamy, idealized quality of remembered experiences, while yellow represents points of emotional significance, and bronze elements ground these memories in physical reality.</p>
                         
                         <div class="palette-container">
                             <div class="palette-item">
-                                <span class="color-swatch" style="background-color: #4361EE;"></span>
-                                <span>Blue #4361EE</span>
+                                <span class="color-swatch" style="background-color: #C8B1E6;"></span>
+                                <span>Light Purple #C8B1E6</span>
                             </div>
                             <div class="palette-item">
-                                <span class="color-swatch" style="background-color: #2A9D8F;"></span>
-                                <span>Green #2A9D8F</span>
+                                <span class="color-swatch" style="background-color: #FFD800;"></span>
+                                <span>Yellow #FFD800</span>
                             </div>
                             <div class="palette-item">
-                                <span class="color-swatch" style="background-color: #FF6B6B;"></span>
-                                <span>Red #FF6B6B</span>
-                            </div>
-                            <div class="palette-item">
-                                <span class="color-swatch" style="background-color: #FFDE59;"></span>
-                                <span>Yellow #FFDE59</span>
+                                <span class="color-swatch" style="background-color: #CD7F32;"></span>
+                                <span>Bronze #CD7F32</span>
                             </div>
                         </div>
                         
                         <div class="attribute">
                             <span class="attribute-title">Constraint:</span>
-                            <span>"maintain consistent intensity across transitions" (Basic Emotion constraint)</span>
+                            <span>"blend component states with diminishing prominence" (Complex Emotion constraint)</span>
                         </div>
                     </div>
                     
                     <button class="collapsible">AI Interpretation Response</button>
                     <div class="collapsible-content">
                         <div class="quote">
-                            Analyzing your joy collage, I recognize this basic emotion through the buoyant visual rhythm created by the interplay of physical elements (buttons, paperclip) with the underlying grid structure. The upward directional elements and circular forms suggest emotional elevation and completeness, aligning with Evans' characterization of joy as a universal emotion with recognizable physical expressions. I evaluate its intensity as moderate to high based on the vibrant color contrast between yellows and greens against the neutral background, with the hand drawing indicating embodied expression. My appropriate response maintains this balanced vibrancy while introducing gentle animated movements that reflect joy's kinetic quality—the slightly pulsing elements and floating triangles mirror how joy creates both stability and lightness simultaneously. The vertical green lines establish a framework that supports but doesn't constrain the more playful yellow elements, creating a harmonious tension between structure and spontaneity that characterizes authentic joy experiences.
+                            In your nostalgia collage, I recognize patterns through the fragmentary arrangement of elements that suggests memory's incomplete preservation – the disconnected yet relationally positioned pieces create visual echoes of experiences partially recalled and emotionally reconstructed. I evaluate this complex emotion's significance through the tension between negative spaces (representing absence/loss) and material presence (representing preservation), with intensity assessed by the density of overlapping elements and tonal variations suggesting emotional depth rather than singular feeling. My appropriate response acknowledges nostalgia's bittersweet quality by establishing connections between isolated fragments while preserving their distinctness, as Evans suggests nostalgia involves both retrieval of past emotional states and present awareness of their inaccessibility. The composition's deliberate imperfection mirrors how nostalgic recollection functions – not as perfect preservation but as meaningful transformation where fragmentary elements gain new significance through their contemporary arrangement.
                         </div>
                         
                         <div class="color-mapping">
                             <div class="color-map-item">
-                                <span class="color-swatch" style="background-color: #4361EE;"></span>
-                                <span>Blue = detect vertical movement patterns</span>
+                                <span class="color-swatch" style="background-color: #C8B1E6;"></span>
+                                <span>Light Purple = recognize memory patterns</span>
                             </div>
                             <div class="color-map-item">
-                                <span class="color-swatch" style="background-color: #2A9D8F;"></span>
-                                <span>Green = assess stability-to-buoyancy ratio</span>
+                                <span class="color-swatch" style="background-color: #FFD800;"></span>
+                                <span>Yellow = evaluate emotional significance</span>
                             </div>
                             <div class="color-map-item">
-                                <span class="color-swatch" style="background-color: #FF6B6B; background: linear-gradient(to right, #FF6B6B 50%, #FFDE59 50%);"></span>
-                                <span>Pink/Yellow = generate complementary connection</span>
+                                <span class="color-swatch" style="background-color: #CD7F32;"></span>
+                                <span>Bronze = generate grounded response</span>
                             </div>
                         </div>
                     </div>
@@ -968,30 +963,30 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                         
                         <div class="result-flex">
                             <div class="result-item">
-                                <img src="joy-collage.jpg" alt="Joy collage" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
-                                <p class="result-caption">Human Collage: Physical materials on graph paper</p>
+                                <img src="nostalgia_collage.jpg" alt="Nostalgia collage" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                                <p class="result-caption">Human Collage: Physical materials with memory fragments</p>
                             </div>
                             
                             <div class="result-item">
                                 <div class="iframe-container">
-                                    <iframe src="joy-overlay.html" frameborder="0"></iframe>
+                                    <iframe src="nostalgia-overlay.html" frameborder="0"></iframe>
                                 </div>
-                                <p class="result-caption">AI Response: Animated overlay with color-coded behaviors</p>
+                                <p class="result-caption">AI Response: Interactive overlay with color-coded processing</p>
                             </div>
                         </div>
                         
                         <div class="audio-section">
                             <h4 style="margin-top: 0;">Audio Dimension</h4>
-                            <p>To complement the visual collaboration, I used Stable Audio to create a soundscape that captures the essence of joy as revealed through our human-AI dialogue:</p>
+                            <p>To complete the multisensory experience, I created a soundscape using Stable Audio that captures the essence of nostalgia as revealed through our human-AI dialogue:</p>
                             
                             <div class="quote">
-                                "Soft ambient joy soundscape with gentle bell tones, light piano notes, and occasional subtle wind chimes creating a sense of elevation. Includes warm organic textures with slight movement, conveying contentment and satisfaction. No vocals or lyrics."
+                                "Create a gentle ambient soundscape that explores nostalgia through fragmented memories. Begin with delicate piano notes that emerge like purple dots connecting through space, gradually revealing a pattern. Introduce warm resonant tones in yellow frequency ranges that pulse like beacons of significance, creating emotional anchors. Gradually blend in bronze-toned textural elements—subtle natural sounds like distant footsteps, the soft rustling of fabric, and warm bass notes that provide grounding. The piece should embody the tension between presence and absence, with sonic elements that appear and fade like memories being recalled. Include subtle breathing sounds and hints of a heartbeat that mirror the hand imagery. Create a 60-second seamless loop that can be played continuously without disruption, maintaining a meditative quality throughout."
                             </div>
                             
-                            <p>The resulting audio creates a sonic environment that mirrors key aspects of the visual collaboration: gentle bell tones reflect the "pulsing" quality identified in joy, piano notes provide structure similar to the green vertical elements, wind chimes create moments of elevation analogous to the floating triangles, and the overall warm texture maintains the "consistent intensity" specified in our constraint.</p>
+                            <p>The resulting audio creates a sonic environment that mirrors the visual elements: piano notes create memory patterns (purple), resonant tones evaluate significance (yellow), and textural sounds provide grounding (bronze). The soundscape maintains the "blend component states with diminishing prominence" constraint by having elements fade in and out with varying intensities.</p>
                             
                             <audio controls class="audio-controls">
-                                <source src="joy-sound.mp3" type="audio/mpeg">
+                                <source src="nostalgia_soundscape.mp3" type="audio/mpeg">
                                 Your browser does not support the audio element.
                             </audio>
                         </div>
@@ -1000,31 +995,31 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     <div class="analysis">
                         <h4 class="analysis-title">Theoretical Analysis</h4>
                         
-                        <p>This collaboration provides valuable insights into how joy functions as one of Evans' basic universal emotions:</p>
+                        <p>This collaboration reveals important insights into how nostalgia functions as a complex emotional state:</p>
                         
                         <div class="insight-grid">
                             <div class="insight-card">
-                                <h5 class="insight-title">Universality with Variation</h5>
-                                <p>The AI recognized joy's universal characteristics (upward movement, circular completeness) but interpreted them through unique processing mechanisms, suggesting that even "basic" emotions manifest differently across different forms of intelligence.</p>
+                                <h5 class="insight-title">Temporal Complexity</h5>
+                                <p>The AI's visualization acknowledges nostalgia's unique temporal dimension—it exists simultaneously in past (memories), present (emotional response), and future (longing). This multi-temporal quality is represented through elements that gradually build and connect rather than appearing simultaneously.</p>
                             </div>
                             
                             <div class="insight-card">
-                                <h5 class="insight-title">Cognitive-Physical Integration</h5>
-                                <p>Both the human collage and AI response acknowledge that joy involves both physical expressions (represented by the hand drawing and movement patterns) and cognitive evaluation (the definitional text and color-coded processing functions).</p>
+                                <h5 class="insight-title">Fragmentation as Feature</h5>
+                                <p>Both the human collage and AI response treat fragmentation not as a flaw but as an essential characteristic of nostalgia. The discontinuities between elements reflect how nostalgic recall is selective and reconstructive rather than comprehensive.</p>
                             </div>
                             
                             <div class="insight-card">
-                                <h5 class="insight-title">Adaptive Function</h5>
-                                <p>The AI's emphasis on stability-to-buoyancy ratio suggests an understanding of joy's evolutionary function—to encourage beneficial behaviors while maintaining sufficient stability for continued functioning.</p>
+                                <h5 class="insight-title">Embodied Dimension</h5>
+                                <p>The hand outline that gradually appears in the AI's response suggests understanding that nostalgia has an embodied dimension—it involves not just cognitive remembering but physical sensations associated with past experiences.</p>
                             </div>
                             
                             <div class="insight-card">
-                                <h5 class="insight-title">Intensity Gradient</h5>
-                                <p>Our collaboration reveals joy as existing on a spectrum from quiet contentment to more exuberant expression, challenging simplistic views of basic emotions as having fixed intensities.</p>
+                                <h5 class="insight-title">Bittersweet Duality</h5>
+                                <p>The tension between the various elements—particularly the interplay between the grounding bronze forms and the more ephemeral purple dots—captures nostalgia's fundamental bittersweetness: pleasure in remembering combined with awareness of irretrievable loss.</p>
                             </div>
                         </div>
                         
-                        <p style="margin-top: 30px;">The AI's processing of joy reveals a systematic approach that balances pattern detection (blue), stability assessment (green), and connection generation (pink/yellow)—suggesting that even in artificial systems, joy involves complex multi-component processing rather than a singular response.</p>
+                        <p style="margin-top: 30px;">The AI's processing of nostalgia reveals a structured approach that breaks this complex emotional state into component processes: recognition of memory patterns (purple), evaluation of emotional significance (yellow), and generation of grounded response (bronze). This suggests that even in artificial systems, complex emotions can be processed through a combination of more basic operations arranged in specific sequences.</p>
                     </div>
                 </div>
             </div>
@@ -1179,30 +1174,30 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     <div class="analysis">
                         <h4 class="analysis-title">Comparative Analysis</h4>
                         
-                        <p>When compared with the Joy exploration, several interesting contrasts emerge:</p>
+                        <p>When compared with the Nostalgia exploration, several interesting contrasts emerge:</p>
                         
                         <div class="two-column">
                             <div class="column">
                                 <div class="attribute">
                                     <span class="attribute-title">Movement Patterns:</span>
-                                    <span>Joy's movements show consistent intensity with complementary directions (floating upward, pulsing outward), whereas pause maintains micro-movements within a more contained field. This aligns with Evans' distinction between basic emotions (direct, consistent response patterns) and complex emotional states (layered, more contextual responses).</span>
+                                    <span>Nostalgia's movements involve progressive connection of elements (connecting dots, pulsing evaluations, grounded responses), whereas pause maintains tension between motion and stillness. Both emotions involve careful pacing, but for different purposes—nostalgia to build memory connections, pause to create contemplative space.</span>
                                 </div>
                                 
                                 <div class="attribute">
                                     <span class="attribute-title">Visual Language:</span>
-                                    <span>The AI used different visual strategies for each emotion—for joy, elements move with buoyancy and regular pulsing; for pause, elements maintain potential energy with subtle shifts in size and opacity. These different visual languages suggest the AI has developed distinct processing schemas for different emotional categories.</span>
+                                    <span>The AI used different visual strategies for each emotion—for nostalgia, elements gradually form a constellation of memory with a hand outline emerging; for pause, elements maintain potential energy with deliberate interruptions. These different approaches suggest the AI recognizes fundamental differences in how these complex emotions operate.</span>
                                 </div>
                             </div>
                             
                             <div class="column">
                                 <div class="attribute">
                                     <span class="attribute-title">Color Function Assignment:</span>
-                                    <span>In both cases, the AI assigned specific processing functions to colors, but these functions differ significantly between emotions. This suggests the AI recognizes that different emotions require different types of cognitive-perceptual processing—supporting Evans' view that emotions involve distinct appraisal patterns.</span>
+                                    <span>Both emotions use a three-color processing model, but with distinct functions: nostalgia's colors represent recognition-evaluation-response progression, while pause's colors represent interruption-duration-transition. This suggests the AI recognizes that different complex emotions require unique processing frameworks.</span>
                                 </div>
                                 
                                 <div class="attribute">
                                     <span class="attribute-title">Temporal Dimension:</span>
-                                    <span>Joy is represented as a more present-focused state, while pause has a strong temporal component (potential energy for "eventual resumption"). This reveals how complex emotional states often incorporate time perception in ways that basic emotions may not.</span>
+                                    <span>While both emotions involve complex temporal dimensions, they differ fundamentally: nostalgia involves reconciling past and present (memory fragments with contemporary significance), while pause involves suspending normal time flow to create an expanded present moment.</span>
                                 </div>
                             </div>
                         </div>
@@ -1358,7 +1353,7 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     <a href="#introduction">Introduction</a>
                     <a href="#framework">Framework</a>
                     <a href="#method">Method</a>
-                    <a href="#joy-exploration">Joy</a>
+                    <a href="#nostalgia-exploration">Nostalgia</a>
                     <a href="#pause-exploration">Pause</a>
                     <a href="#emotion-map">Emotion Map</a>
                 </div>

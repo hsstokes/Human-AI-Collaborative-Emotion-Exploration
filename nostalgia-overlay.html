@@ -72,7 +72,7 @@
         // Memory pathways that connect elements
         let memoryPathways = [];
         
-        // Hand outline that appears gradually
+        // Hand outline that appears gradually - more delicate/sensitive approach
         let handOutline = {
             x: 0,
             y: 0,
@@ -81,6 +81,19 @@
             drawProgress: 0,
             points: []
         };
+        
+        // House-like memory container
+        let houseOutline = {
+            x: 0,
+            y: 0,
+            size: 0,
+            opacity: 0,
+            drawProgress: 0,
+            points: []
+        };
+        
+        // Delicate black lines representing memory fragments
+        let memoryFragments = [];
         
         function preload() {
             // Pre-load assets
@@ -113,10 +126,29 @@
         function setup() {
             createCanvas(windowWidth, windowHeight);
             
-            // Set up hand outline
+            // Set up hand outline - more delicate position
             handOutline.x = width * 0.75;
             handOutline.y = height * 0.5;
-            handOutline.size = min(width, height) * 0.35;
+            handOutline.size = min(width, height) * 0.32;
+            
+            // Set up house outline
+            houseOutline.x = width * 0.3;
+            houseOutline.y = height * 0.25;
+            houseOutline.size = min(width, height) * 0.25;
+            
+            // Create memory fragments (delicate black lines)
+            for (let i = 0; i < 8; i++) {
+                memoryFragments.push({
+                    x1: random(width * 0.1, width * 0.9),
+                    y1: random(height * 0.1, height * 0.9),
+                    x2: random(width * 0.1, width * 0.9),
+                    y2: random(height * 0.1, height * 0.9),
+                    opacity: random(50, 120),
+                    thickness: random(0.5, 2),
+                    startTime: i * 3000 + 10000,
+                    visible: false
+                });
+            }
             
             // Create purple elements - recognition of memory patterns
             for (let i = 0; i < 12; i++) {
@@ -176,19 +208,20 @@
                 });
             }
             
-            // Create hand outline points
-            // Simplified hand shape path
+            // Create hand outline points - more gentle, open hand
             const handPath = [
-                {x: -0.3, y: 0.5},  // Start at wrist
-                {x: -0.3, y: -0.1},  // Up to pinky base
-                {x: -0.2, y: -0.3},  // Pinky tip
-                {x: -0.1, y: -0.4},  // Ring finger
-                {x: 0, y: -0.5},     // Middle finger
-                {x: 0.1, y: -0.4},   // Index finger
-                {x: 0.2, y: -0.2},   // Thumb tip
-                {x: 0.3, y: 0},      // Thumb base
-                {x: 0.3, y: 0.3},    // Side of palm
-                {x: 0, y: 0.5}       // Back to wrist
+                {x: -0.05, y: 0.45},    // Start at bottom of palm
+                {x: -0.28, y: 0.35},    // Side of palm
+                {x: -0.35, y: 0.15},    // Start of pinky
+                {x: -0.32, y: -0.15},   // Pinky tip
+                {x: -0.15, y: -0.30},   // Ring finger
+                {x: 0, y: -0.38},       // Middle finger
+                {x: 0.15, y: -0.30},    // Index finger
+                {x: 0.25, y: -0.05},    // Start of thumb
+                {x: 0.35, y: 0.15},     // Thumb tip
+                {x: 0.30, y: 0.30},     // Base of thumb
+                {x: 0.15, y: 0.40},     // Palm
+                {x: -0.05, y: 0.45}     // Back to start
             ];
             
             // Scale the hand points
@@ -196,6 +229,24 @@
                 handOutline.points.push({
                     x: handOutline.x + point.x * handOutline.size,
                     y: handOutline.y + point.y * handOutline.size
+                });
+            }
+            
+            // Create house outline points
+            const housePath = [
+                {x: -0.4, y: 0.5},   // Bottom left
+                {x: -0.4, y: -0.2},  // Left wall
+                {x: 0, y: -0.5},     // Roof peak
+                {x: 0.4, y: -0.2},   // Right wall
+                {x: 0.4, y: 0.5},    // Bottom right
+                {x: -0.4, y: 0.5}    // Back to start
+            ];
+            
+            // Scale the house points
+            for (let point of housePath) {
+                houseOutline.points.push({
+                    x: houseOutline.x + point.x * houseOutline.size,
+                    y: houseOutline.y + point.y * houseOutline.size
                 });
             }
             
@@ -223,11 +274,19 @@
                 image(nostalgiaImage, (width - newWidth) / 2, 0, newWidth, height);
             }
             
-            // Update and draw all elements
+            // Layer 1: House outline (memory container)
+            drawHouseOutline();
+            
+            // Layer 2: Memory fragments (delicate black lines)
+            drawMemoryFragments();
+            
+            // Layer 3: Update and draw all elements
             drawMemoryPathways();
             drawRecognitionElements();
             drawEvaluationElements();
             drawResponseElements();
+            
+            // Layer 4: Hand outline
             drawHandOutline();
             
             // Sound control button
@@ -351,23 +410,63 @@
                 }
             }
         }
-
-        function drawHandOutline() {
-            // Hand outline that appears gradually
-            // Start drawing the hand after most elements are visible
-            if (millis() > 25000) {
+        
+        function drawMemoryFragments() {
+            // Delicate black lines representing memory fragments
+            for (let fragment of memoryFragments) {
+                if (millis() > fragment.startTime) {
+                    fragment.visible = true;
+                }
+                
+                if (fragment.visible) {
+                    stroke(30, 30, 30, fragment.opacity);
+                    strokeWeight(fragment.thickness);
+                    line(fragment.x1, fragment.y1, fragment.x2, fragment.y2);
+                }
+            }
+        }
+        
+        function drawHouseOutline() {
+            // House outline that appears gradually - representing memory container
+            if (millis() > 15000) {
                 // Increase opacity
-                handOutline.opacity = min(200, handOutline.opacity + 0.5);
+                houseOutline.opacity = min(100, houseOutline.opacity + 0.3);
                 
                 // Increase drawing progress
                 if (isAnimating) {
-                    handOutline.drawProgress = min(1, handOutline.drawProgress + 0.001);
+                    houseOutline.drawProgress = min(1, houseOutline.drawProgress + 0.0007);
                 }
                 
-                // Draw the hand outline
+                // Draw the house outline
                 noFill();
-                stroke(80, 80, 80, handOutline.opacity);
-                strokeWeight(2);
+                stroke(40, 40, 40, houseOutline.opacity);
+                strokeWeight(1.2);
+                
+                // Draw the house path progressively
+                beginShape();
+                for (let i = 0; i <= floor(houseOutline.points.length * houseOutline.drawProgress); i++) {
+                    let index = i % houseOutline.points.length;
+                    vertex(houseOutline.points[index].x, houseOutline.points[index].y);
+                }
+                endShape();
+            }
+        }
+
+        function drawHandOutline() {
+            // Hand outline that appears gradually - more delicate approach
+            if (millis() > 25000) {
+                // Increase opacity gradually, but keep it subtle
+                handOutline.opacity = min(150, handOutline.opacity + 0.4);
+                
+                // Increase drawing progress
+                if (isAnimating) {
+                    handOutline.drawProgress = min(1, handOutline.drawProgress + 0.0008);
+                }
+                
+                // Draw the hand outline with a more delicate stroke
+                noFill();
+                stroke(60, 60, 60, handOutline.opacity);
+                strokeWeight(1.5);
                 
                 // Draw the hand path progressively
                 beginShape();
@@ -376,6 +475,30 @@
                     vertex(handOutline.points[index].x, handOutline.points[index].y);
                 }
                 endShape();
+                
+                // Add some interior delicate lines to the hand for additional sensitivity
+                if (handOutline.drawProgress > 0.5) {
+                    // Life line
+                    stroke(60, 60, 60, handOutline.opacity * 0.7);
+                    strokeWeight(1);
+                    noFill();
+                    beginShape();
+                    curveVertex(handOutline.x - handOutline.size * 0.05, handOutline.y + handOutline.size * 0.2);
+                    curveVertex(handOutline.x - handOutline.size * 0.05, handOutline.y + handOutline.size * 0.2);
+                    curveVertex(handOutline.x - handOutline.size * 0.1, handOutline.y);
+                    curveVertex(handOutline.x - handOutline.size * 0.15, handOutline.y - handOutline.size * 0.1);
+                    curveVertex(handOutline.x - handOutline.size * 0.15, handOutline.y - handOutline.size * 0.1);
+                    endShape();
+                    
+                    // Heart line
+                    beginShape();
+                    curveVertex(handOutline.x + handOutline.size * 0.2, handOutline.y + handOutline.size * 0.1);
+                    curveVertex(handOutline.x + handOutline.size * 0.2, handOutline.y + handOutline.size * 0.1);
+                    curveVertex(handOutline.x, handOutline.y - handOutline.size * 0.05);
+                    curveVertex(handOutline.x - handOutline.size * 0.2, handOutline.y - handOutline.size * 0.1);
+                    curveVertex(handOutline.x - handOutline.size * 0.2, handOutline.y - handOutline.size * 0.1);
+                    endShape();
+                }
             }
         }
         
@@ -437,27 +560,52 @@
             // Update hand outline position and size
             handOutline.x = width * 0.75;
             handOutline.y = height * 0.5;
-            handOutline.size = min(width, height) * 0.35;
+            handOutline.size = min(width, height) * 0.32;
+            
+            // Update house outline position and size
+            houseOutline.x = width * 0.3;
+            houseOutline.y = height * 0.25;
+            houseOutline.size = min(width, height) * 0.25;
             
             // Update hand outline points
             handOutline.points = [];
             const handPath = [
-                {x: -0.3, y: 0.5},  // Start at wrist
-                {x: -0.3, y: -0.1},  // Up to pinky base
-                {x: -0.2, y: -0.3},  // Pinky tip
-                {x: -0.1, y: -0.4},  // Ring finger
-                {x: 0, y: -0.5},     // Middle finger
-                {x: 0.1, y: -0.4},   // Index finger
-                {x: 0.2, y: -0.2},   // Thumb tip
-                {x: 0.3, y: 0},      // Thumb base
-                {x: 0.3, y: 0.3},    // Side of palm
-                {x: 0, y: 0.5}       // Back to wrist
+                {x: -0.05, y: 0.45},    // Start at bottom of palm
+                {x: -0.28, y: 0.35},    // Side of palm
+                {x: -0.35, y: 0.15},    // Start of pinky
+                {x: -0.32, y: -0.15},   // Pinky tip
+                {x: -0.15, y: -0.30},   // Ring finger
+                {x: 0, y: -0.38},       // Middle finger
+                {x: 0.15, y: -0.30},    // Index finger
+                {x: 0.25, y: -0.05},    // Start of thumb
+                {x: 0.35, y: 0.15},     // Thumb tip
+                {x: 0.30, y: 0.30},     // Base of thumb
+                {x: 0.15, y: 0.40},     // Palm
+                {x: -0.05, y: 0.45}     // Back to start
             ];
             
             for (let point of handPath) {
                 handOutline.points.push({
                     x: handOutline.x + point.x * handOutline.size,
                     y: handOutline.y + point.y * handOutline.size
+                });
+            }
+            
+            // Update house outline points
+            houseOutline.points = [];
+            const housePath = [
+                {x: -0.4, y: 0.5},   // Bottom left
+                {x: -0.4, y: -0.2},  // Left wall
+                {x: 0, y: -0.5},     // Roof peak
+                {x: 0.4, y: -0.2},   // Right wall
+                {x: 0.4, y: 0.5},    // Bottom right
+                {x: -0.4, y: 0.5}    // Back to start
+            ];
+            
+            for (let point of housePath) {
+                houseOutline.points.push({
+                    x: houseOutline.x + point.x * houseOutline.size,
+                    y: houseOutline.y + point.y * houseOutline.size
                 });
             }
         }

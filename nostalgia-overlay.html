@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Nostalgia - Emotional Processing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f4ef;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        
+        canvas {
+            max-width: 100%;
+            max-height: 100vh;
+            object-fit: contain;
+            touch-action: manipulation;
+        }
+    
+        .ui-element {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(80, 80, 80, 0.7);
+            font-family: 'Orator Std', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">Nostalgia · Emotional Processing</div>
+    
+    <script>
+        let nostalgiaImage;
+        let isAnimating = true;
+        let soundEnabled = true;
+        let soundPlaying = false;
+        let nostalgiaSound;
+        let soundLoaded = false;
+        
+        // Color palette for Nostalgia
+        const colors = {
+            purple: [200, 177, 230],  // Light purple - Recognition
+            yellow: [255, 216, 0],    // Yellow - Evaluation
+            bronze: [205, 127, 50]    // Bronze - Response
+        };
+        
+        // Elements for each behavior
+        let recognitionElements = [];  // Purple elements - recognition of patterns
+        let evaluationElements = [];   // Yellow elements - evaluation of significance
+        let responseElements = [];     // Bronze elements - response generation
+        
+        // Memory pathways that connect elements
+        let memoryPathways = [];
+        
+        // Hand outline that appears gradually
+        let handOutline = {
+            x: 0,
+            y: 0,
+            size: 0,
+            opacity: 0,
+            drawProgress: 0,
+            points: []
+        };
+        
+        function preload() {
+            // Pre-load assets
+            nostalgiaImage = loadImage('nostalgia_collage.jpg');
+            soundLoaded = false;
+            nostalgiaSound = loadSound('nostalgia_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                    
+                    // Start sound if autoplay is enabled
+                    if (isAnimating && soundEnabled) {
+                        try {
+                            nostalgiaSound.loop();
+                            nostalgiaSound.setVolume(0);
+                            nostalgiaSound.setVolume(0.8, 2); // Fade in over 2 seconds
+                            soundPlaying = true;
+                        } catch(e) {
+                            console.error("Error starting audio:", e);
+                        }
+                    }
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Set up hand outline
+            handOutline.x = width * 0.75;
+            handOutline.y = height * 0.5;
+            handOutline.size = min(width, height) * 0.35;
+            
+            // Create purple elements - recognition of memory patterns
+            for (let i = 0; i < 12; i++) {
+                recognitionElements.push({
+                    x: random(width * 0.1, width * 0.6),
+                    y: random(height * 0.1, height * 0.9),
+                    size: random(5, 15),
+                    opacity: random(150, 230),
+                    startTime: i * 800,
+                    visible: false
+                });
+            }
+            
+            // Create memory pathways connecting recognition elements
+            for (let i = 0; i < recognitionElements.length - 1; i++) {
+                memoryPathways.push({
+                    start: i,
+                    end: i + 1,
+                    progress: 0,
+                    speed: random(0.001, 0.003),
+                    opacity: random(100, 180),
+                    dotSize: random(2, 4),
+                    dotSpacing: random(8, 15),
+                    startTime: recognitionElements[i].startTime + 400
+                });
+            }
+            
+            // Create yellow elements - evaluate significance
+            for (let i = 0; i < 8; i++) {
+                let isCircle = random() > 0.5;
+                evaluationElements.push({
+                    x: random(width * 0.2, width * 0.8),
+                    y: random(height * 0.2, height * 0.8),
+                    width: isCircle ? random(20, 40) : random(30, 60),
+                    height: isCircle ? undefined : random(15, 30),
+                    isCircle: isCircle,
+                    pulseRate: random(0.001, 0.003),
+                    opacity: random(150, 200),
+                    startTime: 12000 + i * 1000,
+                    visible: false
+                });
+            }
+            
+            // Create bronze elements - response generation
+            for (let i = 0; i < 6; i++) {
+                let shapeType = floor(random(3)); // 0: rectangle, 1: arc, 2: line
+                responseElements.push({
+                    x: random(width * 0.3, width * 0.9),
+                    y: random(height * 0.3, height * 0.7),
+                    width: random(30, 60),
+                    height: shapeType === 0 ? random(40, 60) : 
+                            shapeType === 1 ? random(15, 30) : random(3, 8),
+                    shapeType: shapeType,
+                    opacity: random(150, 220),
+                    startTime: 20000 + i * 1500,
+                    visible: false
+                });
+            }
+            
+            // Create hand outline points
+            // Simplified hand shape path
+            const handPath = [
+                {x: -0.3, y: 0.5},  // Start at wrist
+                {x: -0.3, y: -0.1},  // Up to pinky base
+                {x: -0.2, y: -0.3},  // Pinky tip
+                {x: -0.1, y: -0.4},  // Ring finger
+                {x: 0, y: -0.5},     // Middle finger
+                {x: 0.1, y: -0.4},   // Index finger
+                {x: 0.2, y: -0.2},   // Thumb tip
+                {x: 0.3, y: 0},      // Thumb base
+                {x: 0.3, y: 0.3},    // Side of palm
+                {x: 0, y: 0.5}       // Back to wrist
+            ];
+            
+            // Scale the hand points
+            for (let point of handPath) {
+                handOutline.points.push({
+                    x: handOutline.x + point.x * handOutline.size,
+                    y: handOutline.y + point.y * handOutline.size
+                });
+            }
+            
+            // Initialize audio context for better mobile support
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+        }
+
+        function draw() {
+            // Clear the canvas with a warm white background
+            background(248, 247, 242, 50);  // Semi-transparent to create a fading effect
+
+            // Display the background image with proper aspect ratio
+            let imgRatio = nostalgiaImage.width / nostalgiaImage.height;
+            let canvasRatio = width / height;
+    
+            if (imgRatio > canvasRatio) {
+                // Image is wider than canvas relative to height
+                let newHeight = width / imgRatio;
+                image(nostalgiaImage, 0, (height - newHeight) / 2, width, newHeight);
+            } else {
+                // Image is taller than canvas relative to width
+                let newWidth = height * imgRatio;
+                image(nostalgiaImage, (width - newWidth) / 2, 0, newWidth, height);
+            }
+            
+            // Update and draw all elements
+            drawMemoryPathways();
+            drawRecognitionElements();
+            drawEvaluationElements();
+            drawResponseElements();
+            drawHandOutline();
+            
+            // Sound control button
+            drawSoundButton();
+        }
+
+        function drawRecognitionElements() {
+            // Purple elements for recognition of memory patterns
+            noStroke();
+            
+            for (let i = 0; i < recognitionElements.length; i++) {
+                let element = recognitionElements[i];
+                
+                // Check if this element should be visible based on its timing
+                if (millis() > element.startTime) {
+                    element.visible = true;
+                }
+                
+                if (element.visible) {
+                    fill(colors.purple[0], colors.purple[1], colors.purple[2], element.opacity);
+                    ellipse(element.x, element.y, element.size);
+                }
+            }
+        }
+
+        function drawMemoryPathways() {
+            // Dotted pathways connecting memory points
+            for (let pathway of memoryPathways) {
+                // Only start drawing after the delay
+                if (millis() > pathway.startTime) {
+                    // Update progress if animating
+                    if (isAnimating) {
+                        pathway.progress = min(1, pathway.progress + pathway.speed);
+                    }
+                    
+                    // Get start and end points
+                    let start = recognitionElements[pathway.start];
+                    let end = recognitionElements[pathway.end];
+                    
+                    // Only draw if both points are visible
+                    if (start.visible && end.visible) {
+                        // Draw dotted line
+                        stroke(colors.purple[0], colors.purple[1], colors.purple[2], pathway.opacity);
+                        strokeWeight(1);
+                        
+                        let distance = dist(start.x, start.y, end.x, end.y);
+                        let numDots = floor(distance / pathway.dotSpacing);
+                        
+                        // Draw dots along the path
+                        for (let i = 0; i <= numDots * pathway.progress; i++) {
+                            let t = i / numDots;
+                            let x = lerp(start.x, end.x, t);
+                            let y = lerp(start.y, end.y, t);
+                            
+                            // Draw dot
+                            noStroke();
+                            fill(colors.purple[0], colors.purple[1], colors.purple[2], pathway.opacity);
+                            ellipse(x, y, pathway.dotSize);
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawEvaluationElements() {
+            // Yellow elements for evaluation of significance
+            noStroke();
+            
+            for (let element of evaluationElements) {
+                // Check if this element should be visible based on its timing
+                if (millis() > element.startTime) {
+                    element.visible = true;
+                }
+                
+                if (element.visible) {
+                    // Calculate pulsing for the element
+                    let pulseAmount = sin(millis() * element.pulseRate);
+                    let scaleMultiplier = 1 + pulseAmount * 0.2;
+                    
+                    fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], element.opacity * (0.7 + pulseAmount * 0.3));
+                    
+                    if (element.isCircle) {
+                        ellipse(element.x, element.y, element.width * scaleMultiplier);
+                    } else {
+                        // Pill shape
+                        rectMode(CENTER);
+                        rect(element.x, element.y, 
+                             element.width * scaleMultiplier, 
+                             element.height * scaleMultiplier, 
+                             element.height * scaleMultiplier / 2); // Rounded corners
+                    }
+                }
+            }
+        }
+
+        function drawResponseElements() {
+            // Bronze elements for response generation
+            noStroke();
+            
+            for (let element of responseElements) {
+                // Check if this element should be visible based on its timing
+                if (millis() > element.startTime) {
+                    element.visible = true;
+                }
+                
+                if (element.visible) {
+                    fill(colors.bronze[0], colors.bronze[1], colors.bronze[2], element.opacity);
+                    
+                    if (element.shapeType === 0) {
+                        // Rectangle
+                        rectMode(CENTER);
+                        rect(element.x, element.y, element.width, element.height, 5);
+                    } else if (element.shapeType === 1) {
+                        // Arc / semicircle
+                        arc(element.x, element.y, element.width, element.height * 2, PI, TWO_PI, CHORD);
+                    } else {
+                        // Line
+                        rectMode(CENTER);
+                        rect(element.x, element.y, element.width, element.height);
+                    }
+                }
+            }
+        }
+
+        function drawHandOutline() {
+            // Hand outline that appears gradually
+            // Start drawing the hand after most elements are visible
+            if (millis() > 25000) {
+                // Increase opacity
+                handOutline.opacity = min(200, handOutline.opacity + 0.5);
+                
+                // Increase drawing progress
+                if (isAnimating) {
+                    handOutline.drawProgress = min(1, handOutline.drawProgress + 0.001);
+                }
+                
+                // Draw the hand outline
+                noFill();
+                stroke(80, 80, 80, handOutline.opacity);
+                strokeWeight(2);
+                
+                // Draw the hand path progressively
+                beginShape();
+                for (let i = 0; i <= floor(handOutline.points.length * handOutline.drawProgress); i++) {
+                    let index = i % handOutline.points.length;
+                    vertex(handOutline.points[index].x, handOutline.points[index].y);
+                }
+                endShape();
+            }
+        }
+        
+        function drawSoundButton() {
+            // Sound control button
+            let buttonX = width - 50;
+            let buttonY = height - 50;
+            let buttonSize = 30;
+
+            // Button background
+            noStroke();
+            fill(240, 240, 240, 180);
+            rect(buttonX, buttonY, buttonSize, buttonSize, 5);
+
+            // Sound icon
+            if (soundEnabled) {
+                // Sound on icon
+                fill(60, 60, 60);
+                noStroke();
+                // Speaker base
+                rect(buttonX + 10, buttonY + 12, 4, 6);
+                // Speaker cone
+                beginShape();
+                vertex(buttonX + 10, buttonY + 12);
+                vertex(buttonX + 16, buttonY + 8);
+                vertex(buttonX + 16, buttonY + 22);
+                vertex(buttonX + 10, buttonY + 18);
+                endShape(CLOSE);
+                // Sound waves
+                noFill();
+                stroke(60, 60, 60);
+                strokeWeight(1.5);
+                arc(buttonX + 18, buttonY + 15, 6, 8, -PI/3, PI/3);
+                arc(buttonX + 18, buttonY + 15, 10, 14, -PI/3, PI/3);
+            } else {
+                // Sound off icon
+                fill(60, 60, 60);
+                noStroke();
+                // Speaker base
+                rect(buttonX + 10, buttonY + 12, 4, 6);
+                // Speaker cone
+                beginShape();
+                vertex(buttonX + 10, buttonY + 12);
+                vertex(buttonX + 16, buttonY + 8);
+                vertex(buttonX + 16, buttonY + 22);
+                vertex(buttonX + 10, buttonY + 18);
+                endShape(CLOSE);
+                // X over the speaker
+                stroke(60, 60, 60);
+                strokeWeight(1.5);
+                line(buttonX + 19, buttonY + 10, buttonX + 24, buttonY + 20);
+                line(buttonX + 24, buttonY + 10, buttonX + 19, buttonY + 20);
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            
+            // Update hand outline position and size
+            handOutline.x = width * 0.75;
+            handOutline.y = height * 0.5;
+            handOutline.size = min(width, height) * 0.35;
+            
+            // Update hand outline points
+            handOutline.points = [];
+            const handPath = [
+                {x: -0.3, y: 0.5},  // Start at wrist
+                {x: -0.3, y: -0.1},  // Up to pinky base
+                {x: -0.2, y: -0.3},  // Pinky tip
+                {x: -0.1, y: -0.4},  // Ring finger
+                {x: 0, y: -0.5},     // Middle finger
+                {x: 0.1, y: -0.4},   // Index finger
+                {x: 0.2, y: -0.2},   // Thumb tip
+                {x: 0.3, y: 0},      // Thumb base
+                {x: 0.3, y: 0.3},    // Side of palm
+                {x: 0, y: 0.5}       // Back to wrist
+            ];
+            
+            for (let point of handPath) {
+                handOutline.points.push({
+                    x: handOutline.x + point.x * handOutline.size,
+                    y: handOutline.y + point.y * handOutline.size
+                });
+            }
+        }
+        
+        function mousePressed() {
+            // Check if sound button was clicked
+            let buttonX = width - 50;
+            let buttonY = height - 50;
+            let buttonSize = 30;
+            
+            if (mouseX > buttonX && mouseX < buttonX + buttonSize && 
+                mouseY > buttonY && mouseY < buttonY + buttonSize) {
+                
+                soundEnabled = !soundEnabled;
+                
+                if (!soundEnabled && soundPlaying) {
+                    // Fade out and stop sound
+                    nostalgiaSound.setVolume(0, 1);
+                    setTimeout(() => {
+                        nostalgiaSound.stop();
+                        soundPlaying = false;
+                    }, 1000);
+                } else if (soundEnabled && isAnimating && !soundPlaying && soundLoaded) {
+                    // Start sound
+                    try {
+                        nostalgiaSound.loop();
+                        nostalgiaSound.setVolume(0);
+                        nostalgiaSound.setVolume(0.8, 1);
+                        soundPlaying = true;
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                return false;
+            }
+            
+            // Toggle animation state when canvas is clicked
+            isAnimating = !isAnimating;
+            
+            // Handle sound based on animation state
+            if (!isAnimating && soundPlaying) {
+                nostalgiaSound.setVolume(0, 1);
+                setTimeout(() => {
+                    nostalgiaSound.pause();
+                    soundPlaying = false;
+                }, 1000);
+            } else if (isAnimating && soundEnabled && !soundPlaying && soundLoaded) {
+                try {
+                    nostalgiaSound.loop();
+                    nostalgiaSound.setVolume(0);
+                    nostalgiaSound.setVolume(0.8, 1);
+                    soundPlaying = true;
+                } catch(e) {
+                    console.error("Error playing sound:", e);
+                }
+            }
+            
+            return false;
+        }
+        
+        // Support touch events
+        function touchStarted() {
+            // Initialize audio context for iOS
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+    </script>
+</body>
+</html>

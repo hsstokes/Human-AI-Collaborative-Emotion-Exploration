@@ -379,7 +379,7 @@
     function updateLandingContent() {
         // Set title and description based on emotion
         document.getElementById('emotion-title').textContent = currentEmotion.toUpperCase();
-        document.getElementById('emotion-description').textContent = 
+        document.getElementById('emotion-description').innerHTML = 
             EMOTION_CONFIG[currentEmotion].description || 
             "An exploration of emotional states through interactive visual elements.";
         document.getElementById('emotion-indicator').textContent = currentEmotion.toUpperCase();

@@ -12,7 +12,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #f5f5f7;
+            background-color: transparent; /* Transparent background */
             font-family: 'Roboto Mono', monospace;
             -webkit-text-size-adjust: 100%;
             touch-action: none;
@@ -105,9 +105,9 @@
             left: 0;
             width: 100%;
             height: 60px;
-            background-color: rgba(245, 245, 247, 0.7);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            background-color: rgba(245, 245, 247, 0.4); /* More transparent */
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
         }
         
         .frame-top {
@@ -144,7 +144,7 @@
         .control-btn {
             width: 45px;
             height: 45px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.7); /* More transparent */
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -164,7 +164,7 @@
             left: 20px;
             bottom: 15px;
             z-index: 25;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.6); /* More transparent */
             padding: 10px 15px;
             border-radius: 20px;
             font-size: 12px;
@@ -232,7 +232,7 @@
             top: 70px;
             left: 0;
             width: 100%;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.6);
             padding: 10px;
             font-size: 10px;
             z-index: 9999;
@@ -328,7 +328,7 @@
         
     // Default to 'pause' until determined from URL
     let currentEmotion = 'pause';
-    let overlayOpacity = 0.85; // Increased for better visibility
+    let overlayOpacity = 0.6; // Lower default for more transparency
     let soundEnabled = true;
     let emotionSound;
     let soundPlaying = false;
@@ -808,7 +808,7 @@
                 size: min(width, height) * 0.25, // Responsive size
                 pulseRate: random(0.0005, 0.001),
                 colorIndex: floor(random(3)),
-                opacity: random(120, 180), // Increased opacity
+                opacity: random(120, 180),
                 offsetX: 0,
                 offsetY: 0
             });
@@ -816,9 +816,9 @@
     }
     
     function draw() {
-        // Clear canvas and set semi-transparent background
+        // Clear canvas only, don't set a background color to maintain transparency
         clear();
-        background(255, 255, 255, 10);
+        // Removed background() call to keep everything transparent
         
         // Ensure something visible appears even without motion
         if (!deviceHasMoved && !motionPermissionGranted) {
@@ -918,8 +918,8 @@
             // Draw outer glow
             noFill();
             for (let i = 0; i < 3; i++) {
-                let strokeW = 2 + i*0.8; // Increased thickness
-                let alpha = circle.opacity - i * 20; // Reduced fade for better visibility
+                let strokeW = 2 + i*0.8;
+                let alpha = circle.opacity - i * 20;
                 if (alpha > 0) {
                     stroke(color[0], color[1], color[2], alpha * overlayOpacity);
                     strokeWeight(strokeW);
@@ -928,7 +928,7 @@
             }
             
             // Draw dotted circle
-            stroke(color[0], color[1], color[2], (circle.opacity + 50) * overlayOpacity); // Increased visibility
+            stroke(color[0], color[1], color[2], (circle.opacity + 50) * overlayOpacity);
             strokeWeight(2);
             drawingContext.setLineDash([5, 5]);
             ellipse(drawX, drawY, currentSize);
@@ -961,7 +961,7 @@
             
             noFill();
             stroke(80, 80, 80, line.opacity * overlayOpacity);
-            strokeWeight(1.5); // Increased for visibility
+            strokeWeight(1.5);
             
             let dx = cos(line.angle);
             let dy = sin(line.angle);
@@ -973,7 +973,7 @@
                 if (i / line.length <= line.progress) {
                     fill(80, 80, 80, line.opacity * overlayOpacity);
                     noStroke();
-                    ellipse(x, y, line.dotSize * 1.2); // Increased size
+                    ellipse(x, y, line.dotSize * 1.2);
                 }
             }
             
@@ -981,12 +981,12 @@
                 let pauseX = startX + dx * (line.length * line.pauseAt);
                 let pauseY = startY + dy * (line.length * line.pauseAt);
                 
-                let pulseSize = map(sin(millis() * 0.01), -1, 1, 7, 14); // Increased pulse size
+                let pulseSize = map(sin(millis() * 0.01), -1, 1, 7, 14);
                 
                 const colors = EMOTION_CONFIG[currentEmotion].colors;
                 noFill();
                 stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
-                       220 * overlayOpacity); // Increased visibility
+                       220 * overlayOpacity);
                 strokeWeight(1.5);
                 ellipse(pauseX, pauseY, pulseSize);
             }
@@ -1036,8 +1036,8 @@
                 let drawY = element.y + element.offsetY;
                 
                 let pulseAmount = sin(millis() * element.pulseRate);
-                let currentSize = element.size + pulseAmount * 12; // Increased pulse
-                let currentOpacity = element.opacity + pulseAmount * 50; // Increased contrast
+                let currentSize = element.size + pulseAmount * 12;
+                let currentOpacity = element.opacity + pulseAmount * 50;
                 
                 for (let i = 0; i < 3; i++) {
                     let size = currentSize - i * 8;
@@ -1071,8 +1071,8 @@
                 let drawY2 = element.y2 + element.offsetY;
                 
                 stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
-                       element.opacity * 1.2 * overlayOpacity); // Increased visibility
-                strokeWeight(element.thickness * 1.3); // Increased thickness
+                       element.opacity * 1.2 * overlayOpacity);
+                strokeWeight(element.thickness * 1.3);
                 line(drawX1, drawY1, 
                      lerp(drawX1, drawX2, element.progress), 
                      lerp(drawY1, drawY2, element.progress));
@@ -1086,7 +1086,7 @@
                      element.opacity * 1.2 * overlayOpacity);
                 ellipse(lerp(drawX1, drawX2, element.progress), 
                         lerp(drawY1, drawY2, element.progress), 
-                        element.thickness * 5); // Increased size
+                        element.thickness * 5);
             }
         }
     }
@@ -1104,7 +1104,7 @@
                 
                 // For nostalgia, make elements fade in and out
                 if (isAnimating) {
-                    point.opacity = 120 + 100 * sin(millis() * point.fadeRate); // Increased range
+                    point.opacity = 120 + 100 * sin(millis() * point.fadeRate);
                 }
                 
                 fill(colors.primary[0], colors.primary[1], colors.primary[2], 
@@ -1198,8 +1198,8 @@
                 
                 // Draw light beam
                 for (let i = 0; i < 3; i++) {
-                    let thickness = (element.thickness - i*0.4) * 1.4; // Increased thickness
-                    let opacity = (element.opacity - i*15) * 1.3; // Increased visibility
+                    let thickness = (element.thickness - i*0.4) * 1.4;
+                    let opacity = (element.opacity - i*15) * 1.3;
                     
                     if (thickness > 0 && opacity > 0) {
                         stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
@@ -1251,16 +1251,16 @@
     }
     
     function toggleOpacity() {
-        // Cycle through opacity levels
-        if (overlayOpacity > 0.8) {
-            overlayOpacity = 0.5;
-            debugLog("Opacity set to medium (0.5)");
+        // Cycle through opacity levels with more transparency
+        if (overlayOpacity > 0.55) {
+            overlayOpacity = 0.4; // Medium transparency
+            debugLog("Opacity set to medium (0.4)");
         } else if (overlayOpacity > 0.3) {
-            overlayOpacity = 0.25;
-            debugLog("Opacity set to low (0.25)");
+            overlayOpacity = 0.2; // High transparency
+            debugLog("Opacity set to low (0.2)");
         } else {
-            overlayOpacity = 0.95;
-            debugLog("Opacity set to high (0.95)");
+            overlayOpacity = 0.7; // Low transparency
+            debugLog("Opacity set to high (0.7)");
         }
     }
     

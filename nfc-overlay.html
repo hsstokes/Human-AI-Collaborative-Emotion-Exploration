@@ -225,6 +225,19 @@
             top: 20%;
             left: 15%;
         }
+
+        /* Debug message for mobile testing */
+        #debug-info {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 100%;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            font-size: 10px;
+            z-index: 9999;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -241,6 +254,9 @@
     <!-- p5.js canvas for the interactive overlay -->
     <div id="overlay-canvas"></div>
     
+    <!-- Debug info for testing -->
+    <div id="debug-info">Debugging info will appear here</div>
+
     <!-- Frame that provides visual context -->
     <div class="overlay-frame">
         <div class="frame-top">
@@ -287,880 +303,1005 @@
                 secondary: [216, 122, 60], // Orange
                 accent: [139, 90, 43]      // Brown
             },
-            soundFile: 'pause_ambient.mp3'  // Changed from assets/sounds/pause_ambient.mp3
-       },
-       nostalgia: {
+            soundFile: 'pause_ambient.mp3',  // Changed from assets/sounds/pause_ambient.mp3
+            description: "An exploration of momentary stillness, when time feels suspended and we observe the interruption of continuous flow."
+        },
+        nostalgia: {
             colors: {
                 primary: [80, 55, 130],    // Purple
                 secondary: [216, 122, 60], // Orange
                 accent: [50, 150, 100]     // Green
             },
-            soundFile: 'nostalgia_soundscape.mp3'  // Changed to match your file name
-      },
-      hope: {
+            soundFile: 'nostalgia_soundscape.mp3',  // Changed to match your file name
+            description: "A reflection on the bittersweet remembrance of things past, the emotional texture of memory and temporal distance."
+        },
+        hope: {
             colors: {
-               primary: [50, 150, 80],    // Green
-               secondary: [255, 180, 50], // Yellow
-               accent: [255, 80, 80]      // Red
+                primary: [50, 150, 80],    // Green
+                secondary: [255, 180, 50], // Yellow
+                accent: [255, 80, 80]      // Red
             },
-            soundFile: ''  // Empty string since there's no hope sound file
-      }
-     };
+            soundFile: '',  // Empty string since there's no hope sound file
+            description: "An anticipation of possibility, the sensation of potential futures unfolding from present moments."
+        }
+    };
         
-        // Default to 'pause' until determined from URL
-        let currentEmotion = 'pause';
-        let overlayOpacity = 0.7;
-        let soundEnabled = true;
-        let emotionSound;
-        let soundPlaying = false;
-        let isAnimating = true;
-        let hintVisible = true;
+    // Default to 'pause' until determined from URL
+    let currentEmotion = 'pause';
+    let overlayOpacity = 0.85; // Increased for better visibility
+    let soundEnabled = true;
+    let emotionSound;
+    let soundPlaying = false;
+    let isAnimating = true;
+    let hintVisible = true;
+    let debugMode = false; // Set to true for debugging
+    
+    // Track device motion for interactive effect
+    let deviceHasMoved = false;
+    let deviceTiltX = 0;
+    let deviceTiltY = 0;
+    let motionPermissionGranted = false;
+    
+    // Visual elements
+    let interruptionPoints = [];
+    let temporalElements = [];
+    let transitionElements = [];
+    let dottedLines = [];
+    let circleOverlays = [];
+    
+    // Debug log helper
+    function debugLog(message) {
+        if (debugMode) {
+            console.log(message);
+            let debugElement = document.getElementById('debug-info');
+            if (debugElement) {
+                debugElement.style.display = 'block';
+                debugElement.innerHTML += message + '<br>';
+            }
+        }
+    }
+    
+    // Get emotion from URL if present (from NFC tag)
+    function getEmotionFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const emotion = urlParams.get('emotion');
         
-        // Track device motion for interactive effect
-        let deviceHasMoved = false;
-        let deviceTiltX = 0;
-        let deviceTiltY = 0;
+        if (emotion && EMOTION_CONFIG[emotion]) {
+            currentEmotion = emotion;
+            debugLog(`Emotion set from URL: ${emotion}`);
+        }
         
-        // Visual elements
-        let interruptionPoints = [];
-        let temporalElements = [];
-        let transitionElements = [];
-        let dottedLines = [];
-        let circleOverlays = [];
+        // Update landing page content based on emotion
+        updateLandingContent();
+    }
+    
+    function updateLandingContent() {
+        // Set title and description based on emotion
+        document.getElementById('emotion-title').textContent = currentEmotion.toUpperCase();
+        document.getElementById('emotion-description').textContent = 
+            EMOTION_CONFIG[currentEmotion].description || 
+            "An exploration of emotional states through interactive visual elements.";
+        document.getElementById('emotion-indicator').textContent = currentEmotion.toUpperCase();
         
-        // Get emotion from URL if present (from NFC tag)
-        function getEmotionFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const emotion = urlParams.get('emotion');
+        // Apply theme class
+        document.getElementById('emotion-title').className = `emotion-name ${currentEmotion}-theme`;
+        document.getElementById('emotion-indicator').className = `emotion-indicator ${currentEmotion}-theme`;
+        
+        // Show the correct accent
+        document.getElementById('pause-accent').style.display = 'none';
+        document.getElementById('nostalgia-accent').style.display = 'none';
+        document.getElementById('hope-accent').style.display = 'none';
+        document.getElementById(`${currentEmotion}-accent`).style.display = 'block';
+    }
+    
+    // Request device motion permission for iOS
+    function requestDeviceMotionPermission() {
+        if (typeof DeviceOrientationEvent !== 'undefined' && 
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
             
-            if (emotion && EMOTION_CONFIG[emotion]) {
-                currentEmotion = emotion;
-                console.log(`Emotion set from URL: ${emotion}`);
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        debugLog("Device motion permission granted");
+                        window.addEventListener('deviceorientation', handleDeviceMotion);
+                        motionPermissionGranted = true;
+                    } else {
+                        debugLog("Device motion permission denied");
+                    }
+                    startExperience(); // Start experience regardless of permission
+                })
+                .catch(error => {
+                    debugLog("Error requesting device motion permission: " + error);
+                    startExperience(); // Start experience anyway
+                });
+        } else {
+            // For non-iOS or older browsers that don't need explicit permission
+            debugLog("Device doesn't require motion permission or isn't iOS");
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', handleDeviceMotion);
+            } else {
+                debugLog("Device orientation not supported");
+            }
+            startExperience();
+        }
+    }
+    
+    // Start the experience after handling permissions
+    function startExperience() {
+        document.getElementById('landing-overlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('landing-overlay').style.display = 'none';
+        }, 1000);
+        
+        // For iOS audio context
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+        
+        if (emotionSound && soundEnabled && !soundPlaying) {
+            startSound();
+        }
+    }
+    
+    // Initialize event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        debugLog("DOM Content Loaded");
+        
+        // Get emotion from URL
+        getEmotionFromUrl();
+        
+        // Start button functionality with permission request
+        document.getElementById('start-experience').addEventListener('click', function() {
+            debugLog("Start button clicked");
+            requestDeviceMotionPermission();
+        });
+        
+        // Back button returns to landing
+        document.getElementById('back-button').addEventListener('click', function() {
+            document.getElementById('landing-overlay').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.opacity = '1';
+            }, 50);
+        });
+        
+        // Hide hint after 5 seconds
+        setTimeout(() => {
+            document.getElementById('hint').style.opacity = '0';
+            hintVisible = false;
+        }, 5000);
+        
+        // Debug mode toggle (double tap on emotion indicator)
+        let tapCount = 0;
+        document.getElementById('emotion-indicator').addEventListener('click', function() {
+            tapCount++;
+            if (tapCount >= 5) {
+                debugMode = !debugMode;
+                document.getElementById('debug-info').style.display = debugMode ? 'block' : 'none';
+                debugLog("Debug mode " + (debugMode ? "enabled" : "disabled"));
+                tapCount = 0;
             }
             
-            // Update landing page content based on emotion
-            updateLandingContent();
+            setTimeout(() => { tapCount = 0; }, 2000);
+        });
+    });
+    
+    function handleDeviceMotion(event) {
+        if (!deviceHasMoved) {
+            deviceHasMoved = true;
+            debugLog("Device motion detected");
         }
         
-        function updateLandingContent() {
-            // Set title and description based on emotion
-            document.getElementById('emotion-title').textContent = currentEmotion.toUpperCase();
-            document.getElementById('emotion-description').textContent = EMOTION_CONFIG[currentEmotion].description;
-            document.getElementById('emotion-indicator').textContent = currentEmotion.toUpperCase();
-            
-            // Apply theme class
-            document.getElementById('emotion-title').className = `emotion-name ${currentEmotion}-theme`;
-            document.getElementById('emotion-indicator').className = `emotion-indicator ${currentEmotion}-theme`;
-            
-            // Show the correct accent
-            document.getElementById('pause-accent').style.display = 'none';
-            document.getElementById('nostalgia-accent').style.display = 'none';
-            document.getElementById('hope-accent').style.display = 'none';
-            document.getElementById(`${currentEmotion}-accent`).style.display = 'block';
+        // Get tilt data for interactive effects
+        deviceTiltX = event.beta;  // -180 to 180 (front/back tilt)
+        deviceTiltY = event.gamma; // -90 to 90 (left/right tilt)
+    }
+    
+    function preload() {
+        debugLog("Preload started");
+        
+        // Determine emotion from URL
+        getEmotionFromUrl();
+
+        // Load the sound file for current emotion, but don't block if it fails
+        const soundFileUrl = EMOTION_CONFIG[currentEmotion].soundFile;
+        
+        // Only try to load sound if there's actually a file path
+        if (soundFileUrl && soundFileUrl.length > 0) {
+            debugLog(`Attempting to load sound: ${soundFileUrl}`);
+            try {
+                emotionSound = loadSound(soundFileUrl, 
+                    () => {
+                        debugLog("Sound loaded successfully");
+                        if (isAnimating && soundEnabled) {
+                            startSound();
+                        }
+                    },
+                    (err) => {
+                        console.error("Error loading sound:", err);
+                        debugLog("Error loading sound: " + err);
+                        soundEnabled = false;
+                    }
+                );
+            } catch (e) {
+                console.error("Error loading sound:", e);
+                debugLog("Error loading sound: " + e);
+                soundEnabled = false;
+            }
+        } else {
+            debugLog("No sound file specified for this emotion");
+            soundEnabled = false;
+        }
+    }
+    
+    function setup() {
+        debugLog("p5.js setup running, canvas size:" + windowWidth + "x" + windowHeight);
+        
+        // Create canvas as an overlay
+        let canvas = createCanvas(windowWidth, windowHeight);
+        canvas.parent('overlay-canvas');
+        
+        // Set up UI controls
+        document.getElementById('sound-toggle').addEventListener('click', toggleSound);
+        document.getElementById('opacity-toggle').addEventListener('click', toggleOpacity);
+        
+        // Initialize visual elements based on current emotion
+        initializeElements();
+        
+        // Start audio context for iOS
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+    }
+    
+    function initializeElements() {
+        debugLog("Initializing visual elements for: " + currentEmotion);
+        
+        // Clear existing elements
+        interruptionPoints = [];
+        temporalElements = [];
+        transitionElements = [];
+        dottedLines = [];
+        circleOverlays = [];
+        
+        // Initialize elements based on which emotion we're displaying
+        if (currentEmotion === 'pause') {
+            createPauseElements();
+        } else if (currentEmotion === 'nostalgia') {
+            createNostalgiaElements();
+        } else if (currentEmotion === 'hope') {
+            createHopeElements();
         }
         
-        // Initialize event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get emotion from URL
-            getEmotionFromUrl();
-            
-            // Start button functionality
-            document.getElementById('start-experience').addEventListener('click', function() {
-                document.getElementById('landing-overlay').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('landing-overlay').style.display = 'none';
-                }, 1000);
+        // Create circular overlays for all emotions
+        createCircleOverlays();
+    }
+    
+    function createPauseElements() {
+        // Black elements - points of interruption
+        for (let i = 0; i < 5; i++) {
+            interruptionPoints.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.2, height * 0.8),
+                size: random(15, 40),
+                type: random() > 0.5 ? 'rect' : 'circle',
+                opacity: random(180, 255),
+                duration: random(2000, 5000),
+                startTime: random(0, 2000),
+                visible: false,
+                offsetX: 0,
+                offsetY: 0
             });
-            
-            // Back button returns to landing
-            document.getElementById('back-button').addEventListener('click', function() {
-                document.getElementById('landing-overlay').style.display = 'flex';
-                setTimeout(() => {
-                    document.getElementById('landing-overlay').style.opacity = '1';
-                }, 50);
+        }
+        
+        // Orange elements - temporal duration
+        for (let i = 0; i < 3; i++) {
+            temporalElements.push({
+                x: random(width * 0.3, width * 0.7),
+                y: random(height * 0.3, height * 0.7),
+                size: random(30, 60),
+                pulseRate: random(0.001, 0.003),
+                opacity: random(100, 180),
+                startTime: random(0, 3000),
+                offsetX: 0,
+                offsetY: 0
             });
+        }
+        
+        // Brown transition elements
+        for (let i = 0; i < 4; i++) {
+            transitionElements.push({
+                x1: random(width * 0.1, width * 0.4),
+                y1: random(height * 0.2, height * 0.8),
+                x2: random(width * 0.6, width * 0.9),
+                y2: random(height * 0.2, height * 0.8),
+                thickness: random(1, 3),
+                opacity: random(120, 180),
+                progress: 0,
+                speed: random(0.0005, 0.002),
+                delay: random(1000, 3000),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Dotted lines that pause
+        for (let i = 0; i < 8; i++) {
+            dottedLines.push({
+                x: random(width * 0.1, width * 0.9),
+                y: random(height * 0.1, height * 0.9),
+                length: random(100, 200),
+                angle: random(0, TWO_PI),
+                dotSize: random(2, 4),
+                dotSpacing: random(8, 15),
+                progress: 0,
+                speed: random(0.002, 0.005),
+                pauseAt: random(0.3, 0.7),
+                pauseDuration: random(1000, 3000),
+                isPaused: false,
+                pauseStart: 0,
+                opacity: random(150, 220),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+    }
+    
+    function createNostalgiaElements() {
+        // Purple memory fragments
+        for (let i = 0; i < 8; i++) {
+            interruptionPoints.push({
+                x: random(width * 0.1, width * 0.9),
+                y: random(height * 0.1, height * 0.9),
+                size: random(10, 30),
+                type: 'circle',
+                opacity: random(100, 180),
+                fadeRate: random(0.0003, 0.0008),
+                visible: true,
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Orange temporal elements
+        for (let i = 0; i < 5; i++) {
+            temporalElements.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.2, height * 0.8),
+                size: random(30, 70),
+                pulseRate: random(0.0005, 0.001),
+                opacity: random(80, 150),
+                startTime: random(0, 4000),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Echo lines that fade
+        for (let i = 0; i < 5; i++) {
+            transitionElements.push({
+                x1: width/2 + random(-width/4, width/4),
+                y1: height/2 + random(-height/4, height/4),
+                x2: width/2 + random(-width/3, width/3) * 1.5,
+                y2: height/2 + random(-height/3, height/3) * 1.5,
+                thickness: random(1, 2.5),
+                opacity: random(80, 150),
+                progress: 0,
+                speed: random(0.0003, 0.001),
+                delay: random(500, 3000),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Slow, meandering lines
+        for (let i = 0; i < 6; i++) {
+            dottedLines.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.2, height * 0.8),
+                length: random(150, 300),
+                angle: random(0, TWO_PI),
+                dotSize: random(1.5, 3),
+                dotSpacing: random(10, 18),
+                progress: 0,
+                speed: random(0.0005, 0.001),
+                pauseAt: random(0.4, 0.8),
+                pauseDuration: random(2000, 5000),
+                isPaused: false,
+                pauseStart: 0,
+                opacity: random(120, 180),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+    }
+    
+    function createHopeElements() {
+        // Rising elements
+        for (let i = 0; i < 6; i++) {
+            temporalElements.push({
+                x: random(width * 0.1, width * 0.9),
+                y: height - random(height * 0.1, height * 0.3),
+                size: random(20, 50),
+                pulseRate: random(0.001, 0.002),
+                opacity: random(120, 200),
+                startTime: random(0, 2000),
+                riseSpeed: random(0.2, 0.8),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Upward light beams
+        for (let i = 0; i < 3; i++) {
+            transitionElements.push({
+                x1: width/2 + random(-width/4, width/4),
+                y1: height,
+                x2: width/2 + random(-width/3, width/3),
+                y2: 0,
+                thickness: random(2, 5),
+                opacity: random(60, 120),
+                progress: 0,
+                speed: random(0.001, 0.003),
+                delay: random(500, 2000),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Green growth points
+        for (let i = 0; i < 5; i++) {
+            interruptionPoints.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.6, height * 0.9),
+                size: random(10, 25),
+                type: 'circle',
+                opacity: random(150, 220),
+                growRate: random(0.0005, 0.001),
+                maxSize: random(30, 60),
+                currentSize: 5,
+                visible: true,
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Connecting energy lines
+        for (let i = 0; i < 7; i++) {
+            dottedLines.push({
+                x: random(width * 0.1, width * 0.9),
+                y: random(height * 0.6, height * 0.9),
+                length: random(100, 250),
+                angle: random(-PI/4, -3*PI/4), // Mostly upward
+                dotSize: random(2, 3.5),
+                dotSpacing: random(6, 12),
+                progress: 0,
+                speed: random(0.003, 0.007),
+                pauseAt: 1, // No pausing for hope
+                opacity: random(150, 220),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+    }
+    
+    function createCircleOverlays() {
+        // Create circular overlays for the hand illustrations
+        // Positions adjusted based on mobile device viewing orientation
+        let handPositions;
+        
+        if (width > height) { // Landscape
+            handPositions = [
+                { x: width * 0.25, y: height * 0.5 },
+                { x: width * 0.75, y: height * 0.5 }
+            ];
+        } else { // Portrait
+            handPositions = [
+                { x: width * 0.5, y: height * 0.35 },
+                { x: width * 0.5, y: height * 0.65 }
+            ];
+        }
+        
+        for (let pos of handPositions) {
+            circleOverlays.push({
+                x: pos.x,
+                y: pos.y,
+                size: min(width, height) * 0.25, // Responsive size
+                pulseRate: random(0.0005, 0.001),
+                colorIndex: floor(random(3)),
+                opacity: random(120, 180), // Increased opacity
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+    }
+    
+    function draw() {
+        // Clear canvas and set semi-transparent background
+        clear();
+        background(255, 255, 255, 10);
+        
+        // Ensure something visible appears even without motion
+        if (!deviceHasMoved && !motionPermissionGranted) {
+            // Draw fallback static elements for non-motion devices
+            const colors = EMOTION_CONFIG[currentEmotion].colors;
             
-            // Hide hint after 5 seconds
+            // Draw a more visible starting state
+            fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 100);
+            noStroke();
+            ellipse(width/2, height/2, 100);
+            
+            textAlign(CENTER, CENTER);
+            fill(0, 0, 0, 200);
+            textSize(14);
+            text("Move device to interact", width/2, height/2 + 60);
+            textSize(12);
+            text("or tap screen to continue", width/2, height/2 + 85);
+        }
+        
+        // Update element positions based on device tilt if moved
+        if (deviceHasMoved) {
+            updateElementPositions();
+        }
+        
+        // Draw elements based on current emotion
+        drawCircleOverlays();
+        drawDottedLines();
+        
+        if (currentEmotion === 'pause') {
+            drawInterruptionPoints();
+            drawTemporalElements();
+            drawTransitionElements();
+        }
+        else if (currentEmotion === 'nostalgia') {
+            drawNostalgiaElements();
+            drawTemporalElements();
+            drawTransitionElements();
+        }
+        else if (currentEmotion === 'hope') {
+            drawHopeElements();
+            drawRisingElements();
+            drawLightBeams();
+        }
+    }
+    
+    // Update positions based on device movement
+    function updateElementPositions() {
+        // Calculate offset amount based on device tilt
+        // Constrain to reasonable values to prevent extreme movement
+        let offsetX = map(deviceTiltY, -40, 40, -30, 30);
+        let offsetY = map(deviceTiltX, -40, 40, -20, 20);
+        
+        // Update positions for each element type
+        updateGroupPositions(interruptionPoints, offsetX, offsetY);
+        updateGroupPositions(temporalElements, offsetX, offsetY);
+        updateGroupPositions(circleOverlays, offsetX, offsetY);
+        
+        // Update dotted lines
+        for (let line of dottedLines) {
+            line.offsetX = offsetX * 0.5;
+            line.offsetY = offsetY * 0.5;
+        }
+        
+        // Update transition elements
+        for (let element of transitionElements) {
+            element.offsetX = offsetX * 0.3;
+            element.offsetY = offsetY * 0.3;
+        }
+    }
+    
+    function updateGroupPositions(elements, offsetX, offsetY) {
+        for (let element of elements) {
+            element.offsetX = offsetX * 0.7;
+            element.offsetY = offsetY * 0.7;
+        }
+    }
+    
+    // Drawing functions for common elements
+    function drawCircleOverlays() {
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let circle of circleOverlays) {
+            // Get color based on circle's assigned color index
+            let color;
+            if (circle.colorIndex === 0) color = colors.primary;
+            else if (circle.colorIndex === 1) color = colors.secondary;
+            else color = colors.accent;
+            
+            // Calculate pulsing size based on time
+            let pulseAmount = sin(millis() * circle.pulseRate);
+            let currentSize = circle.size + pulseAmount * 10;
+            
+            // Add device tilt offset
+            let drawX = circle.x + circle.offsetX;
+            let drawY = circle.y + circle.offsetY;
+            
+            // Draw outer glow
+            noFill();
+            for (let i = 0; i < 3; i++) {
+                let strokeW = 2 + i*0.8; // Increased thickness
+                let alpha = circle.opacity - i * 20; // Reduced fade for better visibility
+                if (alpha > 0) {
+                    stroke(color[0], color[1], color[2], alpha * overlayOpacity);
+                    strokeWeight(strokeW);
+                    ellipse(drawX, drawY, currentSize + i*20);
+                }
+            }
+            
+            // Draw dotted circle
+            stroke(color[0], color[1], color[2], (circle.opacity + 50) * overlayOpacity); // Increased visibility
+            strokeWeight(2);
+            drawingContext.setLineDash([5, 5]);
+            ellipse(drawX, drawY, currentSize);
+            drawingContext.setLineDash([]);
+        }
+    }
+    
+    function drawDottedLines() {
+        for (let line of dottedLines) {
+            if (isAnimating && !line.isPaused) {
+                line.progress += line.speed;
+                
+                if (line.progress > line.pauseAt && line.progress < (line.pauseAt + 0.1)) {
+                    line.isPaused = true;
+                    line.pauseStart = millis();
+                }
+                
+                if (line.progress > 1) {
+                    line.progress = 0;
+                }
+            }
+            
+            if (line.isPaused && millis() > line.pauseStart + line.pauseDuration) {
+                line.isPaused = false;
+            }
+            
+            // Add device tilt offset
+            let startX = line.x + line.offsetX;
+            let startY = line.y + line.offsetY;
+            
+            noFill();
+            stroke(80, 80, 80, line.opacity * overlayOpacity);
+            strokeWeight(1.5); // Increased for visibility
+            
+            let dx = cos(line.angle);
+            let dy = sin(line.angle);
+            
+            for (let i = 0; i < line.length; i += line.dotSpacing) {
+                let x = startX + dx * i;
+                let y = startY + dy * i;
+                
+                if (i / line.length <= line.progress) {
+                    fill(80, 80, 80, line.opacity * overlayOpacity);
+                    noStroke();
+                    ellipse(x, y, line.dotSize * 1.2); // Increased size
+                }
+            }
+            
+            if (line.isPaused) {
+                let pauseX = startX + dx * (line.length * line.pauseAt);
+                let pauseY = startY + dy * (line.length * line.pauseAt);
+                
+                let pulseSize = map(sin(millis() * 0.01), -1, 1, 7, 14); // Increased pulse size
+                
+                const colors = EMOTION_CONFIG[currentEmotion].colors;
+                noFill();
+                stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
+                       220 * overlayOpacity); // Increased visibility
+                strokeWeight(1.5);
+                ellipse(pauseX, pauseY, pulseSize);
+            }
+        }
+    }
+    
+    // Drawing functions for pause emotion
+    function drawInterruptionPoints() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let point of interruptionPoints) {
+            if (millis() > point.startTime) {
+                point.visible = true;
+            }
+            
+            if (point.visible) {
+                // Apply device tilt offset
+                let drawX = point.x + point.offsetX;
+                let drawY = point.y + point.offsetY;
+                
+                fill(colors.primary[0], colors.primary[1], colors.primary[2], 
+                     point.opacity * overlayOpacity);
+                
+                if (point.type === 'rect') {
+                    rectMode(CENTER);
+                    rect(drawX, drawY, point.size, point.size);
+                } else {
+                    ellipse(drawX, drawY, point.size);
+                }
+                
+                if (isAnimating) {
+                    point.opacity = map(sin(millis() * 0.0005), -1, 1, 180, 255);
+                }
+            }
+        }
+    }
+    
+    function drawTemporalElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of temporalElements) {
+            if (millis() > element.startTime) {
+                // Apply device tilt offset
+                let drawX = element.x + element.offsetX;
+                let drawY = element.y + element.offsetY;
+                
+                let pulseAmount = sin(millis() * element.pulseRate);
+                let currentSize = element.size + pulseAmount * 12; // Increased pulse
+                let currentOpacity = element.opacity + pulseAmount * 50; // Increased contrast
+                
+                for (let i = 0; i < 3; i++) {
+                    let size = currentSize - i * 8;
+                    let opacity = currentOpacity - i * 30;
+                    if (size > 0 && opacity > 0) {
+                        fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
+                             opacity * overlayOpacity);
+                        ellipse(drawX, drawY, size);
+                    }
+                }
+            }
+        }
+    }
+    
+    function drawTransitionElements() {
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of transitionElements) {
+            if (millis() > element.delay) {
+                if (isAnimating) {
+                    element.progress += element.speed;
+                    if (element.progress > 1) {
+                        element.progress = 0;
+                    }
+                }
+                
+                // Apply device tilt offset
+                let drawX1 = element.x1 + element.offsetX;
+                let drawY1 = element.y1 + element.offsetY;
+                let drawX2 = element.x2 + element.offsetX;
+                let drawY2 = element.y2 + element.offsetY;
+                
+                stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                       element.opacity * 1.2 * overlayOpacity); // Increased visibility
+                strokeWeight(element.thickness * 1.3); // Increased thickness
+                line(drawX1, drawY1, 
+                     lerp(drawX1, drawX2, element.progress), 
+                     lerp(drawY1, drawY2, element.progress));
+                
+                noStroke();
+                fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                     element.opacity * 0.8 * overlayOpacity);
+                ellipse(drawX1, drawY1, element.thickness * 3);
+                
+                fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                     element.opacity * 1.2 * overlayOpacity);
+                ellipse(lerp(drawX1, drawX2, element.progress), 
+                        lerp(drawY1, drawY2, element.progress), 
+                        element.thickness * 5); // Increased size
+            }
+        }
+    }
+    
+    // Drawing functions for nostalgia emotion
+    function drawNostalgiaElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let point of interruptionPoints) {
+            if (point.visible) {
+                // Apply device tilt offset
+                let drawX = point.x + point.offsetX;
+                let drawY = point.y + point.offsetY;
+                
+                // For nostalgia, make elements fade in and out
+                if (isAnimating) {
+                    point.opacity = 120 + 100 * sin(millis() * point.fadeRate); // Increased range
+                }
+                
+                fill(colors.primary[0], colors.primary[1], colors.primary[2], 
+                     point.opacity * overlayOpacity);
+                ellipse(drawX, drawY, point.size);
+            }
+        }
+    }
+    
+    // Drawing functions for hope emotion
+    function drawHopeElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        // Draw growing green elements
+        for (let point of interruptionPoints) {
+            if (point.visible) {
+                // Apply device tilt offset
+                let drawX = point.x + point.offsetX;
+                let drawY = point.y + point.offsetY;
+                
+                // For hope, make elements grow
+                if (isAnimating) {
+                    point.currentSize += point.growRate * deltaTime;
+                    if (point.currentSize > point.maxSize) {
+                        point.currentSize = 5;
+                    }
+                }
+                
+                fill(colors.primary[0], colors.primary[1], colors.primary[2], 
+                     point.opacity * overlayOpacity);
+                ellipse(drawX, drawY, point.currentSize);
+            }
+        }
+    }
+    
+    function drawRisingElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of temporalElements) {
+            if (millis() > element.startTime) {
+                // Apply device tilt offset
+                let drawX = element.x + element.offsetX;
+                let drawY = element.y + element.offsetY;
+                
+                // If this is hope emotion, make elements rise
+                if (isAnimating) {
+                    element.y -= element.riseSpeed;
+                    if (element.y < -element.size) {
+                        element.y = height + element.size;
+                        element.x = random(width * 0.1, width * 0.9);
+                    }
+                }
+                
+                let pulseAmount = sin(millis() * element.pulseRate);
+                let currentSize = element.size + pulseAmount * 8;
+                let currentOpacity = element.opacity + pulseAmount * 30;
+                
+                for (let i = 0; i < 3; i++) {
+                    let size = currentSize - i * 8;
+                    let opacity = currentOpacity - i * 25;
+                    if (size > 0 && opacity > 0) {
+                        fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
+                             opacity * overlayOpacity);
+                        ellipse(drawX, drawY, size);
+                    }
+                }
+            }
+        }
+    }
+    
+    function drawLightBeams() {
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of transitionElements) {
+            if (millis() > element.delay) {
+                // Apply device tilt offset
+                let drawX1 = element.x1 + element.offsetX;
+                let drawY1 = element.y1 + element.offsetY;
+                let drawX2 = element.x2 + element.offsetX;
+                let drawY2 = element.y2 + element.offsetY;
+                
+                // For hope, make beams expand from bottom to top
+                if (isAnimating) {
+                    element.progress += element.speed;
+                    if (element.progress > 1) {
+                        element.progress = 0;
+                    }
+                }
+                
+                // Draw light beam
+                for (let i = 0; i < 3; i++) {
+                    let thickness = (element.thickness - i*0.4) * 1.4; // Increased thickness
+                    let opacity = (element.opacity - i*15) * 1.3; // Increased visibility
+                    
+                    if (thickness > 0 && opacity > 0) {
+                        stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                              opacity * overlayOpacity);
+                        strokeWeight(thickness);
+                        line(drawX1, drawY1, 
+                             lerp(drawX1, drawX2, element.progress), 
+                             lerp(drawY1, drawY2, element.progress));
+                    }
+                }
+            }
+        }
+    }
+    
+    // UI control functions
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        debugLog("Sound toggled: " + (soundEnabled ? "on" : "off"));
+        
+        if (!soundEnabled && soundPlaying) {
+            emotionSound.setVolume(0, 1);
+            setTimeout(() => {
+                emotionSound.stop();
+                soundPlaying = false;
+            }, 1000);
+        } else if (soundEnabled && isAnimating && !soundPlaying && emotionSound) {
+            startSound();
+        }
+        
+        // Update sound icon visibility
+        document.getElementById('sound-waves').style.display = 
+            soundEnabled ? 'block' : 'none';
+    }
+    
+    function startSound() {
+        try {
+            // Only try to play if the sound was successfully loaded
+            if (emotionSound && emotionSound.isLoaded()) {
+                debugLog("Starting sound playback");
+                emotionSound.loop();
+                emotionSound.setVolume(0);
+                emotionSound.setVolume(0.7, 1.5);
+                soundPlaying = true;
+            }
+        } catch(e) {
+            console.error("Error playing sound:", e);
+            debugLog("Error playing sound: " + e);
+        }
+    }
+    
+    function toggleOpacity() {
+        // Cycle through opacity levels
+        if (overlayOpacity > 0.8) {
+            overlayOpacity = 0.5;
+            debugLog("Opacity set to medium (0.5)");
+        } else if (overlayOpacity > 0.3) {
+            overlayOpacity = 0.25;
+            debugLog("Opacity set to low (0.25)");
+        } else {
+            overlayOpacity = 0.95;
+            debugLog("Opacity set to high (0.95)");
+        }
+    }
+    
+    function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        debugLog("Window resized: " + windowWidth + "x" + windowHeight);
+        initializeElements();
+    }
+    
+    function touchStarted() {
+        // For iOS - ensure we have motion permission
+        if (!motionPermissionGranted && typeof DeviceOrientationEvent !== 'undefined' && 
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            requestDeviceMotionPermission();
+        }
+        
+        // Show hint briefly when user taps if it's hidden
+        if (!hintVisible) {
+            document.getElementById('hint').style.opacity = '1';
+            hintVisible = true;
+            
             setTimeout(() => {
                 document.getElementById('hint').style.opacity = '0';
                 hintVisible = false;
-            }, 5000);
-            
-            // Setup device motion if supported
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', handleDeviceMotion);
-            }
-        });
-        
-        function handleDeviceMotion(event) {
-            if (!deviceHasMoved) {
-                deviceHasMoved = true;
-            }
-            
-            // Get tilt data for interactive effects
-            deviceTiltX = event.beta;  // -180 to 180 (front/back tilt)
-            deviceTiltY = event.gamma; // -90 to 90 (left/right tilt)
+            }, 3000);
         }
         
-        function preload() {
-            // Determine emotion from URL
-            getEmotionFromUrl();
-
-			// Load the sound file for current emotion, but don't block if it fails
-            const soundFileUrl = EMOTION_CONFIG[currentEmotion].soundFile;
-
-			// Only try to load sound if there's actually a file path
-            if (soundFileUrl && soundFileUrl.length > 0) {
-                try {
-                    emotionSound = loadSound(soundFileUrl, 
-                        () => {
-                            console.log("Sound loaded successfully");
-                            if (isAnimating && soundEnabled) {
-                                startSound();
-                            }
-                        },
-                        (err) => {
-                            console.error("Error loading sound:", err);
-                            oundEnabled = false;
-                        }
-                     );
-                 } catch (e) {
-                     console.error("Error loading sound:", e);
-                     soundEnabled = false;
-                 }
-			} else {
-                console.log("No sound file specified for this emotion");
-                soundEnabled = false;
-			}
+        // Make device tilt optional by simulating some movement
+        if (!deviceHasMoved) {
+            deviceHasMoved = true;
+            deviceTiltX = random(-10, 10);
+            deviceTiltY = random(-10, 10);
         }
         
-        function setup() {
-            // Create canvas as an overlay
-            let canvas = createCanvas(windowWidth, windowHeight);
-            canvas.parent('overlay-canvas');
-            
-            // Set up UI controls
-            document.getElementById('sound-toggle').addEventListener('click', toggleSound);
-            document.getElementById('opacity-toggle').addEventListener('click', toggleOpacity);
-            
-            // Initialize visual elements based on current emotion
-            initializeElements();
-            
-            // Start audio context for iOS
-            if (getAudioContext().state !== 'running') {
-                getAudioContext().resume();
-            }
+        // For iOS audio context
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
         }
         
-        function initializeElements() {
-            // Clear existing elements
-            interruptionPoints = [];
-            temporalElements = [];
-            transitionElements = [];
-            dottedLines = [];
-            circleOverlays = [];
-            
-            // Initialize elements based on which emotion we're displaying
-            if (currentEmotion === 'pause') {
-                createPauseElements();
-            } else if (currentEmotion === 'nostalgia') {
-                createNostalgiaElements();
-            } else if (currentEmotion === 'hope') {
-                createHopeElements();
-            }
-            
-            // Create circular overlays for all emotions
-            createCircleOverlays();
-        }
-        
-        function createPauseElements() {
-            // Black elements - points of interruption
-            for (let i = 0; i < 5; i++) {
-                interruptionPoints.push({
-                    x: random(width * 0.2, width * 0.8),
-                    y: random(height * 0.2, height * 0.8),
-                    size: random(15, 40),
-                    type: random() > 0.5 ? 'rect' : 'circle',
-                    opacity: random(180, 255),
-                    duration: random(2000, 5000),
-                    startTime: random(0, 2000),
-                    visible: false,
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Orange elements - temporal duration
-            for (let i = 0; i < 3; i++) {
-                temporalElements.push({
-                    x: random(width * 0.3, width * 0.7),
-                    y: random(height * 0.3, height * 0.7),
-                    size: random(30, 60),
-                    pulseRate: random(0.001, 0.003),
-                    opacity: random(100, 180),
-                    startTime: random(0, 3000),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Brown transition elements
-            for (let i = 0; i < 4; i++) {
-                transitionElements.push({
-                    x1: random(width * 0.1, width * 0.4),
-                    y1: random(height * 0.2, height * 0.8),
-                    x2: random(width * 0.6, width * 0.9),
-                    y2: random(height * 0.2, height * 0.8),
-                    thickness: random(1, 3),
-                    opacity: random(120, 180),
-                    progress: 0,
-                    speed: random(0.0005, 0.002),
-                    delay: random(1000, 3000),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Dotted lines that pause
-            for (let i = 0; i < 8; i++) {
-                dottedLines.push({
-                    x: random(width * 0.1, width * 0.9),
-                    y: random(height * 0.1, height * 0.9),
-                    length: random(100, 200),
-                    angle: random(0, TWO_PI),
-                    dotSize: random(2, 4),
-                    dotSpacing: random(8, 15),
-                    progress: 0,
-                    speed: random(0.002, 0.005),
-                    pauseAt: random(0.3, 0.7),
-                    pauseDuration: random(1000, 3000),
-                    isPaused: false,
-                    pauseStart: 0,
-                    opacity: random(150, 220),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-        }
-        
-        function createNostalgiaElements() {
-            // Purple memory fragments
-            for (let i = 0; i < 8; i++) {
-                interruptionPoints.push({
-                    x: random(width * 0.1, width * 0.9),
-                    y: random(height * 0.1, height * 0.9),
-                    size: random(10, 30),
-                    type: 'circle',
-                    opacity: random(100, 180),
-                    fadeRate: random(0.0003, 0.0008),
-                    visible: true,
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Orange temporal elements
-            for (let i = 0; i < 5; i++) {
-                temporalElements.push({
-                    x: random(width * 0.2, width * 0.8),
-                    y: random(height * 0.2, height * 0.8),
-                    size: random(30, 70),
-                    pulseRate: random(0.0005, 0.001),
-                    opacity: random(80, 150),
-                    startTime: random(0, 4000),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Echo lines that fade
-            for (let i = 0; i < 5; i++) {
-                transitionElements.push({
-                    x1: width/2 + random(-width/4, width/4),
-                    y1: height/2 + random(-height/4, height/4),
-                    x2: width/2 + random(-width/3, width/3) * 1.5,
-                    y2: height/2 + random(-height/3, height/3) * 1.5,
-                    thickness: random(1, 2.5),
-                    opacity: random(80, 150),
-                    progress: 0,
-                    speed: random(0.0003, 0.001),
-                    delay: random(500, 3000),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Slow, meandering lines
-            for (let i = 0; i < 6; i++) {
-                dottedLines.push({
-                    x: random(width * 0.2, width * 0.8),
-                    y: random(height * 0.2, height * 0.8),
-                    length: random(150, 300),
-                    angle: random(0, TWO_PI),
-                    dotSize: random(1.5, 3),
-                    dotSpacing: random(10, 18),
-                    progress: 0,
-                    speed: random(0.0005, 0.001),
-                    pauseAt: random(0.4, 0.8),
-                    pauseDuration: random(2000, 5000),
-                    isPaused: false,
-                    pauseStart: 0,
-                    opacity: random(120, 180),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-        }
-        
-        function createHopeElements() {
-            // Rising elements
-            for (let i = 0; i < 6; i++) {
-                temporalElements.push({
-                    x: random(width * 0.1, width * 0.9),
-                    y: height - random(height * 0.1, height * 0.3),
-                    size: random(20, 50),
-                    pulseRate: random(0.001, 0.002),
-                    opacity: random(120, 200),
-                    startTime: random(0, 2000),
-                    riseSpeed: random(0.2, 0.8),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Upward light beams
-            for (let i = 0; i < 3; i++) {
-                transitionElements.push({
-                    x1: width/2 + random(-width/4, width/4),
-                    y1: height,
-                    x2: width/2 + random(-width/3, width/3),
-                    y2: 0,
-                    thickness: random(2, 5),
-                    opacity: random(60, 120),
-                    progress: 0,
-                    speed: random(0.001, 0.003),
-                    delay: random(500, 2000),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Green growth points
-            for (let i = 0; i < 5; i++) {
-                interruptionPoints.push({
-                    x: random(width * 0.2, width * 0.8),
-                    y: random(height * 0.6, height * 0.9),
-                    size: random(10, 25),
-                    type: 'circle',
-                    opacity: random(150, 220),
-                    growRate: random(0.0005, 0.001),
-                    maxSize: random(30, 60),
-                    currentSize: 5,
-                    visible: true,
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-            
-            // Connecting energy lines
-            for (let i = 0; i < 7; i++) {
-                dottedLines.push({
-                    x: random(width * 0.1, width * 0.9),
-                    y: random(height * 0.6, height * 0.9),
-                    length: random(100, 250),
-                    angle: random(-PI/4, -3*PI/4), // Mostly upward
-                    dotSize: random(2, 3.5),
-                    dotSpacing: random(6, 12),
-                    progress: 0,
-                    speed: random(0.003, 0.007),
-                    pauseAt: 1, // No pausing for hope
-                    opacity: random(150, 220),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-        }
-        
-        function createCircleOverlays() {
-            // Create circular overlays for the hand illustrations
-            // Positions adjusted based on mobile device viewing orientation
-            let handPositions;
-            
-            if (width > height) { // Landscape
-                handPositions = [
-                    { x: width * 0.25, y: height * 0.5 },
-                    { x: width * 0.75, y: height * 0.5 }
-                ];
-            } else { // Portrait
-                handPositions = [
-                    { x: width * 0.5, y: height * 0.35 },
-                    { x: width * 0.5, y: height * 0.65 }
-                ];
-            }
-            
-            for (let pos of handPositions) {
-                circleOverlays.push({
-                    x: pos.x,
-                    y: pos.y,
-                    size: min(width, height) * 0.25, // Responsive size
-                    pulseRate: random(0.0005, 0.001),
-                    colorIndex: floor(random(3)),
-                    opacity: random(70, 120),
-                    offsetX: 0,
-                    offsetY: 0
-                });
-            }
-        }
-        
-        function draw() {
-            // Clear canvas and set semi-transparent background
-            clear();
-            background(255, 255, 255, 5);
-            
-            // Update element positions based on device tilt if moved
-            if (deviceHasMoved) {
-                updateElementPositions();
-            }
-            
-            // Draw elements based on current emotion
-            drawCircleOverlays();
-            drawDottedLines();
-            
-            if (currentEmotion === 'pause') {
-                drawInterruptionPoints();
-                drawTemporalElements();
-                drawTransitionElements();
-            }
-            else if (currentEmotion === 'nostalgia') {
-                drawNostalgiaElements();
-                drawTemporalElements();
-                drawTransitionElements();
-            }
-            else if (currentEmotion === 'hope') {
-                drawHopeElements();
-                drawRisingElements();
-                drawLightBeams();
-            }
-        }
-        
-        // Update positions based on device movement
-        function updateElementPositions() {
-            // Calculate offset amount based on device tilt
-            // Constrain to reasonable values to prevent extreme movement
-            let offsetX = map(deviceTiltY, -40, 40, -30, 30);
-            let offsetY = map(deviceTiltX, -40, 40, -20, 20);
-            
-            // Update positions for each element type
-            updateGroupPositions(interruptionPoints, offsetX, offsetY);
-            updateGroupPositions(temporalElements, offsetX, offsetY);
-            updateGroupPositions(circleOverlays, offsetX, offsetY);
-            
-            // Update dotted lines
-            for (let line of dottedLines) {
-                line.offsetX = offsetX * 0.5;
-                line.offsetY = offsetY * 0.5;
-            }
-            
-            // Update transition elements
-            for (let element of transitionElements) {
-                element.offsetX = offsetX * 0.3;
-                element.offsetY = offsetY * 0.3;
-            }
-        }
-        
-        function updateGroupPositions(elements, offsetX, offsetY) {
-            for (let element of elements) {
-                element.offsetX = offsetX * 0.7;
-                element.offsetY = offsetY * 0.7;
-            }
-        }
-        
-        // Drawing functions for common elements
-        function drawCircleOverlays() {
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            for (let circle of circleOverlays) {
-                // Get color based on circle's assigned color index
-                let color;
-                if (circle.colorIndex === 0) color = colors.primary;
-                else if (circle.colorIndex === 1) color = colors.secondary;
-                else color = colors.accent;
-                
-                // Calculate pulsing size based on time
-                let pulseAmount = sin(millis() * circle.pulseRate);
-                let currentSize = circle.size + pulseAmount * 10;
-                
-                // Add device tilt offset
-                let drawX = circle.x + circle.offsetX;
-                let drawY = circle.y + circle.offsetY;
-                
-                // Draw outer glow
-                noFill();
-                for (let i = 0; i < 3; i++) {
-                    let strokeW = 1.5 + i*0.5;
-                    let alpha = circle.opacity - i * 30;
-                    if (alpha > 0) {
-                        stroke(color[0], color[1], color[2], alpha * overlayOpacity);
-                        strokeWeight(strokeW);
-                        ellipse(drawX, drawY, currentSize + i*20);
-                    }
-                }
-                
-                // Draw dotted circle
-                stroke(color[0], color[1], color[2], (circle.opacity + 20) * overlayOpacity);
-                strokeWeight(1.5);
-                drawingContext.setLineDash([5, 5]);
-                ellipse(drawX, drawY, currentSize);
-                drawingContext.setLineDash([]);
-            }
-        }
-        
-        function drawDottedLines() {
-            for (let line of dottedLines) {
-                if (isAnimating && !line.isPaused) {
-                    line.progress += line.speed;
-                    
-                    if (line.progress > line.pauseAt && line.progress < (line.pauseAt + 0.1)) {
-                        line.isPaused = true;
-                        line.pauseStart = millis();
-                    }
-                    
-                    if (line.progress > 1) {
-                        line.progress = 0;
-                    }
-                }
-                
-                if (line.isPaused && millis() > line.pauseStart + line.pauseDuration) {
-                    line.isPaused = false;
-                }
-                
-                // Add device tilt offset
-                let startX = line.x + line.offsetX;
-                let startY = line.y + line.offsetY;
-                
-                noFill();
-                stroke(80, 80, 80, line.opacity * overlayOpacity);
-                strokeWeight(1);
-                
-                let dx = cos(line.angle);
-                let dy = sin(line.angle);
-                
-                for (let i = 0; i < line.length; i += line.dotSpacing) {
-                    let x = startX + dx * i;
-                    let y = startY + dy * i;
-                    
-                    if (i / line.length <= line.progress) {
-                        fill(80, 80, 80, line.opacity * overlayOpacity);
-                        noStroke();
-                        ellipse(x, y, line.dotSize);
-                    }
-                }
-                
-                if (line.isPaused) {
-                    let pauseX = startX + dx * (line.length * line.pauseAt);
-                    let pauseY = startY + dy * (line.length * line.pauseAt);
-                    
-                    let pulseSize = map(sin(millis() * 0.01), -1, 1, 5, 10);
-                    
-                    const colors = EMOTION_CONFIG[currentEmotion].colors;
-                    noFill();
-                    stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
-                           180 * overlayOpacity);
-                    strokeWeight(1);
-                    ellipse(pauseX, pauseY, pulseSize);
-                }
-            }
-        }
-        
-        // Drawing functions for pause emotion
-        function drawInterruptionPoints() {
-            noStroke();
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            for (let point of interruptionPoints) {
-                if (millis() > point.startTime) {
-                    point.visible = true;
-                }
-                
-                if (point.visible) {
-                    // Apply device tilt offset
-                    let drawX = point.x + point.offsetX;
-                    let drawY = point.y + point.offsetY;
-                    
-                    fill(colors.primary[0], colors.primary[1], colors.primary[2], 
-                         point.opacity * overlayOpacity);
-                    
-                    if (point.type === 'rect') {
-                        rectMode(CENTER);
-                        rect(drawX, drawY, point.size, point.size);
-                    } else {
-                        ellipse(drawX, drawY, point.size);
-                    }
-                    
-                    if (isAnimating) {
-                        point.opacity = map(sin(millis() * 0.0005), -1, 1, 180, 255);
-                    }
-                }
-            }
-        }
-        
-        function drawTemporalElements() {
-            noStroke();
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            for (let element of temporalElements) {
-                if (millis() > element.startTime) {
-                    // Apply device tilt offset
-                    let drawX = element.x + element.offsetX;
-                    let drawY = element.y + element.offsetY;
-                    
-                    let pulseAmount = sin(millis() * element.pulseRate);
-                    let currentSize = element.size + pulseAmount * 10;
-                    let currentOpacity = element.opacity + pulseAmount * 40;
-                    
-                    for (let i = 0; i < 3; i++) {
-                        let size = currentSize - i * 10;
-                        let opacity = currentOpacity - i * 30;
-                        if (size > 0 && opacity > 0) {
-                            fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
-                                 opacity * overlayOpacity);
-                            ellipse(drawX, drawY, size);
-                        }
-                    }
-                }
-            }
-        }
-        
-        function drawTransitionElements() {
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            for (let element of transitionElements) {
-                if (millis() > element.delay) {
-                    if (isAnimating) {
-                        element.progress += element.speed;
-                        if (element.progress > 1) {
-                            element.progress = 0;
-                        }
-                    }
-                    
-                    // Apply device tilt offset
-                    let drawX1 = element.x1 + element.offsetX;
-                    let drawY1 = element.y1 + element.offsetY;
-                    let drawX2 = element.x2 + element.offsetX;
-                    let drawY2 = element.y2 + element.offsetY;
-                    
-                    stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
-                           element.opacity * overlayOpacity);
-                    strokeWeight(element.thickness);
-                    line(drawX1, drawY1, 
-                         lerp(drawX1, drawX2, element.progress), 
-                         lerp(drawY1, drawY2, element.progress));
-                    
-                    noStroke();
-                    fill(colors.accent[0], colors.accent[1], colors.accent[2], 
-                         element.opacity * 0.7 * overlayOpacity);
-                    ellipse(drawX1, drawY1, element.thickness * 3);
-                    
-                    fill(colors.accent[0], colors.accent[1], colors.accent[2], 
-                         element.opacity * overlayOpacity);
-                    ellipse(lerp(drawX1, drawX2, element.progress), 
-                            lerp(drawY1, drawY2, element.progress), 
-                            element.thickness * 4);
-                }
-            }
-        }
-        
-        // Drawing functions for nostalgia emotion
-        function drawNostalgiaElements() {
-            noStroke();
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            for (let point of interruptionPoints) {
-                if (point.visible) {
-                    // Apply device tilt offset
-                    let drawX = point.x + point.offsetX;
-                    let drawY = point.y + point.offsetY;
-                    
-                    // For nostalgia, make elements fade in and out
-                    if (isAnimating) {
-                        point.opacity = 100 + 80 * sin(millis() * point.fadeRate);
-                    }
-                    
-                    fill(colors.primary[0], colors.primary[1], colors.primary[2], 
-                         point.opacity * overlayOpacity);
-                    ellipse(drawX, drawY, point.size);
-                }
-            }
-        }
-        
-        // Drawing functions for hope emotion
-        function drawHopeElements() {
-            noStroke();
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            // Draw growing green elements
-            for (let point of interruptionPoints) {
-                if (point.visible) {
-                    // Apply device tilt offset
-                    let drawX = point.x + point.offsetX;
-                    let drawY = point.y + point.offsetY;
-                    
-                    // For hope, make elements grow
-                    if (isAnimating) {
-                        point.currentSize += point.growRate * deltaTime;
-                        if (point.currentSize > point.maxSize) {
-                            point.currentSize = 5;
-                        }
-                    }
-                    
-                    fill(colors.primary[0], colors.primary[1], colors.primary[2], 
-                         point.opacity * overlayOpacity);
-                    ellipse(drawX, drawY, point.currentSize);
-                }
-            }
-        }
-        
-        function drawRisingElements() {
-            noStroke();
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            for (let element of temporalElements) {
-                if (millis() > element.startTime) {
-                    // Apply device tilt offset
-                    let drawX = element.x + element.offsetX;
-                    let drawY = element.y + element.offsetY;
-                    
-                    // If this is hope emotion, make elements rise
-                    if (isAnimating) {
-                        element.y -= element.riseSpeed;
-                        if (element.y < -element.size) {
-                            element.y = height + element.size;
-                            element.x = random(width * 0.1, width * 0.9);
-                        }
-                    }
-                    
-                    let pulseAmount = sin(millis() * element.pulseRate);
-                    let currentSize = element.size + pulseAmount * 5;
-                    let currentOpacity = element.opacity + pulseAmount * 20;
-                    
-                    for (let i = 0; i < 3; i++) {
-                        let size = currentSize - i * 8;
-                        let opacity = currentOpacity - i * 25;
-                        if (size > 0 && opacity > 0) {
-                            fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
-                                 opacity * overlayOpacity);
-                            ellipse(drawX, drawY, size);
-                        }
-                    }
-                }
-            }
-        }
-        
-        function drawLightBeams() {
-            const colors = EMOTION_CONFIG[currentEmotion].colors;
-            
-            for (let element of transitionElements) {
-                if (millis() > element.delay) {
-                    // Apply device tilt offset
-                    let drawX1 = element.x1 + element.offsetX;
-                    let drawY1 = element.y1 + element.offsetY;
-                    let drawX2 = element.x2 + element.offsetX;
-                    let drawY2 = element.y2 + element.offsetY;
-                    
-                    // For hope, make beams expand from bottom to top
-                    if (isAnimating) {
-                        element.progress += element.speed;
-                        if (element.progress > 1) {
-                            element.progress = 0;
-                        }
-                    }
-                    
-                    // Draw light beam
-                    for (let i = 0; i < 3; i++) {
-                        let thickness = element.thickness - i*0.5;
-                        let opacity = element.opacity - i*20;
-                        
-                        if (thickness > 0 && opacity > 0) {
-                            stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
-                                  opacity * overlayOpacity);
-                            strokeWeight(thickness);
-                            line(drawX1, drawY1, 
-                                 lerp(drawX1, drawX2, element.progress), 
-                                 lerp(drawY1, drawY2, element.progress));
-                        }
-                    }
-                }
-            }
-        }
-        
-        // UI control functions
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            
-            if (!soundEnabled && soundPlaying) {
-                emotionSound.setVolume(0, 1);
-                setTimeout(() => {
-                    emotionSound.stop();
-                    soundPlaying = false;
-                }, 1000);
-            } else if (soundEnabled && isAnimating && !soundPlaying) {
-                startSound();
-            }
-            
-            // Update sound icon visibility
-            document.getElementById('sound-waves').style.display = 
-                soundEnabled ? 'block' : 'none';
-        }
-        
-        function startSound() {
-            try {
-				 // Only try to play if the sound was successfully loaded
-                if (emotionSound && emotionSound.isLoaded()) {
-                    emotionSound.loop();
-                    emotionSound.setVolume(0);
-                    emotionSound.setVolume(0.7, 1.5);
-                    soundPlaying = true;
-				}
-             } catch(e) {
-                    console.error("Error playing sound:", e);
-		     }
-         }
-        
-        function toggleOpacity() {
-            // Cycle through opacity levels
-            if (overlayOpacity > 0.7) {
-                overlayOpacity = 0.4;
-            } else if (overlayOpacity > 0.3) {
-                overlayOpacity = 0.2;
-            } else {
-                overlayOpacity = 0.9;
-            }
-        }
-        
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-            initializeElements();
-        }
-        
-        function touchStarted() {
-            // Show hint briefly when user taps if it's hidden
-            if (!hintVisible) {
-                document.getElementById('hint').style.opacity = '1';
-                hintVisible = true;
-                
-                setTimeout(() => {
-                    document.getElementById('hint').style.opacity = '0';
-                    hintVisible = false;
-                }, 3000);
-            }
-            
-            // For iOS audio context
-            if (getAudioContext().state !== 'running') {
-                getAudioContext().resume();
-            }
-            
-            return false;
-        }
+        return false;
+    }
     </script>
 </body>
 </html>

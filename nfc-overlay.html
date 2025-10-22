@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Emotional NFC Overlay</title>
+    <title>Emotional AR Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
@@ -12,10 +12,21 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: transparent; /* Transparent background */
+            background-color: #000; /* Black background as fallback */
             font-family: 'Roboto Mono', monospace;
             -webkit-text-size-adjust: 100%;
             touch-action: none;
+        }
+        
+        /* Camera feed */
+        #camera-feed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1; /* Below the canvas */
         }
         
         /* Landing screen that appears first */
@@ -144,7 +155,7 @@
         .control-btn {
             width: 45px;
             height: 45px;
-            background: rgba(255, 255, 255, 0.7); /* More transparent */
+            background: rgba(255, 255, 255, 0.7);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -158,13 +169,31 @@
             transform: scale(0.95);
         }
         
+        /* Camera control button */
+        #camera-toggle {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            z-index: 30;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        
         /* Helpful hints */
         .hint {
             position: absolute;
-            left: 20px;
+            left: 70px;
             bottom: 15px;
             z-index: 25;
-            background-color: rgba(255, 255, 255, 0.6); /* More transparent */
+            background-color: rgba(255, 255, 255, 0.6); 
             padding: 10px 15px;
             border-radius: 20px;
             font-size: 12px;
@@ -238,11 +267,60 @@
             z-index: 9999;
             display: none;
         }
+        
+        /* Camera permission request */
+        #camera-permission {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        #camera-permission h2 {
+            margin-bottom: 20px;
+        }
+        
+        #camera-permission p {
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.4;
+        }
+        
+        #camera-permission button {
+            padding: 15px 35px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+    <!-- Camera feed that will show what's behind the phone -->
+    <video id="camera-feed" autoplay playsinline></video>
+    
+    <!-- Camera permission request overlay -->
+    <div id="camera-permission">
+        <h2>Camera Access Required</h2>
+        <p>This experience uses your camera to create an augmented reality effect over your physical sketchbook. No images are stored or transmitted.</p>
+        <button id="enable-camera">Enable Camera</button>
+    </div>
+    
     <!-- Initial landing overlay -->
-    <div id="landing-overlay">
+    <div id="landing-overlay" style="display:none">
         <h1 class="landing-title">Emotional Collage Experience</h1>
         <h2 class="emotion-name" id="emotion-title">PAUSE</h2>
         <p class="emotion-description" id="emotion-description">
@@ -285,6 +363,14 @@
             
             <div class="hint" id="hint">
                 Move your phone gently to explore the overlay
+            </div>
+            
+            <!-- Camera control button -->
+            <div id="camera-toggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
             </div>
         </div>
         
@@ -335,6 +421,8 @@
     let isAnimating = true;
     let hintVisible = true;
     let debugMode = false; // Set to true for debugging
+    let cameraEnabled = false;
+    let usingFrontCamera = false;
     
     // Track device motion for interactive effect
     let deviceHasMoved = false;
@@ -359,6 +447,55 @@
                 debugElement.innerHTML += message + '<br>';
             }
         }
+    }
+    
+    // Initialize camera
+    function initCamera(facingMode = "environment") {
+        const videoElement = document.getElementById('camera-feed');
+        
+        // Check if already streaming and stop it
+        if (videoElement.srcObject) {
+            const tracks = videoElement.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+        
+        navigator.mediaDevices.getUserMedia({
+            video: { 
+                facingMode: facingMode,
+                width: { ideal: window.innerWidth },
+                height: { ideal: window.innerHeight }
+            },
+            audio: false
+        })
+        .then(stream => {
+            videoElement.srcObject = stream;
+            cameraEnabled = true;
+            usingFrontCamera = (facingMode === "user");
+            debugLog("Camera initialized: " + facingMode);
+            
+            // Hide permission screen and show landing
+            document.getElementById('camera-permission').style.display = 'none';
+            document.getElementById('landing-overlay').style.display = 'flex';
+        })
+        .catch(error => {
+            console.error("Camera error:", error);
+            debugLog("Camera error: " + error.message);
+            
+            // If exact environment mode fails, try without "exact" constraint
+            if (facingMode === "environment") {
+                debugLog("Trying generic camera access...");
+                initCamera({ exact: "environment" });
+            } else {
+                // If all camera attempts fail
+                alert("Camera access is required for this experience. Please allow camera access and reload the page.");
+            }
+        });
+    }
+    
+    // Toggle between front and back camera
+    function toggleCamera() {
+        usingFrontCamera = !usingFrontCamera;
+        initCamera(usingFrontCamera ? "user" : "environment");
     }
     
     // Get emotion from URL if present (from NFC tag)
@@ -450,10 +587,20 @@
         // Get emotion from URL
         getEmotionFromUrl();
         
+        // Camera permission button
+        document.getElementById('enable-camera').addEventListener('click', function() {
+            initCamera();
+        });
+        
         // Start button functionality with permission request
         document.getElementById('start-experience').addEventListener('click', function() {
             debugLog("Start button clicked");
             requestDeviceMotionPermission();
+        });
+        
+        // Camera toggle button
+        document.getElementById('camera-toggle').addEventListener('click', function() {
+            toggleCamera();
         });
         
         // Back button returns to landing
@@ -816,9 +963,8 @@
     }
     
     function draw() {
-        // Clear canvas only, don't set a background color to maintain transparency
+        // Clear canvas with completely transparent background
         clear();
-        // Removed background() call to keep everything transparent
         
         // Ensure something visible appears even without motion
         if (!deviceHasMoved && !motionPermissionGranted) {
@@ -1251,9 +1397,9 @@
     }
     
     function toggleOpacity() {
-        // Cycle through opacity levels with more transparency
+        // Cycle through opacity levels
         if (overlayOpacity > 0.55) {
-            overlayOpacity = 0.4; // Medium transparency
+            overlayOpacity = 0.4; // Medium transparency 
             debugLog("Opacity set to medium (0.4)");
         } else if (overlayOpacity > 0.3) {
             overlayOpacity = 0.2; // High transparency

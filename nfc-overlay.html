@@ -279,36 +279,33 @@
     </div>
     
     <script>
-        // Configuration for each emotional theme
-        const EMOTION_CONFIG = {
-            pause: {
-                colors: {
-                    primary: [0, 0, 0],        // Black
-                    secondary: [216, 122, 60],  // Orange
-                    accent: [139, 90, 43]       // Brown
-                },
-                soundFile: 'assets/sounds/pause_ambient.mp3',
-                description: 'An exploration of momentary stillness, when time feels suspended and we observe the interruption of continuous flow.'
+    // Configuration for each emotional theme
+    const EMOTION_CONFIG = {
+        pause: {
+            colors: {
+                primary: [0, 0, 0],       // Black
+                secondary: [216, 122, 60], // Orange
+                accent: [139, 90, 43]      // Brown
             },
-            nostalgia: {
-                colors: {
-                    primary: [80, 55, 130],     // Purple
-                    secondary: [216, 122, 60],  // Orange
-                    accent: [50, 150, 100]      // Green
-                },
-                soundFile: 'assets/sounds/nostalgia_ambient.mp3',
-                description: 'A bittersweet remembrance of moments past, where memories fade and resurface in waves of emotional resonance.'
+            soundFile: 'pause_ambient.mp3'  // Changed from assets/sounds/pause_ambient.mp3
+       },
+       nostalgia: {
+            colors: {
+                primary: [80, 55, 130],    // Purple
+                secondary: [216, 122, 60], // Orange
+                accent: [50, 150, 100]     // Green
             },
-            hope: {
-                colors: {
-                    primary: [50, 150, 80],     // Green
-                    secondary: [255, 180, 50],  // Yellow
-                    accent: [255, 80, 80]       // Red
-                },
-                soundFile: 'assets/sounds/hope_ambient.mp3',
-                description: 'An upward movement of possibility, where anticipation and optimism create pathways toward imagined futures.'
-            }
-        };
+            soundFile: 'nostalgia_soundscape.mp3'  // Changed to match your file name
+      },
+      hope: {
+            colors: {
+               primary: [50, 150, 80],    // Green
+               secondary: [255, 180, 50], // Yellow
+               accent: [255, 80, 80]      // Red
+            },
+            soundFile: ''  // Empty string since there's no hope sound file
+      }
+     };
         
         // Default to 'pause' until determined from URL
         let currentEmotion = 'pause';
@@ -406,25 +403,35 @@
         }
         
         function preload() {
-            // Load the sound file for current emotion
+            // Determine emotion from URL
+            getEmotionFromUrl();
+
+			// Load the sound file for current emotion, but don't block if it fails
             const soundFileUrl = EMOTION_CONFIG[currentEmotion].soundFile;
-            try {
-                emotionSound = loadSound(soundFileUrl, 
-                    () => {
-                        console.log("Sound loaded successfully");
-                        if (isAnimating && soundEnabled) {
-                            startSound();
+
+			// Only try to load sound if there's actually a file path
+            if (soundFileUrl && soundFileUrl.length > 0) {
+                try {
+                    emotionSound = loadSound(soundFileUrl, 
+                        () => {
+                            console.log("Sound loaded successfully");
+                            if (isAnimating && soundEnabled) {
+                                startSound();
+                            }
+                        },
+                        (err) => {
+                            console.error("Error loading sound:", err);
+                            oundEnabled = false;
                         }
-                    },
-                    (err) => {
-                        console.error("Error loading sound:", err);
-                        soundEnabled = false;
-                    }
-                );
-            } catch (e) {
-                console.error("Error loading sound:", e);
+                     );
+                 } catch (e) {
+                     console.error("Error loading sound:", e);
+                     soundEnabled = false;
+                 }
+			} else {
+                console.log("No sound file specified for this emotion");
                 soundEnabled = false;
-            }
+			}
         }
         
         function setup() {
@@ -1107,14 +1114,17 @@
         
         function startSound() {
             try {
-                emotionSound.loop();
-                emotionSound.setVolume(0);
-                emotionSound.setVolume(0.7, 1.5);
-                soundPlaying = true;
-            } catch(e) {
-                console.error("Error playing sound:", e);
-            }
-        }
+				 // Only try to play if the sound was successfully loaded
+                if (emotionSound && emotionSound.isLoaded()) {
+                    emotionSound.loop();
+                    emotionSound.setVolume(0);
+                    emotionSound.setVolume(0.7, 1.5);
+                    soundPlaying = true;
+				}
+             } catch(e) {
+                    console.error("Error playing sound:", e);
+		     }
+         }
         
         function toggleOpacity() {
             // Cycle through opacity levels

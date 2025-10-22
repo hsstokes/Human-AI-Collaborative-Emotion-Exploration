@@ -247,7 +247,7 @@
         <h2 class="emotion-name" id="emotion-title">PAUSE</h2>
         <p class="emotion-description" id="emotion-description">
             A momentary stillness where fragments of memory suspend in time, reflecting both absence and presence - an AI interpretation of emotional perception.
-            <br><b>Analysis by Claude</b>
+            Analysis by Claude
         </p>
         <button class="start-button" id="start-experience">Begin Experience</button>
     </div>
@@ -305,7 +305,7 @@
                 accent: [139, 90, 43]      // Brown
             },
             soundFile: 'pause_ambient.mp3',  // Changed from assets/sounds/pause_ambient.mp3
-            description: "An exploration of momentary stillness, when time feels suspended and we observe the interruption of continuous flow.<br><b>Analysis by Claude</b>"
+            description: "A momentary stillness where fragments of memory suspend in time, reflecting both absence and presence - an AI interpretation of emotional perception.<br><b>Analysis by Claude</b>"
         },
         nostalgia: {
             colors: {
@@ -314,7 +314,7 @@
                 accent: [50, 150, 100]     // Green
             },
             soundFile: 'nostalgia_soundscape.mp3',  // Changed to match your file name
-            description: "A reflection on the bittersweet remembrance of things past, the emotional texture of memory and temporal distance."
+            description: "A reflection on the bittersweet remembrance of things past, the emotional texture of memory and temporal distance.<br><b>Analysis by Claude</b>"
         },
         hope: {
             colors: {
@@ -323,7 +323,7 @@
                 accent: [255, 80, 80]      // Red
             },
             soundFile: '',  // Empty string since there's no hope sound file
-            description: "An anticipation of possibility, the sensation of potential futures unfolding from present moments."
+            description: "An anticipation of possibility, the sensation of potential futures unfolding from present moments.<br><b>Analysis by Claude</b>"
         }
     };
         
@@ -450,6 +450,12 @@
         
         // Get emotion from URL
         getEmotionFromUrl();
+        
+        // Force correct rendering of description HTML
+        setTimeout(function() {
+            document.getElementById('emotion-description').innerHTML = 
+                EMOTION_CONFIG[currentEmotion].description;
+        }, 100);
         
         // Start button functionality with permission request
         document.getElementById('start-experience').addEventListener('click', function() {

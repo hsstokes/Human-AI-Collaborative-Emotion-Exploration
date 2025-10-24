@@ -210,6 +210,40 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             cursor: pointer;
         }
+        /* Add these new mobile-specific styles at the end of your existing CSS */
+        @media (max-width: 768px) {
+        body {
+            overflow-y: auto !important; /* Allow scrolling on mobile */
+            height: auto !important;
+        }
+    
+        #landing-overlay {
+            position: absolute; /* Change from fixed to absolute */
+            height: auto;
+            min-height: 100%;
+            overflow-y: auto;
+            padding-bottom: 100px; /* Add padding at bottom */
+        }
+    
+        .landing-title {
+            margin-top: 40px;
+        }
+    
+        .start-button {
+            margin-bottom: 60px; /* Ensure button isn't at the very bottom */
+            position: relative;
+        }
+    
+        .emotion-name {
+            font-size: 42px; /* Slightly larger on mobile */
+        }
+    
+        .ai-disclaimer {
+            width: 90%;
+            font-size: 12px;
+            max-width: 90%;
+        }
+    }
     </style>
 </head>
 <body>

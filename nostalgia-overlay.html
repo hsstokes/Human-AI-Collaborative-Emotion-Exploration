@@ -210,41 +210,68 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             cursor: pointer;
         }
+        
         /* Add these new mobile-specific styles at the end of your existing CSS */
         @media (max-width: 768px) {
-        body {
-            overflow-y: auto !important; /* Allow scrolling on mobile */
-            height: auto !important;
+            body {
+                overflow-y: auto !important; /* Allow scrolling on mobile */
+                height: auto !important;
+            }
+        
+            #landing-overlay {
+                position: absolute; /* Change from fixed to absolute */
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+                padding: 40px 20px 120px 20px; /* More padding at top and bottom */
+                justify-content: flex-start; /* Start content from the top */
+            }
+        
+            .landing-title {
+                margin-top: 40px;
+            }
+        
+            .start-button {
+                margin-bottom: 60px; /* Ensure button isn't at the very bottom */
+                position: relative;
+            }
+        
+            .emotion-name {
+                font-size: 42px; /* Slightly larger on mobile */
+            }
+        
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
         }
-    
-        #landing-overlay {
-            position: absolute; /* Change from fixed to absolute */
-            height: auto;
-            min-height: 100%;
-            overflow-y: auto;
-            padding: 40px 20px 120px 20px; /* More padding at top and bottom */
-            justify-content: flex-start; /* Start content from the top */
+        
+        /* Add orientation-specific styles */
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px; /* Move controls above timeline in portrait mode */
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%; /* Wider in portrait */
+            }
         }
-    
-        .landing-title {
-            margin-top: 40px;
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px; /* Move away from edge and timeline handle */
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%; /* Narrower in landscape to leave room for controls */
+                max-width: 600px;
+            }
         }
-    
-        .start-button {
-            margin-bottom: 60px; /* Ensure button isn't at the very bottom */
-            position: relative;
-        }
-    
-        .emotion-name {
-            font-size: 42px; /* Slightly larger on mobile */
-        }
-    
-        .ai-disclaimer {
-            width: 90%;
-            font-size: 12px;
-            max-width: 90%;
-        }
-    }
     </style>
 </head>
 <body>
@@ -367,6 +394,9 @@
                 isAnimating = true;
                 loop();
                 
+                // Position controls based on orientation
+                updateLayoutForOrientation();
+                
                 // Start sound if enabled
                 if (soundEnabled && soundLoaded) {
                     try {
@@ -390,6 +420,32 @@
                 }, 2000);
             }, 1000);
         }
+        
+        // Function to update layout based on orientation
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', function() {
+            // Small delay to ensure dimensions have updated
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
         
         // Setup for landing page interaction - add both event listeners
         document.getElementById('start-experience').addEventListener('click', startExperience);
@@ -431,21 +487,31 @@
         
         // Timeline interaction
         document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
-        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag, { passive: true });
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
         
         function startTimelineDrag(e) {
+            if (e.type === 'touchstart') {
+                // Prevent scrolling during drag on mobile
+                e.preventDefault();
+            }
+            
             isDraggingTimeline = true;
             updateTimelinePosition(e);
             
             // Add document-level event listeners for drag and end
             document.addEventListener('mousemove', updateTimelinePosition);
-            document.addEventListener('touchmove', updateTimelinePosition, { passive: true });
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
             document.addEventListener('mouseup', endTimelineDrag);
             document.addEventListener('touchend', endTimelineDrag);
         }
         
         function updateTimelinePosition(e) {
             if (!isDraggingTimeline) return;
+            
+            // Prevent scrolling when dragging on mobile
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
             
             const timeline = document.getElementById('timeline-bar');
             const rect = timeline.getBoundingClientRect();
@@ -458,7 +524,7 @@
                 clientX = e.clientX;
             }
             
-            // Calculate percentage position
+            // Calculate percentage position with better boundary handling
             let percentage = (clientX - rect.left) / rect.width;
             percentage = Math.max(0, Math.min(1, percentage));
             
@@ -760,6 +826,9 @@
         function showTimeline() {
             // Show the timeline interface
             document.getElementById('timeline').style.opacity = '1';
+            
+            // Position controls based on orientation when timeline appears
+            updateLayoutForOrientation();
         }
         
         function updateActivatedElements() {
@@ -1235,7 +1304,12 @@
 
         function windowResized() {
             resizeCanvas(windowWidth, windowHeight);
-            
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        // Create a dedicated function for repositioning elements
+        function repositionElements() {
             // Recalculate hand outline points for new dimensions
             for (let i = 0; i < handOutlinePoints.length; i++) {
                 handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
@@ -1427,21 +1501,23 @@
         
         function touchStarted(e) {
             // Get the touch position
-            touchX = touches[0].x;
-            touchY = touches[0].y;
-            
-            // Record start time
-            touchStartTime = millis();
-            
-            // Clear any existing timer
-            if (touchTimer) clearTimeout(touchTimer);
-            
-            // Set new timer
-            touchTimer = setTimeout(handleLongPress, 1000);
-            
-            // Resume audio context for iOS
-            if (getAudioContext().state !== 'running') {
-                getAudioContext().resume();
+            if (touches.length > 0) {
+                touchX = touches[0].x;
+                touchY = touches[0].y;
+                
+                // Record start time
+                touchStartTime = millis();
+                
+                // Clear any existing timer
+                if (touchTimer) clearTimeout(touchTimer);
+                
+                // Set new timer
+                touchTimer = setTimeout(handleLongPress, 1000);
+                
+                // Resume audio context for iOS
+                if (getAudioContext().state !== 'running') {
+                    getAudioContext().resume();
+                }
             }
             
             return mousePressed();
@@ -1457,7 +1533,7 @@
         
         function touchMoved() {
             // Clear the long press timer if touch moves too much
-            if (touchTimer && dist(touchX, touchY, touches[0].x, touches[0].y) > 10) {
+            if (touchTimer && touches.length > 0 && dist(touchX, touchY, touches[0].x, touches[0].y) > 10) {
                 clearTimeout(touchTimer);
                 touchTimer = null;
             }
@@ -1470,6 +1546,7 @@
             if (document.getElementById('timeline').style.opacity === '0') {
                 document.getElementById('timeline').style.opacity = '1';
                 activatedTimeline = true;
+                updateLayoutForOrientation();
             }
             
             // Look for focal points near the long press

@@ -3,95 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Nostalgia - Emotional Processing</title>
+    <title>Nostalgia - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f5f4ef;
-            font-family: Arial, sans-serif;
             overflow: hidden;
+            background-color: #f5f5f7;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        /* Landing screen that appears first */
+        #landing-overlay {
             position: fixed;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(245, 245, 247, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
         }
         
-        canvas {
-            max-width: 100%;
-            max-height: 100vh;
-            object-fit: contain;
-            touch-action: manipulation;
-        }
-    
-        .ui-element {
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            color: rgba(80, 80, 80, 0.7);
-            font-family: 'Orator Std', monospace;
-            font-size: 9px;
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
             letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
             text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #50377E; /* Purple for nostalgia */
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 80px;
+            opacity: 0.8;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Canvas for the animation */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
     </style>
 </head>
 <body>
-    <div class="info">Nostalgia · Emotional Processing</div>
+    <!-- Initial landing overlay -->
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">NOSTALGIA</h2>
+        <p class="emotion-description" id="emotion-description">
+            A reflection on the bittersweet remembrance of things past, the emotional texture of memory and temporal distance.
+            <br><b>Analysis by Claude</b>
+        </p>
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
     
     <script>
-        let nostalgiaImage;
         let isAnimating = true;
         let soundEnabled = true;
-        let soundPlaying = false;
         let nostalgiaSound;
         let soundLoaded = false;
         
         // Color palette for Nostalgia
         const colors = {
-            purple: [200, 177, 230],  // Light purple - Recognition
-            yellow: [255, 216, 0],    // Yellow - Evaluation
-            bronze: [205, 127, 50]    // Bronze - Response
+            purple: [200, 177, 230],  // Light purple - Memory fragments
+            yellow: [255, 216, 0],    // Yellow - Emotional response
+            bronze: [205, 127, 50]    // Bronze - Grounding elements
         };
         
-        // Elements for each behavior
-        let recognitionElements = [];  // Purple elements - recognition of patterns
-        let evaluationElements = [];   // Yellow elements - evaluation of significance
-        let responseElements = [];     // Bronze elements - response generation
+        // Elements for each conceptual layer
+        let memoryFragments = [];     // Purple elements - fragments of memory
+        let emotionalResponse = [];   // Yellow elements - emotional reaction to memories
+        let groundingElements = [];   // Bronze elements - anchoring elements
         
         // Memory pathways that connect elements
         let memoryPathways = [];
         
+        // Hand outline coordinates (will gradually appear)
+        let handOutlinePoints = [];
+        let handProgress = 0;
+        
+        // Setup for landing page interaction
+        document.getElementById('start-experience').addEventListener('click', function() {
+            // Fade out landing overlay
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            // After fading out, remove from DOM
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                // Start animation
+                isAnimating = true;
+                loop();
+                
+                // Start sound if enabled
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        nostalgiaSound.loop();
+                        nostalgiaSound.setVolume(0);
+                        nostalgiaSound.setVolume(0.6, 2); // Fade in over 2 seconds
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+            }, 1000);
+        });
+        
         function preload() {
-            // Pre-load assets
-            nostalgiaImage = loadImage('nostalgia_collage.jpg');
+            // Pre-load sound
             soundLoaded = false;
             nostalgiaSound = loadSound('nostalgia_soundscape.mp3', 
                 function() {
                     console.log("Sound loaded successfully");
                     soundLoaded = true;
-                    
-                    // Start sound if autoplay is enabled
-                    if (isAnimating && soundEnabled) {
-                        try {
-                            nostalgiaSound.loop();
-                            nostalgiaSound.setVolume(0);
-                            nostalgiaSound.setVolume(0.8, 2); // Fade in over 2 seconds
-                            soundPlaying = true;
-                        } catch(e) {
-                            console.error("Error starting audio:", e);
-                        }
-                    }
                 },
                 function(err) {
                     console.error("Error loading sound:", err);
@@ -103,79 +168,82 @@
         function setup() {
             createCanvas(windowWidth, windowHeight);
             
-            // Create purple elements - recognition of memory patterns (increased number for more coverage)
-            for (let i = 0; i < 22; i++) {
-                recognitionElements.push({
+            // Define hand outline points - a simplified hand silhouette
+            createHandOutline();
+            
+            // Create memory fragments (purple elements)
+            for (let i = 0; i < 28; i++) {
+                memoryFragments.push({
                     x: random(width * 0.1, width * 0.9),
                     y: random(height * 0.1, height * 0.9),
                     size: random(5, 15),
                     opacity: random(150, 230),
-                    startTime: i * 600,
+                    startTime: i * 500,
                     visible: false
                 });
             }
             
-            // Create memory pathways connecting recognition elements (more pathways)
-            for (let i = 0; i < recognitionElements.length - 1; i++) {
+            // Create memory pathways connecting memory fragments
+            for (let i = 0; i < memoryFragments.length - 1; i++) {
                 memoryPathways.push({
                     start: i,
-                    end: i + 1,
+                    end: (i + 1) % memoryFragments.length,
                     progress: 0,
-                    speed: random(0.001, 0.003),
+                    speed: random(0.0005, 0.002),
                     opacity: random(100, 180),
                     dotSize: random(2, 4),
-                    dotSpacing: random(8, 15),
-                    startTime: recognitionElements[i].startTime + 400
+                    dotSpacing: random(10, 18),
+                    startTime: memoryFragments[i].startTime + 600
                 });
             }
             
-            // Add some additional random connections between dots
-            for (let i = 0; i < 8; i++) {
-                let startIndex = floor(random(recognitionElements.length));
-                let endIndex = floor(random(recognitionElements.length));
+            // Add some additional random connections
+            for (let i = 0; i < 12; i++) {
+                let startIndex = floor(random(memoryFragments.length));
+                let endIndex = floor(random(memoryFragments.length));
                 
                 if (startIndex !== endIndex) {
                     memoryPathways.push({
                         start: startIndex,
                         end: endIndex,
                         progress: 0,
-                        speed: random(0.0008, 0.002),
-                        opacity: random(100, 160),
-                        dotSize: random(2, 3.5),
-                        dotSpacing: random(10, 18),
-                        startTime: 15000 + i * 1200
+                        speed: random(0.0005, 0.0015),
+                        opacity: random(80, 140),
+                        dotSize: random(1.5, 3),
+                        dotSpacing: random(12, 20),
+                        startTime: 12000 + i * 1000
                     });
                 }
             }
             
-            // Create yellow elements - evaluate significance (increased number)
-            for (let i = 0; i < 12; i++) {
+            // Create emotional response elements (yellow)
+            for (let i = 0; i < 10; i++) {
                 let isCircle = random() > 0.4;
-                evaluationElements.push({
-                    x: random(width * 0.1, width * 0.9),
-                    y: random(height * 0.1, height * 0.9),
+                emotionalResponse.push({
+                    x: random(width * 0.15, width * 0.85),
+                    y: random(height * 0.15, height * 0.85),
                     width: isCircle ? random(20, 40) : random(30, 60),
                     height: isCircle ? undefined : random(15, 30),
                     isCircle: isCircle,
                     pulseRate: random(0.001, 0.003),
-                    opacity: random(150, 200),
-                    startTime: 10000 + i * 900,
+                    opacity: random(130, 180),
+                    startTime: 8000 + i * 1100,
                     visible: false
                 });
             }
             
-            // Create bronze elements - response generation (increased number)
-            for (let i = 0; i < 9; i++) {
+            // Create bronze elements (grounding elements)
+            for (let i = 0; i < 7; i++) {
                 let shapeType = floor(random(3)); // 0: rectangle, 1: arc, 2: line
-                responseElements.push({
-                    x: random(width * 0.2, width * 0.9),
+                groundingElements.push({
+                    x: random(width * 0.2, width * 0.8),
                     y: random(height * 0.2, height * 0.8),
-                    width: random(30, 60),
+                    width: random(40, 80),
                     height: shapeType === 0 ? random(40, 60) : 
-                            shapeType === 1 ? random(15, 30) : random(3, 8),
+                             shapeType === 1 ? random(15, 30) : random(3, 8),
                     shapeType: shapeType,
                     opacity: random(150, 220),
-                    startTime: 18000 + i * 1400,
+                    startTime: 16000 + i * 1400,
                     visible: false
                 });
             }
@@ -184,57 +252,117 @@
             if (getAudioContext().state !== 'running') {
                 getAudioContext().resume();
             }
+            
+            // Initially pause animation while on landing page
+            isAnimating = false;
+            noLoop(); // Pause the animation until user enters
+        }
+
+        function createHandOutline() {
+            // Create a simplified hand outline
+            // Base of palm
+            handOutlinePoints.push({x: 0.4, y: 0.7});
+            handOutlinePoints.push({x: 0.6, y: 0.7});
+            
+            // Right side of hand
+            handOutlinePoints.push({x: 0.62, y: 0.65});
+            handOutlinePoints.push({x: 0.63, y: 0.6});
+            
+            // Pinky finger
+            handOutlinePoints.push({x: 0.65, y: 0.55});
+            handOutlinePoints.push({x: 0.67, y: 0.48});
+            handOutlinePoints.push({x: 0.65, y: 0.45});
+            
+            // Ring finger
+            handOutlinePoints.push({x: 0.61, y: 0.43});
+            handOutlinePoints.push({x: 0.6, y: 0.36});
+            handOutlinePoints.push({x: 0.58, y: 0.32});
+            
+            // Middle finger
+            handOutlinePoints.push({x: 0.55, y: 0.3});
+            handOutlinePoints.push({x: 0.53, y: 0.24});
+            handOutlinePoints.push({x: 0.51, y: 0.22});
+            
+            // Index finger
+            handOutlinePoints.push({x: 0.48, y: 0.25});
+            handOutlinePoints.push({x: 0.45, y: 0.28});
+            handOutlinePoints.push({x: 0.43, y: 0.32});
+            
+            // Thumb
+            handOutlinePoints.push({x: 0.39, y: 0.4});
+            handOutlinePoints.push({x: 0.35, y: 0.45});
+            handOutlinePoints.push({x: 0.37, y: 0.52});
+            
+            // Left side of hand
+            handOutlinePoints.push({x: 0.38, y: 0.6});
+            handOutlinePoints.push({x: 0.4, y: 0.7});
+            
+            // Convert relative coordinates to absolute
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
         }
 
         function draw() {
             // Clear the canvas with a warm white background
-            background(248, 247, 242, 50);  // Semi-transparent to create a fading effect
+            background(248, 247, 242);
 
-            // Display the background image with proper aspect ratio
-            let imgRatio = nostalgiaImage.width / nostalgiaImage.height;
-            let canvasRatio = width / height;
-    
-            if (imgRatio > canvasRatio) {
-                // Image is wider than canvas relative to height
-                let newHeight = width / imgRatio;
-                image(nostalgiaImage, 0, (height - newHeight) / 2, width, newHeight);
-            } else {
-                // Image is taller than canvas relative to width
-                let newWidth = height * imgRatio;
-                image(nostalgiaImage, (width - newWidth) / 2, 0, newWidth, height);
+            // Draw the layers in appropriate order
+            drawGroundingElements();  // First layer (bottom)
+            drawHandOutline();        // Second layer (middle)
+            drawMemoryFragments();    // Third layer
+            drawMemoryPathways();     // Fourth layer
+            drawEmotionalResponse();  // Fifth layer (top)
+            
+            // Update hand outline progress
+            if (isAnimating) {
+                handProgress = min(1, handProgress + 0.0005);
             }
-            
-            // Draw all elements - focusing only on the colored components
-            drawMemoryPathways();
-            drawRecognitionElements();
-            drawEvaluationElements();
-            drawResponseElements();
-            
-            // Sound control button
-            drawSoundButton();
         }
 
-        function drawRecognitionElements() {
-            // Purple elements for recognition of memory patterns
+        function drawHandOutline() {
+            // Only start drawing hand after initial elements appear
+            if (millis() < 6000) return;
+            
+            // Calculate how many points to show based on progress
+            let pointsToShow = floor(handOutlinePoints.length * handProgress);
+            
+            if (pointsToShow < 2) return;
+            
+            // Draw the hand outline as a faint connecting line
+            noFill();
+            stroke(180, 160, 140, 50); // Very faint warm gray
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let i = 0; i < pointsToShow; i++) {
+                vertex(handOutlinePoints[i].x, handOutlinePoints[i].y);
+            }
+            endShape();
+        }
+
+        function drawMemoryFragments() {
+            // Purple elements representing memory fragments
             noStroke();
             
-            for (let i = 0; i < recognitionElements.length; i++) {
-                let element = recognitionElements[i];
+            for (let i = 0; i < memoryFragments.length; i++) {
+                let fragment = memoryFragments[i];
                 
                 // Check if this element should be visible based on its timing
-                if (millis() > element.startTime) {
-                    element.visible = true;
+                if (millis() > fragment.startTime) {
+                    fragment.visible = true;
                 }
                 
-                if (element.visible) {
-                    fill(colors.purple[0], colors.purple[1], colors.purple[2], element.opacity);
-                    ellipse(element.x, element.y, element.size);
+                if (fragment.visible) {
+                    fill(colors.purple[0], colors.purple[1], colors.purple[2], fragment.opacity);
+                    ellipse(fragment.x, fragment.y, fragment.size);
                 }
             }
         }
 
         function drawMemoryPathways() {
-            // Dotted pathways connecting memory points
+            // Dotted pathways connecting memory fragments
             for (let pathway of memoryPathways) {
                 // Only start drawing after the delay
                 if (millis() > pathway.startTime) {
@@ -244,15 +372,12 @@
                     }
                     
                     // Get start and end points
-                    let start = recognitionElements[pathway.start];
-                    let end = recognitionElements[pathway.end];
+                    let start = memoryFragments[pathway.start];
+                    let end = memoryFragments[pathway.end];
                     
-                    // Only draw if both points are visible
+                    // Only draw if both fragments are visible
                     if (start.visible && end.visible) {
                         // Draw dotted line
-                        stroke(colors.purple[0], colors.purple[1], colors.purple[2], pathway.opacity);
-                        strokeWeight(1);
-                        
                         let distance = dist(start.x, start.y, end.x, end.y);
                         let numDots = floor(distance / pathway.dotSpacing);
                         
@@ -272,11 +397,11 @@
             }
         }
 
-        function drawEvaluationElements() {
-            // Yellow elements for evaluation of significance
+        function drawEmotionalResponse() {
+            // Yellow elements for emotional response
             noStroke();
             
-            for (let element of evaluationElements) {
+            for (let element of emotionalResponse) {
                 // Check if this element should be visible based on its timing
                 if (millis() > element.startTime) {
                     element.visible = true;
@@ -303,11 +428,11 @@
             }
         }
 
-        function drawResponseElements() {
-            // Bronze elements for response generation
+        function drawGroundingElements() {
+            // Bronze elements representing grounding aspects
             noStroke();
             
-            for (let element of responseElements) {
+            for (let element of groundingElements) {
                 // Check if this element should be visible based on its timing
                 if (millis() > element.startTime) {
                     element.visible = true;
@@ -317,131 +442,50 @@
                     fill(colors.bronze[0], colors.bronze[1], colors.bronze[2], element.opacity);
                     
                     if (element.shapeType === 0) {
-                        // Rectangle
+                        // Rectangle - structured memory foundation
                         rectMode(CENTER);
                         rect(element.x, element.y, element.width, element.height, 5);
                     } else if (element.shapeType === 1) {
-                        // Arc / semicircle
+                        // Arc / semicircle - embracing memory
                         arc(element.x, element.y, element.width, element.height * 2, PI, TWO_PI, CHORD);
                     } else {
-                        // Line
+                        // Line - connection between past and present
                         rectMode(CENTER);
                         rect(element.x, element.y, element.width, element.height);
                     }
                 }
             }
         }
-        
-        function drawSoundButton() {
-            // Sound control button
-            let buttonX = width - 50;
-            let buttonY = height - 50;
-            let buttonSize = 30;
-
-            // Button background
-            noStroke();
-            fill(240, 240, 240, 180);
-            rect(buttonX, buttonY, buttonSize, buttonSize, 5);
-
-            // Sound icon
-            if (soundEnabled) {
-                // Sound on icon
-                fill(60, 60, 60);
-                noStroke();
-                // Speaker base
-                rect(buttonX + 10, buttonY + 12, 4, 6);
-                // Speaker cone
-                beginShape();
-                vertex(buttonX + 10, buttonY + 12);
-                vertex(buttonX + 16, buttonY + 8);
-                vertex(buttonX + 16, buttonY + 22);
-                vertex(buttonX + 10, buttonY + 18);
-                endShape(CLOSE);
-                // Sound waves
-                noFill();
-                stroke(60, 60, 60);
-                strokeWeight(1.5);
-                arc(buttonX + 18, buttonY + 15, 6, 8, -PI/3, PI/3);
-                arc(buttonX + 18, buttonY + 15, 10, 14, -PI/3, PI/3);
-            } else {
-                // Sound off icon
-                fill(60, 60, 60);
-                noStroke();
-                // Speaker base
-                rect(buttonX + 10, buttonY + 12, 4, 6);
-                // Speaker cone
-                beginShape();
-                vertex(buttonX + 10, buttonY + 12);
-                vertex(buttonX + 16, buttonY + 8);
-                vertex(buttonX + 16, buttonY + 22);
-                vertex(buttonX + 10, buttonY + 18);
-                endShape(CLOSE);
-                // X over the speaker
-                stroke(60, 60, 60);
-                strokeWeight(1.5);
-                line(buttonX + 19, buttonY + 10, buttonX + 24, buttonY + 20);
-                line(buttonX + 24, buttonY + 10, buttonX + 19, buttonY + 20);
-            }
-        }
 
         function windowResized() {
             resizeCanvas(windowWidth, windowHeight);
+            
+            // Recalculate hand outline points for new dimensions
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
+            }
         }
         
         function mousePressed() {
-            // Check if sound button was clicked
-            let buttonX = width - 50;
-            let buttonY = height - 50;
-            let buttonSize = 30;
-            
-            if (mouseX > buttonX && mouseX < buttonX + buttonSize && 
-                mouseY > buttonY && mouseY < buttonY + buttonSize) {
+            // Toggle animation state when canvas is clicked (after landing page)
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                isAnimating = !isAnimating;
                 
-                soundEnabled = !soundEnabled;
-                
-                if (!soundEnabled && soundPlaying) {
-                    // Fade out and stop sound
+                // Handle sound based on animation state
+                if (!isAnimating && soundEnabled && soundLoaded && nostalgiaSound.isPlaying()) {
                     nostalgiaSound.setVolume(0, 1);
                     setTimeout(() => {
-                        nostalgiaSound.stop();
-                        soundPlaying = false;
+                        nostalgiaSound.pause();
                     }, 1000);
-                } else if (soundEnabled && isAnimating && !soundPlaying && soundLoaded) {
-                    // Start sound
-                    try {
-                        nostalgiaSound.loop();
-                        nostalgiaSound.setVolume(0);
-                        nostalgiaSound.setVolume(0.8, 1);
-                        soundPlaying = true;
-                    } catch(e) {
-                        console.error("Error playing sound:", e);
-                    }
-                }
-                return false;
-            }
-            
-            // Toggle animation state when canvas is clicked
-            isAnimating = !isAnimating;
-            
-            // Handle sound based on animation state
-            if (!isAnimating && soundPlaying) {
-                nostalgiaSound.setVolume(0, 1);
-                setTimeout(() => {
-                    nostalgiaSound.pause();
-                    soundPlaying = false;
-                }, 1000);
-            } else if (isAnimating && soundEnabled && !soundPlaying && soundLoaded) {
-                try {
+                } else if (isAnimating && soundEnabled && soundLoaded && !nostalgiaSound.isPlaying()) {
                     nostalgiaSound.loop();
                     nostalgiaSound.setVolume(0);
-                    nostalgiaSound.setVolume(0.8, 1);
-                    soundPlaying = true;
-                } catch(e) {
-                    console.error("Error playing sound:", e);
+                    nostalgiaSound.setVolume(0.6, 1);
                 }
+                
+                return false;
             }
-            
-            return false;
         }
         
         // Support touch events

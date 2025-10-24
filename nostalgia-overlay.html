@@ -354,8 +354,8 @@
         // Timeline tracking
         let timelineProgress = 0;
         
-        // Setup for landing page interaction
-        document.getElementById('start-experience').addEventListener('click', function() {
+        // Function that contains the button action logic
+        function startExperience() {
             // Fade out landing overlay
             document.getElementById('landing-overlay').style.opacity = '0';
             
@@ -389,6 +389,13 @@
                     }, 5000);
                 }, 2000);
             }, 1000);
+        }
+        
+        // Setup for landing page interaction - add both event listeners
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault(); // Prevent default to avoid double-firing
+            startExperience();
         });
         
         // Sound toggle

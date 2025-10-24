@@ -2,700 +2,1711 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pause - Emotional Interruption</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Emotional NFC Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
+            overflow: hidden;
+            background-color: #f5f5f7;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        /* Landing screen that appears first */
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(245, 245, 247, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 80px;
+            opacity: 0.8;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* The main overlay that appears after landing screen */
+        #overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            touch-action: manipulation;
+        }
+        
+        /* Frame that provides visual context around the overlay */
+        .overlay-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+        
+        .frame-top, .frame-bottom {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: rgba(245, 245, 247, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        .frame-top {
+            top: 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f8f8f8;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
         }
         
-        canvas {
-            max-width: 100%;
-            max-height: 100vh;
-            object-fit: contain;
+        .frame-bottom {
+            bottom: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
         
-        .info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            color: rgba(80, 80, 80, 0.7);
-            font-family: 'Orator Std', monospace;
-            font-size: 9px;
-            letter-spacing: 1px;
+        .emotion-indicator {
+            font-size: 14px;
+            letter-spacing: 2px;
             text-transform: uppercase;
+            color: #333;
+        }
+        
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            z-index: 30;
+            display: flex;
+            gap: 15px;
+            pointer-events: auto;
+        }
+        
+        .control-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Helpful hints */
+        .hint {
+            position: absolute;
+            left: 20px;
+            bottom: 15px;
+            z-index: 25;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            pointer-events: auto;
+            transition: opacity 0.5s;
+        }
+        
+        /* Pulse animation for certain elements */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        /* Element-specific color themes */
+        .pause-theme {
+            color: #8C5A2D; /* Brown */
+        }
+        
+        .nostalgia-theme {
+            color: #50377E; /* Purple */
+        }
+        
+        .hope-theme {
+            color: #328F50; /* Green */
+        }
+        
+        /* Unique visual effect for each emotion */
+        .visual-accent {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.4;
+            z-index: 5;
+            animation: pulse 4s infinite ease-in-out;
+        }
+        
+        .pause-accent {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(216,122,60,0.3) 0%, rgba(216,122,60,0) 70%);
+            top: 30%;
+            right: 10%;
+        }
+        
+        .nostalgia-accent {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(80,55,130,0.2) 0%, rgba(80,55,130,0) 70%);
+            bottom: 20%;
+            left: 10%;
+        }
+        
+        .hope-accent {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(50,150,80,0.25) 0%, rgba(50,150,80,0) 70%);
+            top: 20%;
+            left: 15%;
+        }
+
+        /* Debug message for mobile testing */
+        #debug-info {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 100%;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            font-size: 10px;
+            z-index: 9999;
+            display: none;
+        }
+        
+        /* Pause effect notification */
+        #pause-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(216,122,60,0.2);
+            border: 1px solid rgba(216,122,60,0.4);
+            color: #8C5A2D;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
 <body>
-    <div class="info">Pause · Emotional Interruption</div>
+    <!-- Initial landing overlay -->
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">PAUSE</h2>
+        <p class="emotion-description" id="emotion-description">
+            A momentary stillness where fragments of memory suspend in time, reflecting both absence and presence - an AI interpretation of emotional perception.
+            Analysis by Claude
+        </p>
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
+    
+    <!-- p5.js canvas for the interactive overlay -->
+    <div id="overlay-canvas"></div>
+    
+    <!-- Debug info for testing -->
+    <div id="debug-info">Debugging info will appear here</div>
+
+    <!-- Frame that provides visual context -->
+    <div class="overlay-frame">
+        <div class="frame-top">
+            <div class="emotion-indicator" id="emotion-indicator">PAUSE</div>
+        </div>
+        <div class="frame-bottom">
+            <div class="controls">
+                <div class="control-btn" id="sound-toggle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                        <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                </div>
+                <div class="control-btn" id="opacity-toggle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                        <path d="M9 3v18M15 3v18"></path>
+                    </svg>
+                </div>
+                <div class="control-btn" id="back-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="hint" id="hint">
+                Tap on elements to experience pause
+            </div>
+        </div>
+        
+        <!-- Visual accents specific to each emotion -->
+        <div class="visual-accent pause-accent" id="pause-accent"></div>
+        <div class="visual-accent nostalgia-accent" id="nostalgia-accent" style="display: none;"></div>
+        <div class="visual-accent hope-accent" id="hope-accent" style="display: none;"></div>
+    </div>
+    
+    <!-- Pause notification -->
+    <div id="pause-notification">Element Paused</div>
     
     <script>
-        let pauseImage; // Background image holder
-        let isAnimating = true; // Start in animation mode
-        let soundEnabled = true;
-        let soundPlaying = false;
-        let pauseSound;
-        let soundLoaded = false;
-        let lastPausedElement = null; // Track the last paused element for visual feedback
-        let pauseEffectTime = 0; // Time when pause effect was triggered
-        
-        // Color palette from the analysis
-        const colors = {
-            black: [0, 0, 0],
-            orange: [216, 122, 60],
-            brown: [139, 90, 43]
-        };
-        
-        // Elements for each behavior
-        let interruptionPoints = []; // Black elements - points of interruption
-        let temporalElements = []; // Orange elements - assess duration
-        let transitionElements = []; // Brown elements - facilitate transition
-        
-        // Dotted lines that occasionally pause
-        let dottedLines = [];
-        
-        function preload() {
-            // Pre-load any assets
-            pauseImage = loadImage('pause.jpg'); // or whatever your image file is named
-            soundLoaded = false;
-            pauseSound = loadSound('pause_ambient.mp3', 
-                function() {
-                    console.log("Sound loaded successfully");
-                    soundLoaded = true;
-                    
-                    // Start sound if autoplay is enabled
-                    if (isAnimating && soundEnabled) {
-                        try {
-                            pauseSound.loop();
-                            pauseSound.setVolume(0);
-                            pauseSound.setVolume(0.8, 2); // Fade in over 2 seconds
-                            soundPlaying = true;
-                        } catch(e) {
-                            console.error("Error starting audio:", e);
-                        }
-                    }
-                },
-                function(err) {
-                    console.error("Error loading sound:", err);
-                    soundEnabled = false;
-                }
-            );
+    // Configuration for each emotional theme
+    const EMOTION_CONFIG = {
+        pause: {
+            colors: {
+                primary: [0, 0, 0],       // Black
+                secondary: [216, 122, 60], // Orange
+                accent: [139, 90, 43]      // Brown
+            },
+            soundFile: 'pause_ambient.mp3',  // Changed from assets/sounds/pause_ambient.mp3
+            description: "A momentary stillness where fragments of memory suspend in time, reflecting both absence and presence - an AI interpretation of emotional perception.<br><b>Analysis by Claude</b>"
+        },
+        nostalgia: {
+            colors: {
+                primary: [80, 55, 130],    // Purple
+                secondary: [216, 122, 60], // Orange
+                accent: [50, 150, 100]     // Green
+            },
+            soundFile: 'nostalgia_soundscape.mp3',  // Changed to match your file name
+            description: "A reflection on the bittersweet remembrance of things past, the emotional texture of memory and temporal distance.<br><b>Analysis by Claude</b>"
+        },
+        hope: {
+            colors: {
+                primary: [50, 150, 80],    // Green
+                secondary: [255, 180, 50], // Yellow
+                accent: [255, 80, 80]      // Red
+            },
+            soundFile: '',  // Empty string since there's no hope sound file
+            description: "An anticipation of possibility, the sensation of potential futures unfolding from present moments.<br><b>Analysis by Claude</b>"
         }
-
-        function setup() {
-            createCanvas(windowWidth, windowHeight);
-            
-            // Create black elements - points of complete interruption
-            for (let i = 0; i < 5; i++) {
-                interruptionPoints.push({
-                    x: random(width * 0.2, width * 0.8),
-                    y: random(height * 0.2, height * 0.8),
-                    size: random(20, 60),
-                    type: random() > 0.5 ? 'rect' : 'circle',
-                    opacity: random(180, 255),
-                    duration: random(2000, 5000),
-                    startTime: random(0, 2000),
-                    visible: false,
-                    paused: false,
-                    pauseTime: 0,
-                    pauseDuration: 0, // Will be set when paused
-                    highlight: false // Visual feedback when clicked
-                });
-            }
-            
-            // Create orange elements - assess temporal duration
-            for (let i = 0; i < 3; i++) {
-                temporalElements.push({
-                    x: random(width * 0.3, width * 0.7),
-                    y: random(height * 0.3, height * 0.7),
-                    size: random(30, 80),
-                    pulseRate: random(0.001, 0.003),
-                    opacity: random(100, 200),
-                    startTime: random(0, 3000),
-                    paused: false,
-                    pauseTime: 0,
-                    pauseDuration: 0,
-                    highlight: false
-                });
-            }
-            
-            // Create brown elements - transition between states
-            for (let i = 0; i < 4; i++) {
-                transitionElements.push({
-                    x1: random(width * 0.1, width * 0.4),
-                    y1: random(height * 0.2, height * 0.8),
-                    x2: random(width * 0.6, width * 0.9),
-                    y2: random(height * 0.2, height * 0.8),
-                    thickness: random(1, 3),
-                    opacity: random(120, 200),
-                    progress: 0,
-                    speed: random(0.0005, 0.002),
-                    delay: random(1000, 3000),
-                    paused: false,
-                    pauseTime: 0,
-                    pauseDuration: 0,
-                    highlight: false
-                });
-            }
-            
-            // Create dotted lines that occasionally pause
-            for (let i = 0; i < 8; i++) {
-                dottedLines.push({
-                    x: random(width * 0.1, width * 0.9),
-                    y: random(height * 0.1, height * 0.9),
-                    length: random(100, 300),
-                    angle: random(0, TWO_PI),
-                    dotSize: random(2, 4),
-                    dotSpacing: random(8, 15),
-                    progress: 0,
-                    speed: random(0.002, 0.005),
-                    pauseAt: random(0.3, 0.7),
-                    pauseDuration: random(1000, 3000),
-                    isPaused: false,
-                    pauseStart: 0,
-                    opacity: random(150, 220),
-                    userPaused: false,
-                    pauseTime: 0,
-                    pauseUserDuration: 0,
-                    highlight: false
-                });
-            }
-            
-            // Initialize audio context for better mobile support
-            if (getAudioContext().state !== 'running') {
-                getAudioContext().resume();
-            }
-        }
-
-        function draw() {
-            // Clear the canvas with a warm white background
-            background(248, 247, 242);
-
-            // Display the background image with proper aspect ratio
-            let imgRatio = pauseImage.width / pauseImage.height;
-            let canvasRatio = width / height;
+    };
+        
+    // Default to 'pause' until determined from URL
+    let currentEmotion = 'pause';
+    let overlayOpacity = 0.85; // Increased for better visibility
+    let soundEnabled = true;
+    let emotionSound;
+    let soundPlaying = false;
+    let isAnimating = true;
+    let hintVisible = true;
+    let debugMode = false; // Set to true for debugging
     
-            if (imgRatio > canvasRatio) {
-                // Image is wider than canvas relative to height
-                let newHeight = width / imgRatio;
-                image(pauseImage, 0, (height - newHeight) / 2, width, newHeight);
+    // Track device motion for interactive effect
+    let deviceHasMoved = false;
+    let deviceTiltX = 0;
+    let deviceTiltY = 0;
+    let motionPermissionGranted = false;
+    
+    // Visual elements
+    let interruptionPoints = [];
+    let temporalElements = [];
+    let transitionElements = [];
+    let dottedLines = [];
+    let circleOverlays = [];
+    
+    // Pause effect variables
+    let pauseEffectTime = 0; 
+    let pauseNotificationVisible = false;
+    let lastElementPaused = null;
+    let globalPauseActive = false;
+    let globalPauseStartTime = 0;
+    let globalPauseDuration = 0;
+    
+    // Debug log helper
+    function debugLog(message) {
+        if (debugMode) {
+            console.log(message);
+            let debugElement = document.getElementById('debug-info');
+            if (debugElement) {
+                debugElement.style.display = 'block';
+                debugElement.innerHTML += message + '<br>';
+            }
+        }
+    }
+    
+    // Get emotion from URL if present (from NFC tag)
+    function getEmotionFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const emotion = urlParams.get('emotion');
+        
+        if (emotion && EMOTION_CONFIG[emotion]) {
+            currentEmotion = emotion;
+            debugLog(`Emotion set from URL: ${emotion}`);
+        }
+        
+        // Update landing page content based on emotion
+        updateLandingContent();
+    }
+    
+    function updateLandingContent() {
+        // Set title and description based on emotion
+        document.getElementById('emotion-title').textContent = currentEmotion.toUpperCase();
+        document.getElementById('emotion-description').innerHTML = 
+            EMOTION_CONFIG[currentEmotion].description || 
+            "An exploration of emotional states through interactive visual elements.";
+        document.getElementById('emotion-indicator').textContent = currentEmotion.toUpperCase();
+        
+        // Apply theme class
+        document.getElementById('emotion-title').className = `emotion-name ${currentEmotion}-theme`;
+        document.getElementById('emotion-indicator').className = `emotion-indicator ${currentEmotion}-theme`;
+        
+        // Show the correct accent
+        document.getElementById('pause-accent').style.display = 'none';
+        document.getElementById('nostalgia-accent').style.display = 'none';
+        document.getElementById('hope-accent').style.display = 'none';
+        document.getElementById(`${currentEmotion}-accent`).style.display = 'block';
+    }
+    
+    // Request device motion permission for iOS
+    function requestDeviceMotionPermission() {
+        if (typeof DeviceOrientationEvent !== 'undefined' && 
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        debugLog("Device motion permission granted");
+                        window.addEventListener('deviceorientation', handleDeviceMotion);
+                        motionPermissionGranted = true;
+                    } else {
+                        debugLog("Device motion permission denied");
+                    }
+                    startExperience(); // Start experience regardless of permission
+                })
+                .catch(error => {
+                    debugLog("Error requesting device motion permission: " + error);
+                    startExperience(); // Start experience anyway
+                });
+        } else {
+            // For non-iOS or older browsers that don't need explicit permission
+            debugLog("Device doesn't require motion permission or isn't iOS");
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', handleDeviceMotion);
             } else {
-                // Image is taller than canvas relative to width
-                let newWidth = height * imgRatio;
-                image(pauseImage, (width - newWidth) / 2, 0, newWidth, height);
+                debugLog("Device orientation not supported");
+            }
+            startExperience();
+        }
+    }
+    
+    // Start the experience after handling permissions
+    function startExperience() {
+        document.getElementById('landing-overlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('landing-overlay').style.display = 'none';
+        }, 1000);
+        
+        // For iOS audio context
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+        
+        if (emotionSound && soundEnabled && !soundPlaying) {
+            startSound();
+        }
+        
+        // Update hint for pause experience
+        if (currentEmotion === 'pause') {
+            document.getElementById('hint').textContent = 'Tap on elements to experience pause';
+        }
+    }
+    
+    // Initialize event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        debugLog("DOM Content Loaded");
+        
+        // Get emotion from URL
+        getEmotionFromUrl();
+        
+        // Force correct rendering of description HTML
+        setTimeout(function() {
+            document.getElementById('emotion-description').innerHTML = 
+                EMOTION_CONFIG[currentEmotion].description;
+        }, 100);
+        
+        // Start button functionality with permission request
+        document.getElementById('start-experience').addEventListener('click', function() {
+            debugLog("Start button clicked");
+            requestDeviceMotionPermission();
+        });
+        
+        // Back button returns to landing
+        document.getElementById('back-button').addEventListener('click', function() {
+            document.getElementById('landing-overlay').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.opacity = '1';
+            }, 50);
+        });
+        
+        // Hide hint after 5 seconds
+        setTimeout(() => {
+            document.getElementById('hint').style.opacity = '0';
+            hintVisible = false;
+        }, 5000);
+        
+        // Debug mode toggle (double tap on emotion indicator)
+        let tapCount = 0;
+        document.getElementById('emotion-indicator').addEventListener('click', function() {
+            tapCount++;
+            if (tapCount >= 5) {
+                debugMode = !debugMode;
+                document.getElementById('debug-info').style.display = debugMode ? 'block' : 'none';
+                debugLog("Debug mode " + (debugMode ? "enabled" : "disabled"));
+                tapCount = 0;
             }
             
-            // Draw the dotted lines that occasionally pause
-            drawDottedLines();
-            
-            // Draw black elements - points of complete interruption
-            drawInterruptionPoints();
-            
-            // Draw orange elements - assess temporal duration
-            drawTemporalElements();
-            
-            // Draw brown elements - transitions between states
-            drawTransitionElements();
-            
-            // Sound control button
-            drawSoundButton();
+            setTimeout(() => { tapCount = 0; }, 2000);
+        });
+    });
+    
+    function handleDeviceMotion(event) {
+        if (!deviceHasMoved) {
+            deviceHasMoved = true;
+            debugLog("Device motion detected");
+        }
+        
+        // Get tilt data for interactive effects
+        deviceTiltX = event.beta;  // -180 to 180 (front/back tilt)
+        deviceTiltY = event.gamma; // -90 to 90 (left/right tilt)
+    }
+    
+    function preload() {
+        debugLog("Preload started");
+        
+        // Determine emotion from URL
+        getEmotionFromUrl();
 
-            // Check and resume paused elements that have finished their pause duration
-            checkPausedElements();
+        // Load the sound file for current emotion, but don't block if it fails
+        const soundFileUrl = EMOTION_CONFIG[currentEmotion].soundFile;
+        
+        // Only try to load sound if there's actually a file path
+        if (soundFileUrl && soundFileUrl.length > 0) {
+            debugLog(`Attempting to load sound: ${soundFileUrl}`);
+            try {
+                emotionSound = loadSound(soundFileUrl, 
+                    () => {
+                        debugLog("Sound loaded successfully");
+                        if (isAnimating && soundEnabled) {
+                            startSound();
+                        }
+                    },
+                    (err) => {
+                        console.error("Error loading sound:", err);
+                        debugLog("Error loading sound: " + err);
+                        soundEnabled = false;
+                    }
+                );
+            } catch (e) {
+                console.error("Error loading sound:", e);
+                debugLog("Error loading sound: " + e);
+                soundEnabled = false;
+            }
+        } else {
+            debugLog("No sound file specified for this emotion");
+            soundEnabled = false;
+        }
+    }
+    
+    function setup() {
+        debugLog("p5.js setup running, canvas size:" + windowWidth + "x" + windowHeight);
+        
+        // Create canvas as an overlay
+        let canvas = createCanvas(windowWidth, windowHeight);
+        canvas.parent('overlay-canvas');
+        
+        // Set up UI controls
+        document.getElementById('sound-toggle').addEventListener('click', toggleSound);
+        document.getElementById('opacity-toggle').addEventListener('click', toggleOpacity);
+        
+        // Initialize visual elements based on current emotion
+        initializeElements();
+        
+        // Start audio context for iOS
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+    }
+    
+    function initializeElements() {
+        debugLog("Initializing visual elements for: " + currentEmotion);
+        
+        // Clear existing elements
+        interruptionPoints = [];
+        temporalElements = [];
+        transitionElements = [];
+        dottedLines = [];
+        circleOverlays = [];
+        
+        // Initialize elements based on which emotion we're displaying
+        if (currentEmotion === 'pause') {
+            createPauseElements();
+        } else if (currentEmotion === 'nostalgia') {
+            createNostalgiaElements();
+        } else if (currentEmotion === 'hope') {
+            createHopeElements();
+        }
+        
+        // Create circular overlays for all emotions
+        createCircleOverlays();
+    }
+    
+    function createPauseElements() {
+        // Black elements - points of interruption
+        for (let i = 0; i < 5; i++) {
+            interruptionPoints.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.2, height * 0.8),
+                size: random(15, 40),
+                type: random() > 0.5 ? 'rect' : 'circle',
+                opacity: random(180, 255),
+                duration: random(2000, 5000),
+                startTime: random(0, 2000),
+                visible: false,
+                offsetX: 0,
+                offsetY: 0,
+                paused: false,
+                pauseTime: 0,
+                pauseDuration: 0,
+                highlight: false,
+                name: "Interruption Point"
+            });
+        }
+        
+        // Orange elements - temporal duration
+        for (let i = 0; i < 3; i++) {
+            temporalElements.push({
+                x: random(width * 0.3, width * 0.7),
+                y: random(height * 0.3, height * 0.7),
+                size: random(30, 60),
+                pulseRate: random(0.001, 0.003),
+                opacity: random(100, 180),
+                startTime: random(0, 3000),
+                offsetX: 0,
+                offsetY: 0,
+                paused: false,
+                pauseTime: 0,
+                pauseDuration: 0,
+                highlight: false,
+                name: "Temporal Element"
+            });
+        }
+        
+        // Brown transition elements
+        for (let i = 0; i < 4; i++) {
+            transitionElements.push({
+                x1: random(width * 0.1, width * 0.4),
+                y1: random(height * 0.2, height * 0.8),
+                x2: random(width * 0.6, width * 0.9),
+                y2: random(height * 0.2, height * 0.8),
+                thickness: random(1, 3),
+                opacity: random(120, 180),
+                progress: 0,
+                speed: random(0.0005, 0.002),
+                delay: random(1000, 3000),
+                offsetX: 0,
+                offsetY: 0,
+                paused: false,
+                pauseTime: 0,
+                pauseDuration: 0,
+                highlight: false,
+                name: "Transition Element"
+            });
+        }
+        
+        // Dotted lines that pause
+        for (let i = 0; i < 8; i++) {
+            dottedLines.push({
+                x: random(width * 0.1, width * 0.9),
+                y: random(height * 0.1, height * 0.9),
+                length: random(100, 200),
+                angle: random(0, TWO_PI),
+                dotSize: random(2, 4),
+                dotSpacing: random(8, 15),
+                progress: 0,
+                speed: random(0.002, 0.005),
+                pauseAt: random(0.3, 0.7),
+                pauseDuration: random(1000, 3000),
+                isPaused: false,
+                pauseStart: 0,
+                opacity: random(150, 220),
+                offsetX: 0,
+                offsetY: 0,
+                userPaused: false,
+                pauseTime: 0,
+                pauseUserDuration: 0,
+                highlight: false,
+                name: "Dotted Line"
+            });
+        }
+    }
+    
+    function createNostalgiaElements() {
+        // Purple memory fragments
+        for (let i = 0; i < 8; i++) {
+            interruptionPoints.push({
+                x: random(width * 0.1, width * 0.9),
+                y: random(height * 0.1, height * 0.9),
+                size: random(10, 30),
+                type: 'circle',
+                opacity: random(100, 180),
+                fadeRate: random(0.0003, 0.0008),
+                visible: true,
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Orange temporal elements
+        for (let i = 0; i < 5; i++) {
+            temporalElements.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.2, height * 0.8),
+                size: random(30, 70),
+                pulseRate: random(0.0005, 0.001),
+                opacity: random(80, 150),
+                startTime: random(0, 4000),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Echo lines that fade
+        for (let i = 0; i < 5; i++) {
+            transitionElements.push({
+                x1: width/2 + random(-width/4, width/4),
+                y1: height/2 + random(-height/4, height/4),
+                x2: width/2 + random(-width/3, width/3) * 1.5,
+                y2: height/2 + random(-height/3, height/3) * 1.5,
+                thickness: random(1, 2.5),
+                opacity: random(80, 150),
+                progress: 0,
+                speed: random(0.0003, 0.001),
+                delay: random(500, 3000),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Slow, meandering lines
+        for (let i = 0; i < 6; i++) {
+            dottedLines.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.2, height * 0.8),
+                length: random(150, 300),
+                angle: random(0, TWO_PI),
+                dotSize: random(1.5, 3),
+                dotSpacing: random(10, 18),
+                progress: 0,
+                speed: random(0.0005, 0.001),
+                pauseAt: random(0.4, 0.8),
+                pauseDuration: random(2000, 5000),
+                isPaused: false,
+                pauseStart: 0,
+                opacity: random(120, 180),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+    }
+    
+    function createHopeElements() {
+        // Rising elements
+        for (let i = 0; i < 6; i++) {
+            temporalElements.push({
+                x: random(width * 0.1, width * 0.9),
+                y: height - random(height * 0.1, height * 0.3),
+                size: random(20, 50),
+                pulseRate: random(0.001, 0.002),
+                opacity: random(120, 200),
+                startTime: random(0, 2000),
+                riseSpeed: random(0.2, 0.8),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Upward light beams
+        for (let i = 0; i < 3; i++) {
+            transitionElements.push({
+                x1: width/2 + random(-width/4, width/4),
+                y1: height,
+                x2: width/2 + random(-width/3, width/3),
+                y2: 0,
+                thickness: random(2, 5),
+                opacity: random(60, 120),
+                progress: 0,
+                speed: random(0.001, 0.003),
+                delay: random(500, 2000),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Green growth points
+        for (let i = 0; i < 5; i++) {
+            interruptionPoints.push({
+                x: random(width * 0.2, width * 0.8),
+                y: random(height * 0.6, height * 0.9),
+                size: random(10, 25),
+                type: 'circle',
+                opacity: random(150, 220),
+                growRate: random(0.0005, 0.001),
+                maxSize: random(30, 60),
+                currentSize: 5,
+                visible: true,
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+        
+        // Connecting energy lines
+        for (let i = 0; i < 7; i++) {
+            dottedLines.push({
+                x: random(width * 0.1, width * 0.9),
+                y: random(height * 0.6, height * 0.9),
+                length: random(100, 250),
+                angle: random(-PI/4, -3*PI/4), // Mostly upward
+                dotSize: random(2, 3.5),
+                dotSpacing: random(6, 12),
+                progress: 0,
+                speed: random(0.003, 0.007),
+                pauseAt: 1, // No pausing for hope
+                opacity: random(150, 220),
+                offsetX: 0,
+                offsetY: 0
+            });
+        }
+    }
+    
+    function createCircleOverlays() {
+        // Create circular overlays for the hand illustrations
+        // Positions adjusted based on mobile device viewing orientation
+        let handPositions;
+        
+        if (width > height) { // Landscape
+            handPositions = [
+                { x: width * 0.25, y: height * 0.5 },
+                { x: width * 0.75, y: height * 0.5 }
+            ];
+        } else { // Portrait
+            handPositions = [
+                { x: width * 0.5, y: height * 0.35 },
+                { x: width * 0.5, y: height * 0.65 }
+            ];
+        }
+        
+        for (let pos of handPositions) {
+            circleOverlays.push({
+                x: pos.x,
+                y: pos.y,
+                size: min(width, height) * 0.25, // Responsive size
+                pulseRate: random(0.0005, 0.001),
+                colorIndex: floor(random(3)),
+                opacity: random(120, 180), // Increased opacity
+                offsetX: 0,
+                offsetY: 0,
+                paused: false,
+                pauseTime: 0,
+                pauseDuration: 0,
+                highlight: false,
+                name: "Circle Overlay"
+            });
+        }
+    }
+    
+    function draw() {
+        // Clear canvas and set semi-transparent background
+        clear();
+        background(255, 255, 255, 10);
+        
+        // Ensure something visible appears even without motion
+        if (!deviceHasMoved && !motionPermissionGranted) {
+            // Draw fallback static elements for non-motion devices
+            const colors = EMOTION_CONFIG[currentEmotion].colors;
             
-            // Display global pause effect visual if recently triggered
-            if (millis() - pauseEffectTime < 2000) {
+            // Draw a more visible starting state
+            fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 100);
+            noStroke();
+            ellipse(width/2, height/2, 100);
+            
+            textAlign(CENTER, CENTER);
+            fill(0, 0, 0, 200);
+            textSize(14);
+            text("Move device to interact", width/2, height/2 + 60);
+            textSize(12);
+            text("or tap screen to continue", width/2, height/2 + 85);
+        }
+        
+        // Update element positions based on device tilt if moved
+        if (deviceHasMoved) {
+            updateElementPositions();
+        }
+        
+        // Check global pause state
+        if (globalPauseActive) {
+            if (millis() - globalPauseStartTime > globalPauseDuration) {
+                globalPauseActive = false;
+                isAnimating = true;
+                
+                if (soundEnabled && emotionSound && soundPlaying) {
+                    emotionSound.setVolume(0.7, 1); // Restore volume
+                }
+            } else {
+                // Draw pause effect during global pause
                 drawPauseEffect();
             }
         }
-
-        function checkPausedElements() {
-            // Check interruption points
-            for (let point of interruptionPoints) {
-                if (point.paused && millis() - point.pauseTime > point.pauseDuration) {
-                    point.paused = false;
-                    point.highlight = false;
-                }
-            }
+        
+        // Check and resume paused elements
+        checkPausedElements();
+        
+        // Draw elements based on current emotion
+        drawCircleOverlays();
+        drawDottedLines();
+        
+        if (currentEmotion === 'pause') {
+            drawInterruptionPoints();
+            drawTemporalElements();
+            drawTransitionElements();
             
-            // Check temporal elements
-            for (let elem of temporalElements) {
-                if (elem.paused && millis() - elem.pauseTime > elem.pauseDuration) {
-                    elem.paused = false;
-                    elem.highlight = false;
-                }
-            }
-            
-            // Check transition elements
-            for (let elem of transitionElements) {
-                if (elem.paused && millis() - elem.pauseTime > elem.pauseDuration) {
-                    elem.paused = false;
-                    elem.highlight = false;
-                }
-            }
-            
-            // Check dotted lines
-            for (let line of dottedLines) {
-                if (line.userPaused && millis() - line.pauseTime > line.pauseUserDuration) {
-                    line.userPaused = false;
-                    line.highlight = false;
-                }
+            // Draw pause notification if needed
+            if (pauseNotificationVisible && millis() - pauseEffectTime < 2000) {
+                fadeNotification();
             }
         }
-
-        function drawPauseEffect() {
-            // Draw a subtle global pause effect
-            let alpha = map(millis() - pauseEffectTime, 0, 2000, 100, 0);
-            noFill();
-            stroke(colors.orange[0], colors.orange[1], colors.orange[2], alpha);
-            strokeWeight(2);
-            
-            // Create a pulsing pause effect
-            let size = map(sin(millis() * 0.01), -1, 1, width * 0.3, width * 0.35);
-            ellipse(width/2, height/2, size);
-            
-            // Add pause text if desired
-            textAlign(CENTER, CENTER);
-            textSize(14);
-            fill(80, 80, 80, alpha);
-            text("PAUSE", width/2, height/2);
+        else if (currentEmotion === 'nostalgia') {
+            drawNostalgiaElements();
+            drawTemporalElements();
+            drawTransitionElements();
         }
-
-        function drawInterruptionPoints() {
-            // Black elements that create complete interruptions
-            noStroke();
-            
-            for (let point of interruptionPoints) {
-                // Check if this point should be visible based on its timing
-                if (millis() > point.startTime) {
-                    point.visible = true;
-                }
-                
-                if (point.visible) {
-                    // Apply highlight effect if this element was just clicked
-                    if (point.highlight) {
-                        // Draw highlight glow
-                        noFill();
-                        stroke(colors.orange[0], colors.orange[1], colors.orange[2], 150);
-                        strokeWeight(2);
-                        if (point.type === 'rect') {
-                            rectMode(CENTER);
-                            rect(point.x, point.y, point.size + 10, point.size + 10);
-                        } else {
-                            ellipse(point.x, point.y, point.size + 10);
-                        }
-                    }
-                    
-                    // Draw the actual element
-                    noStroke();
-                    fill(colors.black[0], colors.black[1], colors.black[2], point.opacity);
-                    
-                    if (point.type === 'rect') {
-                        rectMode(CENTER);
-                        rect(point.x, point.y, point.size, point.size);
-                    } else {
-                        ellipse(point.x, point.y, point.size);
-                    }
-                    
-                    // Add a subtle pulse to the opacity for some visual interest
-                    if (isAnimating && !point.paused) {
-                        point.opacity = map(sin(millis() * 0.0005), -1, 1, 180, 255);
-                    }
-                }
+        else if (currentEmotion === 'hope') {
+            drawHopeElements();
+            drawRisingElements();
+            drawLightBeams();
+        }
+    }
+    
+    // Check and resume paused elements
+    function checkPausedElements() {
+        if (currentEmotion !== 'pause') return;
+        
+        // Check interruption points
+        for (let point of interruptionPoints) {
+            if (point.paused && millis() - point.pauseTime > point.pauseDuration) {
+                point.paused = false;
+                point.highlight = false;
             }
         }
-
-        function drawTemporalElements() {
-            // Orange elements that assess temporal duration
-            noStroke();
+        
+        // Check temporal elements
+        for (let element of temporalElements) {
+            if (element.paused && millis() - element.pauseTime > element.pauseDuration) {
+                element.paused = false;
+                element.highlight = false;
+            }
+        }
+        
+        // Check transition elements
+        for (let element of transitionElements) {
+            if (element.paused && millis() - element.pauseTime > element.pauseDuration) {
+                element.paused = false;
+                element.highlight = false;
+            }
+        }
+        
+        // Check dotted lines
+        for (let line of dottedLines) {
+            if (line.userPaused && millis() - line.pauseTime > line.pauseUserDuration) {
+                line.userPaused = false;
+                line.highlight = false;
+            }
+        }
+        
+        // Check circle overlays
+        for (let circle of circleOverlays) {
+            if (circle.paused && millis() - circle.pauseTime > circle.pauseDuration) {
+                circle.paused = false;
+                circle.highlight = false;
+            }
+        }
+    }
+    
+    // Draw pause effect during global pause
+    function drawPauseEffect() {
+        // Calculate progress through the pause
+        let progress = (millis() - globalPauseStartTime) / globalPauseDuration;
+        let pulseSize = map(sin(millis() * 0.005), -1, 1, width * 0.25, width * 0.3);
+        
+        // Draw pause symbol
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        // Outer pulsing circle
+        noFill();
+        stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 50);
+        strokeWeight(2);
+        ellipse(width/2, height/2, pulseSize);
+        
+        // Pause bars
+        noStroke();
+        fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 100);
+        rectMode(CENTER);
+        rect(width/2 - 15, height/2, 10, 40, 3);
+        rect(width/2 + 15, height/2, 10, 40, 3);
+    }
+    
+    // Show and fade pause notification
+    function showPauseNotification(elementName) {
+        const notification = document.getElementById('pause-notification');
+        notification.textContent = elementName + ' Paused';
+        notification.style.opacity = '1';
+        pauseNotificationVisible = true;
+        pauseEffectTime = millis();
+    }
+    
+    function fadeNotification() {
+        const notification = document.getElementById('pause-notification');
+        let opacity = map(millis() - pauseEffectTime, 0, 2000, 1, 0);
+        notification.style.opacity = opacity.toString();
+        
+        if (opacity <= 0) {
+            pauseNotificationVisible = false;
+        }
+    }
+    
+    // Update positions based on device movement
+    function updateElementPositions() {
+        // Calculate offset amount based on device tilt
+        // Constrain to reasonable values to prevent extreme movement
+        let offsetX = map(deviceTiltY, -40, 40, -30, 30);
+        let offsetY = map(deviceTiltX, -40, 40, -20, 20);
+        
+        // Update positions for each element type
+        updateGroupPositions(interruptionPoints, offsetX, offsetY);
+        updateGroupPositions(temporalElements, offsetX, offsetY);
+        updateGroupPositions(circleOverlays, offsetX, offsetY);
+        
+        // Update dotted lines
+        for (let line of dottedLines) {
+            line.offsetX = offsetX * 0.5;
+            line.offsetY = offsetY * 0.5;
+        }
+        
+        // Update transition elements
+        for (let element of transitionElements) {
+            element.offsetX = offsetX * 0.3;
+            element.offsetY = offsetY * 0.3;
+        }
+    }
+    
+    function updateGroupPositions(elements, offsetX, offsetY) {
+        for (let element of elements) {
+            element.offsetX = offsetX * 0.7;
+            element.offsetY = offsetY * 0.7;
+        }
+    }
+    
+    // Drawing functions for common elements
+    function drawCircleOverlays() {
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let circle of circleOverlays) {
+            // Get color based on circle's assigned color index
+            let color;
+            if (circle.colorIndex === 0) color = colors.primary;
+            else if (circle.colorIndex === 1) color = colors.secondary;
+            else color = colors.accent;
             
-            for (let element of temporalElements) {
-                // Only start rendering after the delay
-                if (millis() > element.startTime) {
-                    // Calculate pulsing size and opacity - but only if not paused
-                    let pulseAmount = 0;
-                    if (!element.paused && isAnimating) {
-                        pulseAmount = sin(millis() * element.pulseRate);
-                    }
-                    let currentSize = element.size + pulseAmount * 10;
-                    let currentOpacity = element.opacity + pulseAmount * 40;
-                    
-                    // Add highlight effect if this element was recently clicked
-                    if (element.highlight) {
-                        noFill();
-                        stroke(colors.orange[0], colors.orange[1], colors.orange[2], 200);
-                        strokeWeight(2);
-                        ellipse(element.x, element.y, currentSize + 15);
-                    }
-                    
-                    // Draw with soft edges for a glowing effect
-                    noStroke();
-                    for (let i = 0; i < 3; i++) {
-                        let size = currentSize - i * 10;
-                        let opacity = currentOpacity - i * 30;
-                        if (size > 0 && opacity > 0) {
-                            fill(colors.orange[0], colors.orange[1], colors.orange[2], opacity);
-                            ellipse(element.x, element.y, size);
-                        }
-                    }
-                }
+            // Calculate pulsing size based on time - but only if not paused
+            let pulseAmount = 0;
+            if (!circle.paused && isAnimating) {
+                pulseAmount = sin(millis() * circle.pulseRate);
             }
-        }
-
-        function drawTransitionElements() {
-            // Brown elements that facilitate transition
-            for (let element of transitionElements) {
-                // Only start rendering after the delay
-                if (millis() > element.delay) {
-                    // Update progress if animation is running and not paused
-                    if (isAnimating && !element.paused) {
-                        element.progress += element.speed;
-                        if (element.progress > 1) {
-                            element.progress = 0;
-                        }
-                    }
-                    
-                    // Add highlight effect if this element was recently clicked
-                    if (element.highlight) {
-                        stroke(colors.orange[0], colors.orange[1], colors.orange[2], 150);
-                        strokeWeight(element.thickness + 2);
-                        line(element.x1, element.y1, 
-                             lerp(element.x1, element.x2, element.progress), 
-                             lerp(element.y1, element.y2, element.progress));
-                    }
-                    
-                    // Draw the line
-                    stroke(colors.brown[0], colors.brown[1], colors.brown[2], element.opacity);
-                    strokeWeight(element.thickness);
-                    line(element.x1, element.y1, 
-                         lerp(element.x1, element.x2, element.progress), 
-                         lerp(element.y1, element.y2, element.progress));
-                    
-                    // Draw small circles at the endpoints
-                    noStroke();
-                    fill(colors.brown[0], colors.brown[1], colors.brown[2], element.opacity * 0.7);
-                    ellipse(element.x1, element.y1, element.thickness * 3);
-                    
-                    // Draw a moving circle that represents the transition point
-                    fill(colors.brown[0], colors.brown[1], colors.brown[2], element.opacity);
-                    ellipse(lerp(element.x1, element.x2, element.progress), 
-                            lerp(element.y1, element.y2, element.progress), 
-                            element.thickness * 4);
-                }
-            }
-        }
-
-        function drawDottedLines() {
-            // Dotted lines that occasionally pause
-            for (let line of dottedLines) {
-                // Update progress if not paused by user or automatically
-                if (isAnimating && !line.userPaused && !line.isPaused) {
-                    line.progress += line.speed;
-                    
-                    // Check if we should automatically pause (part of the animation)
-                    if (line.progress > line.pauseAt && line.progress < (line.pauseAt + 0.1)) {
-                        line.isPaused = true;
-                        line.pauseStart = millis();
-                    }
-                    
-                    // Reset progress when complete
-                    if (line.progress > 1) {
-                        line.progress = 0;
-                    }
-                }
-                
-                // Check if we should resume from automatic pause
-                if (line.isPaused && millis() > line.pauseStart + line.pauseDuration) {
-                    line.isPaused = false;
-                }
-                
-                // Add highlight effect if this line was recently clicked
-                if (line.highlight) {
-                    noFill();
-                    stroke(colors.orange[0], colors.orange[1], colors.orange[2], 150);
-                    strokeWeight(2);
-                    // Draw a highlight along the line path
-                    let endProgress = line.progress;
-                    if (endProgress < 0.05) endProgress = 0.05;
-                    
-                    let startX = line.x;
-                    let startY = line.y;
-                    let endX = startX + cos(line.angle) * (line.length * endProgress);
-                    let endY = startY + sin(line.angle) * (line.length * endProgress);
-                    line(startX, startY, endX, endY);
-                }
-                
-                // Draw the dotted line
+            let currentSize = circle.size + pulseAmount * 10;
+            
+            // Add device tilt offset
+            let drawX = circle.x + circle.offsetX;
+            let drawY = circle.y + circle.offsetY;
+            
+            // Add highlight effect if this circle was recently clicked
+            if (circle.highlight) {
                 noFill();
-                stroke(80, 80, 80, line.opacity);
-                strokeWeight(1);
+                stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 200);
+                strokeWeight(4);
+                ellipse(drawX, drawY, currentSize + 15);
+            }
+            
+            // Draw outer glow
+            noFill();
+            for (let i = 0; i < 3; i++) {
+                let strokeW = 2 + i*0.8; // Increased thickness
+                let alpha = circle.opacity - i * 20; // Reduced fade for better visibility
+                if (alpha > 0) {
+                    stroke(color[0], color[1], color[2], alpha * overlayOpacity);
+                    strokeWeight(strokeW);
+                    ellipse(drawX, drawY, currentSize + i*20);
+                }
+            }
+            
+            // Draw dotted circle
+            stroke(color[0], color[1], color[2], (circle.opacity + 50) * overlayOpacity); // Increased visibility
+            strokeWeight(2);
+            drawingContext.setLineDash([5, 5]);
+            ellipse(drawX, drawY, currentSize);
+            drawingContext.setLineDash([]);
+        }
+    }
+    
+    function drawDottedLines() {
+        for (let line of dottedLines) {
+            // Update progress if animation is running and not paused
+            if (isAnimating && !line.isPaused && !line.userPaused) {
+                line.progress += line.speed;
                 
-                // Calculate starting point
-                let startX = line.x;
-                let startY = line.y;
+                if (line.progress > line.pauseAt && line.progress < (line.pauseAt + 0.1)) {
+                    line.isPaused = true;
+                    line.pauseStart = millis();
+                }
                 
-                // Calculate direction vector
+                if (line.progress > 1) {
+                    line.progress = 0;
+                }
+            }
+            
+            // Check if automated pause should end
+            if (line.isPaused && millis() > line.pauseStart + line.pauseDuration) {
+                line.isPaused = false;
+            }
+            
+            // Add device tilt offset
+            let startX = line.x + line.offsetX;
+            let startY = line.y + line.offsetY;
+            
+            // Add highlight effect if this line was recently clicked
+            if (line.highlight) {
+                const colors = EMOTION_CONFIG[currentEmotion].colors;
+                noFill();
+                stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 150);
+                strokeWeight(2.5);
+                
+                let endProgress = line.progress;
+                if (endProgress < 0.05) endProgress = 0.05;
+                
                 let dx = cos(line.angle);
                 let dy = sin(line.angle);
+                let endX = startX + dx * (line.length * endProgress);
+                let endY = startY + dy * (line.length * endProgress);
                 
-                // Draw dots along the line
-                for (let i = 0; i < line.length; i += line.dotSpacing) {
-                    let x = startX + dx * i;
-                    let y = startY + dy * i;
-                    
-                    // Only draw dots up to the current progress
-                    if (i / line.length <= line.progress) {
-                        fill(80, 80, 80, line.opacity);
-                        noStroke();
-                        ellipse(x, y, line.dotSize);
-                    }
-                }
+                line(startX, startY, endX, endY);
+            }
+            
+            // Draw the dotted line
+            noFill();
+            stroke(80, 80, 80, line.opacity * overlayOpacity);
+            strokeWeight(1.5); // Increased for visibility
+            
+            let dx = cos(line.angle);
+            let dy = sin(line.angle);
+            
+            for (let i = 0; i < line.length; i += line.dotSpacing) {
+                let x = startX + dx * i;
+                let y = startY + dy * i;
                 
-                // Visual indicator of pause (automatic or user-initiated)
-                if (line.isPaused || line.userPaused) {
-                    // Calculate position for the pause indicator
-                    let pauseProgress = line.isPaused ? line.pauseAt : line.progress;
-                    let pauseX = startX + dx * (line.length * pauseProgress);
-                    let pauseY = startY + dy * (line.length * pauseProgress);
-                    
-                    // Pulsing effect on the pause point
-                    let pulseSize = map(sin(millis() * 0.01), -1, 1, 5, 10);
-                    
-                    noFill();
-                    stroke(colors.orange[0], colors.orange[1], colors.orange[2], 180);
-                    strokeWeight(1);
-                    ellipse(pauseX, pauseY, pulseSize);
-                    
-                    // If user paused, make it more prominent
-                    if (line.userPaused) {
-                        noFill();
-                        stroke(colors.orange[0], colors.orange[1], colors.orange[2], 120);
-                        strokeWeight(1);
-                        ellipse(pauseX, pauseY, pulseSize + 5);
-                    }
+                if (i / line.length <= line.progress) {
+                    fill(80, 80, 80, line.opacity * overlayOpacity);
+                    noStroke();
+                    ellipse(x, y, line.dotSize * 1.2); // Increased size
                 }
             }
-        }
-        
-        function drawSoundButton() {
-            // Sound control button
-            let buttonX = width - 50;
-            let buttonY = height - 50;
-            let buttonSize = 30;
-
-            // Button background
-            noStroke();
-            fill(240, 240, 240, 180);
-            rect(buttonX, buttonY, buttonSize, buttonSize, 5);
-
-            // Sound icon
-            if (soundEnabled) {
-                // Sound on icon
-                fill(60, 60, 60);
-                noStroke();
-                // Speaker base
-                rect(buttonX + 10, buttonY + 12, 4, 6);
-                // Speaker cone
-                beginShape();
-                vertex(buttonX + 10, buttonY + 12);
-                vertex(buttonX + 16, buttonY + 8);
-                vertex(buttonX + 16, buttonY + 22);
-                vertex(buttonX + 10, buttonY + 18);
-                endShape(CLOSE);
-                // Sound waves
+            
+            // Visual indicator for pauses (automated or user-triggered)
+            if (line.isPaused || line.userPaused) {
+                let pauseProgress = line.isPaused ? line.pauseAt : line.progress;
+                let pauseX = startX + dx * (line.length * pauseProgress);
+                let pauseY = startY + dy * (line.length * pauseProgress);
+                
+                let pulseSize = map(sin(millis() * 0.01), -1, 1, 7, 14); // Increased pulse size
+                
+                const colors = EMOTION_CONFIG[currentEmotion].colors;
                 noFill();
-                stroke(60, 60, 60);
+                stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
+                       220 * overlayOpacity); // Increased visibility
                 strokeWeight(1.5);
-                arc(buttonX + 18, buttonY + 15, 6, 8, -PI/3, PI/3);
-                arc(buttonX + 18, buttonY + 15, 10, 14, -PI/3, PI/3);
-            } else {
-                // Sound off icon
-                fill(60, 60, 60);
+                ellipse(pauseX, pauseY, pulseSize);
+                
+                // If user paused, make it more prominent
+                if (line.userPaused) {
+                    noFill();
+                    stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 150 * overlayOpacity);
+                    strokeWeight(1);
+                    ellipse(pauseX, pauseY, pulseSize + 6);
+                }
+            }
+        }
+    }
+    
+    // Drawing functions for pause emotion
+    function drawInterruptionPoints() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let point of interruptionPoints) {
+            if (millis() > point.startTime) {
+                point.visible = true;
+            }
+            
+            if (point.visible) {
+                // Apply device tilt offset
+                let drawX = point.x + point.offsetX;
+                let drawY = point.y + point.offsetY;
+                
+                // Add highlight effect if this element was recently clicked
+                if (point.highlight) {
+                    noFill();
+                    stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 180);
+                    strokeWeight(2);
+                    if (point.type === 'rect') {
+                        rectMode(CENTER);
+                        rect(drawX, drawY, point.size + 10, point.size + 10, 2);
+                    } else {
+                        ellipse(drawX, drawY, point.size + 10);
+                    }
+                }
+                
+                // Draw the actual element
                 noStroke();
-                // Speaker base
-                rect(buttonX + 10, buttonY + 12, 4, 6);
-                // Speaker cone
-                beginShape();
-                vertex(buttonX + 10, buttonY + 12);
-                vertex(buttonX + 16, buttonY + 8);
-                vertex(buttonX + 16, buttonY + 22);
-                vertex(buttonX + 10, buttonY + 18);
-                endShape(CLOSE);
-                // X over the speaker
-                stroke(60, 60, 60);
-                strokeWeight(1.5);
-                line(buttonX + 19, buttonY + 10, buttonX + 24, buttonY + 20);
-                line(buttonX + 24, buttonY + 10, buttonX + 19, buttonY + 20);
+                fill(colors.primary[0], colors.primary[1], colors.primary[2], 
+                     point.opacity * overlayOpacity);
+                
+                if (point.type === 'rect') {
+                    rectMode(CENTER);
+                    rect(drawX, drawY, point.size, point.size);
+                } else {
+                    ellipse(drawX, drawY, point.size);
+                }
+                
+                // Add a subtle pulse to the opacity for some visual interest
+                if (isAnimating && !point.paused) {
+                    point.opacity = map(sin(millis() * 0.0005), -1, 1, 180, 255);
+                }
             }
         }
-
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-            
-            // Reposition elements
-            for (let point of interruptionPoints) {
-                point.x = random(width * 0.2, width * 0.8);
-                point.y = random(height * 0.2, height * 0.8);
+    }
+    
+    function drawTemporalElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of temporalElements) {
+            if (millis() > element.startTime) {
+                // Calculate pulsing size - but only if not paused
+                let pulseAmount = 0;
+                if (!element.paused && isAnimating) {
+                    pulseAmount = sin(millis() * element.pulseRate);
+                }
+                let currentSize = element.size + pulseAmount * 12; // Increased pulse
+                let currentOpacity = element.opacity + pulseAmount * 50; // Increased contrast
+                
+                // Apply device tilt offset
+                let drawX = element.x + element.offsetX;
+                let drawY = element.y + element.offsetY;
+                
+                // Add highlight effect if this element was recently clicked
+                if (element.highlight) {
+                    noFill();
+                    stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 180);
+                    strokeWeight(2.5);
+                    ellipse(drawX, drawY, currentSize + 15);
+                }
+                
+                for (let i = 0; i < 3; i++) {
+                    let size = currentSize - i * 8;
+                    let opacity = currentOpacity - i * 30;
+                    if (size > 0 && opacity > 0) {
+                        fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
+                             opacity * overlayOpacity);
+                        ellipse(drawX, drawY, size);
+                    }
+                }
             }
-            
+        }
+    }
+    
+    function drawTransitionElements() {
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of transitionElements) {
+            if (millis() > element.delay) {
+                // Update progress if animation is running and not paused
+                if (isAnimating && !element.paused) {
+                    element.progress += element.speed;
+                    if (element.progress > 1) {
+                        element.progress = 0;
+                    }
+                }
+                
+                // Apply device tilt offset
+                let drawX1 = element.x1 + element.offsetX;
+                let drawY1 = element.y1 + element.offsetY;
+                let drawX2 = element.x2 + element.offsetX;
+                let drawY2 = element.y2 + element.offsetY;
+                
+                // Add highlight effect if this element was recently clicked
+                if (element.highlight) {
+                    stroke(colors.secondary[0], colors.secondary[1], colors.secondary[2], 150);
+                    strokeWeight(element.thickness + 2);
+                    line(drawX1, drawY1, 
+                         lerp(drawX1, drawX2, element.progress), 
+                         lerp(drawY1, drawY2, element.progress));
+                }
+                
+                stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                       element.opacity * 1.2 * overlayOpacity); // Increased visibility
+                strokeWeight(element.thickness * 1.3); // Increased thickness
+                line(drawX1, drawY1, 
+                     lerp(drawX1, drawX2, element.progress), 
+                     lerp(drawY1, drawY2, element.progress));
+                
+                noStroke();
+                fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                     element.opacity * 0.8 * overlayOpacity);
+                ellipse(drawX1, drawY1, element.thickness * 3);
+                
+                fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                     element.opacity * 1.2 * overlayOpacity);
+                ellipse(lerp(drawX1, drawX2, element.progress), 
+                        lerp(drawY1, drawY2, element.progress), 
+                        element.thickness * 5); // Increased size
+            }
+        }
+    }
+    
+    // Drawing functions for nostalgia emotion
+    function drawNostalgiaElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let point of interruptionPoints) {
+            if (point.visible) {
+                // Apply device tilt offset
+                let drawX = point.x + point.offsetX;
+                let drawY = point.y + point.offsetY;
+                
+                // For nostalgia, make elements fade in and out
+                if (isAnimating) {
+                    point.opacity = 120 + 100 * sin(millis() * point.fadeRate); // Increased range
+                }
+                
+                fill(colors.primary[0], colors.primary[1], colors.primary[2], 
+                     point.opacity * overlayOpacity);
+                ellipse(drawX, drawY, point.size);
+            }
+        }
+    }
+    
+    // Drawing functions for hope emotion
+    function drawHopeElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        // Draw growing green elements
+        for (let point of interruptionPoints) {
+            if (point.visible) {
+                // Apply device tilt offset
+                let drawX = point.x + point.offsetX;
+                let drawY = point.y + point.offsetY;
+                
+                // For hope, make elements grow
+                if (isAnimating) {
+                    point.currentSize += point.growRate * deltaTime;
+                    if (point.currentSize > point.maxSize) {
+                        point.currentSize = 5;
+                    }
+                }
+                
+                fill(colors.primary[0], colors.primary[1], colors.primary[2], 
+                     point.opacity * overlayOpacity);
+                ellipse(drawX, drawY, point.currentSize);
+            }
+        }
+    }
+    
+    function drawRisingElements() {
+        noStroke();
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of temporalElements) {
+            if (millis() > element.startTime) {
+                // Apply device tilt offset
+                let drawX = element.x + element.offsetX;
+                let drawY = element.y + element.offsetY;
+                
+                // If this is hope emotion, make elements rise
+                if (isAnimating) {
+                    element.y -= element.riseSpeed;
+                    if (element.y < -element.size) {
+                        element.y = height + element.size;
+                        element.x = random(width * 0.1, width * 0.9);
+                    }
+                }
+                
+                let pulseAmount = sin(millis() * element.pulseRate);
+                let currentSize = element.size + pulseAmount * 8;
+                let currentOpacity = element.opacity + pulseAmount * 30;
+                
+                for (let i = 0; i < 3; i++) {
+                    let size = currentSize - i * 8;
+                    let opacity = currentOpacity - i * 25;
+                    if (size > 0 && opacity > 0) {
+                        fill(colors.secondary[0], colors.secondary[1], colors.secondary[2], 
+                             opacity * overlayOpacity);
+                        ellipse(drawX, drawY, size);
+                    }
+                }
+            }
+        }
+    }
+    
+    function drawLightBeams() {
+        const colors = EMOTION_CONFIG[currentEmotion].colors;
+        
+        for (let element of transitionElements) {
+            if (millis() > element.delay) {
+                // Apply device tilt offset
+                let drawX1 = element.x1 + element.offsetX;
+                let drawY1 = element.y1 + element.offsetY;
+                let drawX2 = element.x2 + element.offsetX;
+                let drawY2 = element.y2 + element.offsetY;
+                
+                // For hope, make beams expand from bottom to top
+                if (isAnimating) {
+                    element.progress += element.speed;
+                    if (element.progress > 1) {
+                        element.progress = 0;
+                    }
+                }
+                
+                // Draw light beam
+                for (let i = 0; i < 3; i++) {
+                    let thickness = (element.thickness - i*0.4) * 1.4; // Increased thickness
+                    let opacity = (element.opacity - i*15) * 1.3; // Increased visibility
+                    
+                    if (thickness > 0 && opacity > 0) {
+                        stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                              opacity * overlayOpacity);
+                        strokeWeight(thickness);
+                        line(drawX1, drawY1, 
+                             lerp(drawX1, drawX2, element.progress), 
+                             lerp(drawY1, drawY2, element.progress));
+                    }
+                }
+            }
+        }
+    }
+    
+    // Helper functions for interaction
+    
+    // Check if a point is inside a circle
+    function pointInCircle(px, py, cx, cy, r) {
+        let distSq = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+        return distSq <= r * r;
+    }
+    
+    // Check if a point is inside a rectangle
+    function pointInRect(px, py, rx, ry, rw, rh) {
+        return px >= rx - rw/2 && px <= rx + rw/2 && py >= ry - rh/2 && py <= ry + rh/2;
+    }
+    
+    // Check if a point is near a line
+    function pointNearLine(px, py, x1, y1, x2, y2, threshold) {
+        // Calculate the distance from point to line segment
+        let A = px - x1;
+        let B = py - y1;
+        let C = x2 - x1;
+        let D = y2 - y1;
+        
+        let dot = A * C + B * D;
+        let len_sq = C * C + D * D;
+        let param = dot / len_sq;
+        
+        let xx, yy;
+        
+        if (param < 0) {
+            xx = x1;
+            yy = y1;
+        }
+        else if (param > 1) {
+            xx = x2;
+            yy = y2;
+        }
+        else {
+            xx = x1 + param * C;
+            yy = y1 + param * D;
+        }
+        
+        let dx = px - xx;
+        let dy = py - yy;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        
+        return dist < threshold;
+    }
+    
+    // Check if a point is near a dotted line
+    function pointNearDottedLine(px, py, line, threshold) {
+        let startX = line.x + line.offsetX;
+        let startY = line.y + line.offsetY;
+        let dx = cos(line.angle);
+        let dy = sin(line.angle);
+        let endX = startX + dx * (line.length * line.progress);
+        let endY = startY + dy * (line.length * line.progress);
+        
+        return pointNearLine(px, py, startX, startY, endX, endY, threshold);
+    }
+    
+    // UI control functions
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        debugLog("Sound toggled: " + (soundEnabled ? "on" : "off"));
+        
+        if (!soundEnabled && soundPlaying) {
+            emotionSound.setVolume(0, 1);
+            setTimeout(() => {
+                emotionSound.stop();
+                soundPlaying = false;
+            }, 1000);
+        } else if (soundEnabled && isAnimating && !soundPlaying && emotionSound) {
+            startSound();
+        }
+        
+        // Update sound icon visibility
+        document.getElementById('sound-waves').style.display = 
+            soundEnabled ? 'block' : 'none';
+    }
+    
+    function startSound() {
+        try {
+            // Only try to play if the sound was successfully loaded
+            if (emotionSound && emotionSound.isLoaded()) {
+                debugLog("Starting sound playback");
+                emotionSound.loop();
+                emotionSound.setVolume(0);
+                emotionSound.setVolume(0.7, 1.5);
+                soundPlaying = true;
+            }
+        } catch(e) {
+            console.error("Error playing sound:", e);
+            debugLog("Error playing sound: " + e);
+        }
+    }
+    
+    function toggleOpacity() {
+        // Cycle through opacity levels
+        if (overlayOpacity > 0.8) {
+            overlayOpacity = 0.5;
+            debugLog("Opacity set to medium (0.5)");
+        } else if (overlayOpacity > 0.3) {
+            overlayOpacity = 0.25;
+            debugLog("Opacity set to low (0.25)");
+        } else {
+            overlayOpacity = 0.95;
+            debugLog("Opacity set to high (0.95)");
+        }
+    }
+    
+    // Apply a pause effect to a specific element
+    function pauseElement(element, elementType) {
+        element.paused = true;
+        element.pauseTime = millis();
+        element.pauseDuration = random(3000, 6000); // Pause for 3-6 seconds
+        element.highlight = true;
+        lastElementPaused = element;
+        
+        // Show pause notification
+        showPauseNotification(element.name || elementType);
+        
+        // Apply subtle sound effect if enabled
+        if (soundEnabled && emotionSound && soundPlaying) {
+            // Slightly lower the volume during pause
+            emotionSound.setVolume(0.4, 0.3);
+            // Will be restored when pause ends
+        }
+    }
+    
+    // Activate global pause mode
+    function activateGlobalPause() {
+        globalPauseActive = true;
+        globalPauseStartTime = millis();
+        globalPauseDuration = random(2000, 4000);
+        isAnimating = false;
+        
+        // Show notification
+        showPauseNotification("Global");
+        
+        // Apply sound effect if enabled
+        if (soundEnabled && emotionSound && soundPlaying) {
+            emotionSound.setVolume(0.2, 0.5);
+        }
+    }
+    
+    function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        debugLog("Window resized: " + windowWidth + "x" + windowHeight);
+        initializeElements();
+    }
+    
+    function mousePressed() {
+        if (currentEmotion !== 'pause') return false;
+        
+        // Make device tilt optional by simulating some movement
+        if (!deviceHasMoved) {
+            deviceHasMoved = true;
+            deviceTiltX = random(-10, 10);
+            deviceTiltY = random(-10, 10);
+        }
+        
+        // Check if sound button was clicked
+        let soundBtnEl = document.getElementById('sound-toggle');
+        let soundBtnRect = soundBtnEl.getBoundingClientRect();
+        if (mouseX >= soundBtnRect.left && mouseX <= soundBtnRect.right && 
+            mouseY >= soundBtnRect.top && mouseY <= soundBtnRect.bottom) {
+            return false; // Don't process as element interaction
+        }
+        
+        // Check if opacity button was clicked
+        let opacityBtnEl = document.getElementById('opacity-toggle');
+        let opacityBtnRect = opacityBtnEl.getBoundingClientRect();
+        if (mouseX >= opacityBtnRect.left && mouseX <= opacityBtnRect.right && 
+            mouseY >= opacityBtnRect.top && mouseY <= opacityBtnRect.bottom) {
+            return false; // Don't process as element interaction
+        }
+        
+        // Check if back button was clicked
+        let backBtnEl = document.getElementById('back-button');
+        let backBtnRect = backBtnEl.getBoundingClientRect();
+        if (mouseX >= backBtnRect.left && mouseX <= backBtnRect.right && 
+            mouseY >= backBtnRect.top && mouseY <= backBtnRect.bottom) {
+            return false; // Don't process as element interaction
+        }
+        
+        // Check if hint was clicked
+        let hintEl = document.getElementById('hint');
+        let hintRect = hintEl.getBoundingClientRect();
+        if (mouseX >= hintRect.left && mouseX <= hintRect.right && 
+            mouseY >= hintRect.top && mouseY <= hintRect.bottom) {
+            return false; // Don't process as element interaction
+        }
+        
+        // Check if any element was clicked to pause
+        let elementClicked = false;
+        
+        // Check interruption points (black elements)
+        for (let point of interruptionPoints) {
+            if (point.visible) {
+                // Apply offset for tilt
+                let drawX = point.x + point.offsetX;
+                let drawY = point.y + point.offsetY;
+                
+                let isInside = point.type === 'rect' 
+                    ? pointInRect(mouseX, mouseY, drawX, drawY, point.size, point.size)
+                    : pointInCircle(mouseX, mouseY, drawX, drawY, point.size/2);
+                    
+                if (isInside) {
+                    // Toggle pause state
+                    if (!point.paused) {
+                        pauseElement(point, "Interruption Point");
+                    } else {
+                        point.paused = false;
+                        point.highlight = false;
+                    }
+                    elementClicked = true;
+                    break;
+                }
+            }
+        }
+        
+        // Check temporal elements (orange circles)
+        if (!elementClicked) {
             for (let element of temporalElements) {
-                element.x = random(width * 0.3, width * 0.7);
-                element.y = random(height * 0.3, height * 0.7);
-            }
-            
-            for (let element of transitionElements) {
-                element.x1 = random(width * 0.1, width * 0.4);
-                element.y1 = random(height * 0.2, height * 0.8);
-                element.x2 = random(width * 0.6, width * 0.9);
-                element.y2 = random(height * 0.2, height * 0.8);
-            }
-            
-            for (let line of dottedLines) {
-                line.x = random(width * 0.1, width * 0.9);
-                line.y = random(height * 0.1, height * 0.9);
-            }
-        }
-        
-        // Helper function to check if a point is inside a circle
-        function pointInCircle(px, py, cx, cy, r) {
-            let distSq = (px - cx) * (px - cx) + (py - cy) * (py - cy);
-            return distSq <= r * r;
-        }
-        
-        // Helper function to check if a point is inside a rectangle
-        function pointInRect(px, py, rx, ry, rw, rh) {
-            return px >= rx - rw/2 && px <= rx + rw/2 && py >= ry - rh/2 && py <= ry + rh/2;
-        }
-        
-        // Helper function to check if a point is near a line
-        function pointNearLine(px, py, x1, y1, x2, y2, threshold) {
-            // Calculate the distance from point to line segment
-            let A = px - x1;
-            let B = py - y1;
-            let C = x2 - x1;
-            let D = y2 - y1;
-            
-            let dot = A * C + B * D;
-            let len_sq = C * C + D * D;
-            let param = dot / len_sq;
-            
-            let xx, yy;
-            
-            if (param < 0) {
-                xx = x1;
-                yy = y1;
-            }
-            else if (param > 1) {
-                xx = x2;
-                yy = y2;
-            }
-            else {
-                xx = x1 + param * C;
-                yy = y1 + param * D;
-            }
-            
-            let dx = px - xx;
-            let dy = py - yy;
-            let dist = Math.sqrt(dx * dx + dy * dy);
-            
-            return dist < threshold;
-        }
-        
-        // Helper function to check if a point is near a dotted line
-        function pointNearDottedLine(px, py, line, threshold) {
-            let startX = line.x;
-            let startY = line.y;
-            let endX = startX + cos(line.angle) * (line.length * line.progress);
-            let endY = startY + sin(line.angle) * (line.length * line.progress);
-            
-            return pointNearLine(px, py, startX, startY, endX, endY, threshold);
-        }
-        
-        function mousePressed() {
-            // Check if sound button was clicked
-            let buttonX = width - 50;
-            let buttonY = height - 50;
-            let buttonSize = 30;
-            
-            if (mouseX > buttonX && mouseX < buttonX + buttonSize && 
-                mouseY > buttonY && mouseY < buttonY + buttonSize) {
-                
-                soundEnabled = !soundEnabled;
-                
-                if (!soundEnabled && soundPlaying) {
-                    // Fade out and stop sound
-                    pauseSound.setVolume(0, 1);
-                    setTimeout(() => {
-                        pauseSound.stop();
-                        soundPlaying = false;
-                    }, 1000);
-                } else if (soundEnabled && isAnimating && !soundPlaying && soundLoaded) {
-                    // Start sound
-                    try {
-                        pauseSound.loop();
-                        pauseSound.setVolume(0);
-                        pauseSound.setVolume(0.8, 1);
-                        soundPlaying = true;
-                    } catch(e) {
-                        console.error("Error playing sound:", e);
-                    }
-                }
-                return false;
-            }
-            
-            // Check if any element was clicked to trigger pause effect
-            let elementClicked = false;
-            
-            // Check interruption points
-            for (let point of interruptionPoints) {
-                if (point.visible) {
-                    let isInside = point.type === 'rect' 
-                        ? pointInRect(mouseX, mouseY, point.x, point.y, point.size, point.size)
-                        : pointInCircle(mouseX, mouseY, point.x, point.y, point.size/2);
-                        
-                    if (isInside) {
+                if (millis() > element.startTime) {
+                    // Apply offset for tilt
+                    let drawX = element.x + element.offsetX;
+                    let drawY = element.y + element.offsetY;
+                    
+                    if (pointInCircle(mouseX, mouseY, drawX, drawY, element.size/2)) {
                         // Toggle pause state
-                        point.paused = !point.paused;
-                        if (point.paused) {
-                            point.pauseTime = millis();
-                            point.pauseDuration = random(3000, 6000); // Pause for 3-6 seconds
-                            point.highlight = true;
-                            lastPausedElement = point;
-                            pauseEffectTime = millis(); // Trigger global pause effect
+                        if (!element.paused) {
+                            pauseElement(element, "Temporal Element");
                         } else {
-                            point.highlight = false;
-                        }
-                        elementClicked = true;
-                        break;
-                    }
-                }
-            }
-            
-            // Check temporal elements if no interruption point was clicked
-            if (!elementClicked) {
-                for (let element of temporalElements) {
-                    if (millis() > element.startTime && 
-                        pointInCircle(mouseX, mouseY, element.x, element.y, element.size/2)) {
-                        // Toggle pause state
-                        element.paused = !element.paused;
-                        if (element.paused) {
-                            element.pauseTime = millis();
-                            element.pauseDuration = random(2000, 5000); // Pause for 2-5 seconds
-                            element.highlight = true;
-                            lastPausedElement = element;
-                            pauseEffectTime = millis(); // Trigger global pause effect
-                        } else {
+                            element.paused = false;
                             element.highlight = false;
                         }
                         elementClicked = true;
@@ -703,89 +1714,132 @@
                     }
                 }
             }
-            
-            // Check transition elements if no other element was clicked
-            if (!elementClicked) {
-                for (let element of transitionElements) {
-                    if (millis() > element.delay) {
-                        let progressX = lerp(element.x1, element.x2, element.progress);
-                        let progressY = lerp(element.y1, element.y2, element.progress);
-                        
-                        if (pointNearLine(mouseX, mouseY, element.x1, element.y1, progressX, progressY, 10)) {
-                            // Toggle pause state
-                            element.paused = !element.paused;
-                            if (element.paused) {
-                                element.pauseTime = millis();
-                                element.pauseDuration = random(2000, 4000); // Pause for 2-4 seconds
-                                element.highlight = true;
-                                lastPausedElement = element;
-                                pauseEffectTime = millis(); // Trigger global pause effect
-                            } else {
-                                element.highlight = false;
-                            }
-                            elementClicked = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            // Check dotted lines if no other element was clicked
-            if (!elementClicked) {
-                for (let line of dottedLines) {
-                    if (pointNearDottedLine(mouseX, mouseY, line, 10)) {
+        }
+        
+        // Check transition elements (brown lines)
+        if (!elementClicked) {
+            for (let element of transitionElements) {
+                if (millis() > element.delay) {
+                    // Apply offset for tilt
+                    let drawX1 = element.x1 + element.offsetX;
+                    let drawY1 = element.y1 + element.offsetY;
+                    let drawX2 = element.x2 + element.offsetX;
+                    let drawY2 = element.y2 + element.offsetY;
+                    
+                    let progressX = lerp(drawX1, drawX2, element.progress);
+                    let progressY = lerp(drawY1, drawY2, element.progress);
+                    
+                    if (pointNearLine(mouseX, mouseY, drawX1, drawY1, progressX, progressY, 15)) {
                         // Toggle pause state
-                        line.userPaused = !line.userPaused;
-                        if (line.userPaused) {
-                            line.pauseTime = millis();
-                            line.pauseUserDuration = random(2000, 4000); // Pause for 2-4 seconds
-                            line.highlight = true;
-                            lastPausedElement = line;
-                            pauseEffectTime = millis(); // Trigger global pause effect
+                        if (!element.paused) {
+                            pauseElement(element, "Transition Element");
                         } else {
-                            line.highlight = false;
+                            element.paused = false;
+                            element.highlight = false;
                         }
                         elementClicked = true;
                         break;
                     }
                 }
             }
-            
-            // If no element was clicked, toggle global animation state
-            if (!elementClicked) {
-                isAnimating = !isAnimating;
-                
-                // Handle sound based on animation state
-                if (!isAnimating && soundPlaying) {
-                    pauseSound.setVolume(0, 1);
-                    setTimeout(() => {
-                        pauseSound.pause();
-                        soundPlaying = false;
-                    }, 1000);
-                } else if (isAnimating && soundEnabled && !soundPlaying && soundLoaded) {
-                    try {
-                        pauseSound.loop();
-                        pauseSound.setVolume(0);
-                        pauseSound.setVolume(0.8, 1);
-                        soundPlaying = true;
-                    } catch(e) {
-                        console.error("Error playing sound:", e);
-                    }
-                }
-            }
-            
-            return false;
         }
         
-        // Support touch events
-        function touchStarted() {
-            // Initialize audio context for iOS
-            if (getAudioContext().state !== 'running') {
-                getAudioContext().resume();
+        // Check dotted lines
+        if (!elementClicked) {
+            for (let line of dottedLines) {
+                if (pointNearDottedLine(mouseX, mouseY, line, 15)) {
+                    // Toggle user pause state
+                    if (!line.userPaused) {
+                        line.userPaused = true;
+                        line.pauseTime = millis();
+                        line.pauseUserDuration = random(3000, 5000);
+                        line.highlight = true;
+                        
+                        // Show notification
+                        showPauseNotification(line.name || "Dotted Line");
+                        
+                        // Apply subtle sound effect
+                        if (soundEnabled && emotionSound && soundPlaying) {
+                            emotionSound.setVolume(0.4, 0.3);
+                        }
+                    } else {
+                        line.userPaused = false;
+                        line.highlight = false;
+                    }
+                    elementClicked = true;
+                    break;
+                }
             }
-            
-            return mousePressed();
         }
+        
+        // Check circle overlays
+        if (!elementClicked) {
+            for (let circle of circleOverlays) {
+                // Apply offset for tilt
+                let drawX = circle.x + circle.offsetX;
+                let drawY = circle.y + circle.offsetY;
+                
+                if (pointInCircle(mouseX, mouseY, drawX, drawY, circle.size/2)) {
+                    // Toggle pause state
+                    if (!circle.paused) {
+                        pauseElement(circle, "Circle Overlay");
+                    } else {
+                        circle.paused = false;
+                        circle.highlight = false;
+                    }
+                    elementClicked = true;
+                    break;
+                }
+            }
+        }
+        
+        // If no element was clicked, toggle global animation state
+        if (!elementClicked) {
+            // Toggle global pause
+            if (!globalPauseActive) {
+                activateGlobalPause();
+            } else {
+                globalPauseActive = false;
+                isAnimating = true;
+                
+                // Restore sound if it was lowered
+                if (soundEnabled && emotionSound && soundPlaying) {
+                    emotionSound.setVolume(0.7, 0.5);
+                }
+            }
+        }
+        
+        // Return false to prevent default browser behavior
+        return false;
+    }
+    
+    // Support touch events for mobile
+    function touchStarted() {
+        // For iOS - ensure we have audio context
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+        
+        // For iOS - request motion permission if needed
+        if (!motionPermissionGranted && typeof DeviceOrientationEvent !== 'undefined' && 
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            requestDeviceMotionPermission();
+        }
+        
+        // Show hint briefly when user taps if it's hidden
+        if (!hintVisible) {
+            document.getElementById('hint').style.opacity = '1';
+            hintVisible = true;
+            
+            setTimeout(() => {
+                document.getElementById('hint').style.opacity = '0';
+                hintVisible = false;
+            }, 3000);
+        }
+        
+        // Process the touch as a mouse click
+        return mousePressed();
+    }
     </script>
 </body>
 </html>

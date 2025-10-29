@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Hope - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f5f5f7;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        /* Landing screen that appears first */
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(245, 245, 247, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #FFD800; /* Yellow for hope */
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 550px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(255, 216, 0, 0.1);
+           border-radius: 8px;
+           border-left: 3px solid #FFD800;
+           line-height: 1.6;
+           color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Canvas for the animation */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        /* Hope resonance popup */
+        .hope-resonance {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 3px solid #FFD800;
+        }
+        
+        /* Controls panel */
+        .controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* Hint message */
+        .hint {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+        }
+        
+        /* Timeline slider */
+        .timeline {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 500px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(255, 216, 0, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background-color: rgba(255, 216, 0, 0.8);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .timeline-handle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #FFD800;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important; /* Allow scrolling on mobile */
+                height: auto !important;
+            }
+        
+            #landing-overlay {
+                position: absolute; /* Change from fixed to absolute */
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+                padding: 40px 20px 120px 20px; /* More padding at top and bottom */
+                justify-content: flex-start; /* Start content from the top */
+            }
+        
+            .landing-title {
+                margin-top: 40px;
+            }
+        
+            .start-button {
+                margin-bottom: 60px; /* Ensure button isn't at the very bottom */
+                position: relative;
+            }
+        
+            .emotion-name {
+                font-size: 42px; /* Slightly larger on mobile */
+            }
+        
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
+        }
+        
+        /* Orientation-specific styles */
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px; /* Move controls above timeline in portrait mode */
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%; /* Wider in portrait */
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px; /* Move away from edge and timeline handle */
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%; /* Narrower in landscape to leave room for controls */
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial landing overlay -->
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">HOPE</h2>
+        <p class="emotion-description" id="emotion-description">
+            An exploration of hope as a complex emotion with directed pathways, emerging possibilities, and future orientation.
+            <br><b>Analysis by Claude</b>
+        </p>
+
+        <!-- AI disclaimer -->
+        <div class="ai-disclaimer">
+            <strong>Note:</strong> This is a simulation of hope based on my analysis of human descriptions. As an AI, I don't experience emotions or feelings - this is just my interpretation of a human concept.
+        </div>
+        
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
+    
+    <!-- Hope resonance popup that appears when interacting with elements -->
+    <div class="hope-resonance" id="hope-resonance"></div>
+    
+    <!-- Control buttons -->
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Hint for users -->
+    <div class="hint" id="hint">Tap on elements to nurture hope</div>
+    
+    <!-- Timeline interface -->
+    <div class="timeline" id="timeline">
+        <div class="timeline-bar" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress"></div>
+            <div class="timeline-handle" id="timeline-handle"></div>
+        </div>
+    </div>
+    
+    <script>
+        let isAnimating = true;
+        let soundEnabled = true;
+        let hopeSound;
+        let soundLoaded = false;
+        let timelineActive = false;
+        let isDraggingTimeline = false;
+        let timePosition = 0;
+        let previousTimePosition = 0;
+        let activatedTimeline = false;
+        
+        // Hope resonances - text snippets that appear when interacting with elements
+        const hopeResonances = [
+            "A small possibility that grows with attention",
+            "The feeling of light gradually entering a dark room",
+            "Gentle optimism in the face of uncertainty",
+            "The space between where we are and where we wish to be",
+            "A tiny seed of possibility waiting to be nurtured",
+            "The courage to imagine better days ahead",
+            "Finding pathways where none seemed to exist",
+            "The first breath after a deep dive",
+            "Small victories that point to larger ones",
+            "Expectation tempered by patience",
+            "The feeling of dawn after a long night",
+            "The moment potential transforms into possibility",
+            "Threads that connect present actions to future outcomes",
+            "The resilient push against resistance",
+            "A signal through noise, getting clearer"
+        ];
+        
+        // Color palette for Hope
+        const colors = {
+            yellow: [255, 216, 0],     // Yellow - Recognition pathways (Color A)
+            pink: [255, 105, 180],     // Pink - Evaluation connectors (Color B)
+            green: [50, 205, 50]       // Green - Response elements (Color C)
+        };
+        
+        // Elements for each conceptual layer
+        let pathwayElements = [];     // Yellow elements - recognition pathways
+        let connectorElements = [];   // Pink elements - evaluation connectors 
+        let directionElements = [];   // Green elements - response indicators
+        
+        // Connection lines between elements
+        let connectionLines = [];
+        
+        // Hand outline coordinates (will gradually appear)
+        let handOutlinePoints = [];
+        let handProgress = 0;
+        
+        // Interactive elements
+        let hopeCenters = []; // Special interactive focal points
+        let activeHopeCenter = null;
+        let hopeCenterActivated = false;
+        
+        // Timeline tracking
+        let timelineProgress = 0;
+        
+        // Function that contains the button action logic
+        function startExperience() {
+            // Fade out landing overlay
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            // After fading out, remove from DOM
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                // Start animation
+                isAnimating = true;
+                loop();
+                
+                // Position controls based on orientation
+                updateLayoutForOrientation();
+                
+                // Start sound if enabled
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        hopeSound.loop();
+                        hopeSound.setVolume(0);
+                        hopeSound.setVolume(0.6, 2); // Fade in over 2 seconds
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                // Show controls and hint
+                setTimeout(() => {
+                    document.getElementById('controls').style.opacity = '1';
+                    document.getElementById('hint').style.opacity = '1';
+                    
+                    // Hide hint after 5 seconds
+                    setTimeout(() => {
+                        document.getElementById('hint').style.opacity = '0';
+                    }, 5000);
+                }, 2000);
+            }, 1000);
+        }
+        
+        // Function to update layout based on orientation
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', function() {
+            // Small delay to ensure dimensions have updated
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
+        
+        // Setup for landing page interaction
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault(); // Prevent default to avoid double-firing
+            startExperience();
+        });
+        
+        // Sound toggle
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            
+            // Update sound wave visibility
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && hopeSound && !hopeSound.isPlaying()) {
+                hopeSound.loop();
+                hopeSound.setVolume(0);
+                hopeSound.setVolume(0.6, 1);
+            } else if (!soundEnabled && hopeSound && hopeSound.isPlaying()) {
+                hopeSound.setVolume(0, 1);
+                setTimeout(() => {
+                    hopeSound.pause();
+                }, 1000);
+            }
+        });
+        
+        // Reset button
+        document.getElementById('reset-button').addEventListener('click', function() {
+            // Reset the experience
+            timePosition = 0;
+            previousTimePosition = 0;
+            
+            resetExperience();
+            
+            // Update timeline
+            updateTimelineUI();
+        });
+        
+        // Timeline interaction
+        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        
+        function startTimelineDrag(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            
+            isDraggingTimeline = true;
+            updateTimelinePosition(e);
+            
+            // Add document-level event listeners
+            document.addEventListener('mousemove', updateTimelinePosition);
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
+            document.addEventListener('mouseup', endTimelineDrag);
+            document.addEventListener('touchend', endTimelineDrag);
+        }
+        
+        function updateTimelinePosition(e) {
+            if (!isDraggingTimeline) return;
+            
+            // Prevent scrolling when dragging on mobile
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            
+            const timeline = document.getElementById('timeline-bar');
+            const rect = timeline.getBoundingClientRect();
+            
+            // Get the x position relative to the timeline
+            let clientX;
+            if (e.type.startsWith('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            // Calculate percentage position with boundary handling
+            let percentage = (clientX - rect.left) / rect.width;
+            percentage = Math.max(0, Math.min(1, percentage));
+            
+            // Update UI
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+            
+            // Update timeline position
+            timePosition = percentage * 30000; // 30 seconds of experience timeline
+            
+            // Set time position
+            setTimePosition(timePosition);
+        }
+        
+        function endTimelineDrag() {
+            isDraggingTimeline = false;
+            document.removeEventListener('mousemove', updateTimelinePosition);
+            document.removeEventListener('touchmove', updateTimelinePosition);
+            document.removeEventListener('mouseup', endTimelineDrag);
+            document.removeEventListener('touchend', endTimelineDrag);
+            
+            previousTimePosition = timePosition;
+        }
+        
+        function updateTimelineUI() {
+            // Calculate percentage
+            const percentage = timePosition / 30000;
+            
+            // Update UI
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+        }
+        
+        function preload() {
+            // Pre-load sound
+            soundLoaded = false;
+            hopeSound = loadSound('hope_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Define hand outline points
+            createHandOutline();
+            
+            // Create pathway elements (yellow - recognition)
+            createPathwayElements();
+            
+            // Create connector elements (pink - evaluation)
+            createConnectorElements();
+            
+            // Create direction elements (green - response)
+            createDirectionElements();
+            
+            // Create connection lines between elements
+            createConnectionLines();
+            
+            // Create hope centers - larger interactive focal points
+            createHopeCenters();
+            
+            // Initialize audio context for better mobile support
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            // Initially pause animation while on landing page
+            isAnimating = false;
+            noLoop();
+        }
+        
+        function getRandomResonance() {
+            return hopeResonances[floor(random(hopeResonances.length))];
+        }
+        
+        function createPathwayElements() {
+            // Create horizontal and vertical pathway elements (yellow)
+            
+            // Main vertical pathway (left side)
+            pathwayElements.push({
+                type: 'vertical',
+                x: width * 0.3,
+                y: height * 0.2,
+                length: height * 0.6,
+                width: 5,
+                opacity: 230,
+                startTime: 500,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                progress: 0,
+                energy: 0,
+                maxEnergy: 100
+            });
+            
+            // Main horizontal pathway (bottom)
+            pathwayElements.push({
+                type: 'horizontal',
+                x: width * 0.3,
+                y: height * 0.7,
+                length: width * 0.4,
+                width: 5,
+                opacity: 230,
+                startTime: 1800,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                progress: 0,
+                energy: 0,
+                maxEnergy: 100
+            });
+            
+            // Add smaller pathway segments
+            for (let i = 0; i < 8; i++) {
+                let isHorizontal = random() > 0.5;
+                let baseX = isHorizontal ? random(width * 0.2, width * 0.7) : random(width * 0.25, width * 0.75);
+                let baseY = isHorizontal ? random(height * 0.3, height * 0.8) : random(height * 0.15, height * 0.6);
+                let segmentLength = isHorizontal ? random(40, 120) : random(30, 100);
+                
+                pathwayElements.push({
+                    type: isHorizontal ? 'horizontal' : 'vertical',
+                    x: baseX,
+                    y: baseY,
+                    length: segmentLength,
+                    width: random(2, 4),
+                    opacity: random(180, 230),
+                    startTime: 3000 + i * 800,
+                    visible: false,
+                    interactive: random() > 0.5,
+                    activated: false,
+                    activatedTime: 0,
+                    progress: 0,
+                    energy: 0,
+                    maxEnergy: random(60, 100)
+                });
+            }
+        }
+        
+        function createConnectorElements() {
+            // Create connector elements (pink - evaluation)
+            
+            // Main connector nodes
+            // First at main pathway intersection
+            connectorElements.push({
+                type: 'circle',
+                x: width * 0.3,
+                y: height * 0.7,
+                size: 10,
+                opacity: 230,
+                startTime: 2500,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                pulseRate: 0.002,
+                intensity: 0,
+                maxIntensity: 100,
+                connections: []
+            });
+            
+            // End of horizontal pathway
+            connectorElements.push({
+                type: 'circle',
+                x: width * 0.7,
+                y: height * 0.7,
+                size: 10,
+                opacity: 230,
+                startTime: 4000,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                pulseRate: 0.0015,
+                intensity: 0,
+                maxIntensity: 100,
+                connections: []
+            });
+            
+            // Additional connector nodes
+            for (let i = 0; i < 6; i++) {
+                let baseX = random(width * 0.2, width * 0.8);
+                let baseY = random(height * 0.25, height * 0.75);
+                
+                connectorElements.push({
+                    type: 'circle',
+                    x: baseX,
+                    y: baseY,
+                    size: random(6, 12),
+                    opacity: random(180, 230),
+                    startTime: 5000 + i * 1200,
+                    visible: false,
+                    interactive: random() > 0.4,
+                    activated: false,
+                    activatedTime: 0,
+                    pulseRate: random(0.001, 0.003),
+                    intensity: 0,
+                    maxIntensity: random(60, 100),
+                    connections: []
+                });
+            }
+        }
+        
+        function createDirectionElements() {
+            // Create direction elements (green - response)
+            
+            // Main direction indicators
+            // Indicator at end of horizontal path
+            directionElements.push({
+                type: 'arrow',
+                x: width * 0.7, 
+                y: height * 0.7,
+                size: 15,
+                direction: 0, // 0 = right, PI/2 = down, PI = left, 3*PI/2 = up
+                opacity: 230,
+                startTime: 4500,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                adaptLevel: 0,
+                maxAdaptLevel: 100
+            });
+            
+            // Indicator for hand focus
+            directionElements.push({
+                type: 'arrow',
+                x: width * 0.75,
+                y: height * 0.45,
+                size: 12,
+                direction: 3*PI/4, // Pointing toward hand
+                opacity: 200,
+                startTime: 8000,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                adaptLevel: 0,
+                maxAdaptLevel: 100
+            });
+            
+            // Additional direction indicators
+            for (let i = 0; i < 6; i++) {
+                let baseX = random(width * 0.2, width * 0.8);
+                let baseY = random(height * 0.2, height * 0.8);
+                
+                directionElements.push({
+                    type: random() > 0.7 ? 'cross' : 'arrow',
+                    x: baseX,
+                    y: baseY,
+                    size: random(8, 14),
+                    direction: random(TWO_PI), // Random direction for arrows
+                    opacity: random(180, 220),
+                    startTime: 6000 + i * 1400,
+                    visible: false,
+                    interactive: random() > 0.3,
+                    activated: false,
+                    activatedTime: 0,
+                    adaptLevel: 0,
+                    maxAdaptLevel: random(70, 100)
+                });
+            }
+        }
+        
+        function createConnectionLines() {
+            // Create connection lines between elements
+            
+            // Connect pathways with connectors
+            for (let i = 0; i < connectorElements.length; i++) {
+                let connector = connectorElements[i];
+                
+                // Find closest pathway elements
+                for (let j = 0; j < pathwayElements.length; j++) {
+                    let pathway = pathwayElements[j];
+                    
+                    // Calculate distance to pathway
+                    let pathwayMidX = pathway.type === 'horizontal' ? 
+                                    pathway.x + pathway.length/2 : 
+                                    pathway.x;
+                    let pathwayMidY = pathway.type === 'vertical' ? 
+                                    pathway.y + pathway.length/2 : 
+                                    pathway.y;
+                    
+                    let d = dist(connector.x, connector.y, pathwayMidX, pathwayMidY);
+                    
+                    if (d < 150) {
+                        connectionLines.push({
+                            startElement: 'connector',
+                            startIndex: i,
+                            endElement: 'pathway',
+                            endIndex: j,
+                            opacity: random(100, 180),
+                            dotSize: random(2, 3),
+                            dotSpacing: random(8, 12),
+                            progress: 0,
+                            startTime: max(connector.startTime, pathway.startTime) + 500,
+                            activated: false
+                        });
+                        
+                        // Add to connector's connections list
+                        connector.connections.push(j);
+                    }
+                }
+                
+                // Connect to direction elements
+                for (let j = 0; j < directionElements.length; j++) {
+                    let direction = directionElements[j];
+                    
+                    let d = dist(connector.x, connector.y, direction.x, direction.y);
+                    
+                    if (d < 160) {
+                        connectionLines.push({
+                            startElement: 'connector',
+                            startIndex: i,
+                            endElement: 'direction',
+                            endIndex: j,
+                            opacity: random(100, 180),
+                            dotSize: random(1.5, 3),
+                            dotSpacing: random(7, 10),
+                            progress: 0,
+                            startTime: max(connector.startTime, direction.startTime) + 800,
+                            activated: false
+                        });
+                    }
+                }
+                
+                // Connect some connectors to other connectors
+                for (let j = i+1; j < connectorElements.length; j++) {
+                    let otherConnector = connectorElements[j];
+                    
+                    let d = dist(connector.x, connector.y, otherConnector.x, otherConnector.y);
+                    
+                    if (d < 200 && random() > 0.7) {
+                        connectionLines.push({
+                            startElement: 'connector',
+                            startIndex: i,
+                            endElement: 'connector',
+                            endIndex: j,
+                            opacity: random(100, 160),
+                            dotSize: random(2, 3),
+                            dotSpacing: random(8, 12),
+                            progress: 0,
+                            startTime: max(connector.startTime, otherConnector.startTime) + 1000,
+                            activated: false
+                        });
+                    }
+                }
+            }
+            
+            // Connect some pathway ends to direction elements
+            for (let i = 0; i < pathwayElements.length; i++) {
+                let pathway = pathwayElements[i];
+                
+                // Get pathway end coordinates
+                let endX = pathway.type === 'horizontal' ? 
+                           pathway.x + pathway.length : 
+                           pathway.x;
+                let endY = pathway.type === 'vertical' ? 
+                           pathway.y + pathway.length : 
+                           pathway.y;
+                
+                // Find nearby direction elements
+                for (let j = 0; j < directionElements.length; j++) {
+                    let direction = directionElements[j];
+                    
+                    let d = dist(endX, endY, direction.x, direction.y);
+                    
+                    if (d < 80 && random() > 0.6) {
+                        connectionLines.push({
+                            startElement: 'pathway',
+                            startIndex: i,
+                            endElement: 'direction',
+                            endIndex: j,
+                            opacity: random(120, 180),
+                            dotSize: random(2, 3),
+                            dotSpacing: random(8, 12),
+                            progress: 0,
+                            startTime: max(pathway.startTime, direction.startTime) + 1200,
+                            activated: false
+                        });
+                    }
+                }
+            }
+        }
+
+        function createHandOutline() {
+            // Create a hand outline representing hope's physical manifestation
+            
+            // Base of palm
+            handOutlinePoints.push({x: 0.55, y: 0.5});
+            handOutlinePoints.push({x: 0.65, y: 0.5});
+            
+            // Right side of hand
+            handOutlinePoints.push({x: 0.67, y: 0.45});
+            handOutlinePoints.push({x: 0.68, y: 0.4});
+            
+            // Fingers extending outward and upward (hope reaching)
+            handOutlinePoints.push({x: 0.67, y: 0.35});
+            handOutlinePoints.push({x: 0.65, y: 0.3});
+            handOutlinePoints.push({x: 0.62, y: 0.25});
+            
+            // Middle fingers
+            handOutlinePoints.push({x: 0.59, y: 0.23});
+            handOutlinePoints.push({x: 0.56, y: 0.22});
+            handOutlinePoints.push({x: 0.53, y: 0.23});
+            
+            // Left fingers
+            handOutlinePoints.push({x: 0.5, y: 0.25});
+            handOutlinePoints.push({x: 0.48, y: 0.3});
+            handOutlinePoints.push({x: 0.47, y: 0.35});
+            
+            // Left side of palm
+            handOutlinePoints.push({x: 0.48, y: 0.4});
+            handOutlinePoints.push({x: 0.5, y: 0.45});
+            handOutlinePoints.push({x: 0.55, y: 0.5});
+            
+            // Convert relative coordinates to absolute
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
+        }
+        
+        function createHopeCenters() {
+            // Create interactive hope centers - focal points of the experience
+            
+            // Main hope center around hand
+            hopeCenters.push({
+                x: width * 0.58, // Center of hand
+                y: height * 0.38, // Center of hand
+                size: 80,
+                opacity: 0,
+                targetOpacity: 180,
+                pulseRate: 0.001,
+                activated: false,
+                activationProgress: 0,
+                startTime: 12000,
+                resonance: "Hope embodied in action - reaching toward possibility",
+                elements: []
+            });
+            
+            // Secondary hope centers
+            for (let i = 0; i < 2; i++) {
+                hopeCenters.push({
+                    x: random(width * 0.3, width * 0.7),
+                    y: random(height * 0.3, height * 0.7),
+                    size: random(50, 70),
+                    opacity: 0,
+                    targetOpacity: random(160, 200),
+                    pulseRate: random(0.0008, 0.0015),
+                    activated: false,
+                    activationProgress: 0,
+                    startTime: 15000 + i * 3000,
+                    resonance: getRandomResonance(),
+                    elements: []
+                });
+            }
+            
+            // Assign some elements to each hope center
+            // For pathway elements
+            for (let i = 0; i < pathwayElements.length; i++) {
+                let pathway = pathwayElements[i];
+                
+                // Get pathway midpoint
+                let pathwayMidX = pathway.type === 'horizontal' ? 
+                                  pathway.x + pathway.length/2 : 
+                                  pathway.x;
+                let pathwayMidY = pathway.type === 'vertical' ? 
+                                  pathway.y + pathway.length/2 : 
+                                  pathway.y;
+                
+                // Find the closest hope center
+                let closestCenter = null;
+                let closestDistance = Infinity;
+                
+                for (let j = 0; j < hopeCenters.length; j++) {
+                    let d = dist(pathwayMidX, pathwayMidY, 
+                                hopeCenters[j].x, hopeCenters[j].y);
+                    if (d < closestDistance && d < 180) {
+                        closestDistance = d;
+                        closestCenter = j;
+                    }
+                }
+                
+                // Assign to hope center if close enough
+                if (closestCenter !== null) {
+                    hopeCenters[closestCenter].elements.push({
+                        type: 'pathway',
+                        index: i
+                    });
+                }
+            }
+            
+            // For connector elements
+            for (let i = 0; i < connectorElements.length; i++) {
+                let connector = connectorElements[i];
+                
+                // Find the closest hope center
+                let closestCenter = null;
+                let closestDistance = Infinity;
+                
+                for (let j = 0; j < hopeCenters.length; j++) {
+                    let d = dist(connector.x, connector.y, 
+                                hopeCenters[j].x, hopeCenters[j].y);
+                    if (d < closestDistance && d < 150) {
+                        closestDistance = d;
+                        closestCenter = j;
+                    }
+                }
+                
+                // Assign to hope center if close enough
+                if (closestCenter !== null) {
+                    hopeCenters[closestCenter].elements.push({
+                        type: 'connector',
+                        index: i
+                    });
+                }
+            }
+            
+            // For direction elements
+            for (let i = 0; i < directionElements.length; i++) {
+                let direction = directionElements[i];
+                
+                // Find the closest hope center
+                let closestCenter = null;
+                let closestDistance = Infinity;
+                
+                for (let j = 0; j < hopeCenters.length; j++) {
+                    let d = dist(direction.x, direction.y, 
+                                hopeCenters[j].x, hopeCenters[j].y);
+                    if (d < closestDistance && d < 160) {
+                        closestDistance = d;
+                        closestCenter = j;
+                    }
+                }
+                
+                // Assign to hope center if close enough
+                if (closestCenter !== null) {
+                    hopeCenters[closestCenter].elements.push({
+                        type: 'direction',
+                        index: i
+                    });
+                }
+            }
+        }
+
+        function draw() {
+            // Clear the canvas with a clean white background
+            background(250, 250, 248);
+            
+            // If animating, update time position
+            if (isAnimating && !isDraggingTimeline) {
+                timePosition += deltaTime;
+                
+                // Limit to 30 seconds
+                if (timePosition > 30000) {
+                    timePosition = 30000;
+                    
+                    // Show timeline if reached end
+                    if (!activatedTimeline) {
+                        showTimeline();
+                        activatedTimeline = true;
+                    }
+                }
+                
+                // Update timeline UI
+                updateTimelineUI();
+                
+                previousTimePosition = timePosition;
+            }
+
+            // Draw the layers in appropriate order
+            drawPathwayElements();    // Yellow elements (recognition)
+            drawConnectionLines();    // Connection lines between elements
+            drawConnectorElements();  // Pink elements (evaluation)
+            drawDirectionElements();  // Green elements (response)
+            drawHandOutline();        // Hand outline representing hope
+            drawHopeCenters();        // Interactive hope centers
+            
+            // Update hand outline progress
+            if (isAnimating) {
+                handProgress = min(1, handProgress + 0.0003);
+            }
+            
+            // Update activated elements
+            updateActivatedElements();
+            
+            // Update element propagation (contagion effect)
+            updateElementPropagation();
+        }
+        
+        function showTimeline() {
+            // Show the timeline interface
+            document.getElementById('timeline').style.opacity = '1';
+            
+            // Position controls based on orientation when timeline appears
+            updateLayoutForOrientation();
+        }
+        
+        function updateActivatedElements() {
+            // Check any activated pathway elements
+            for (let pathway of pathwayElements) {
+                if (pathway.activated) {
+                    // Decrease energy over time (adaptation)
+                    if (pathway.energy > 0) {
+                        pathway.energy = max(0, pathway.energy - 0.2);
+                    }
+                    
+                    if (millis() - pathway.activatedTime > 4000) {
+                        pathway.activated = false;
+                    }
+                }
+            }
+            
+            // Check any activated connector elements
+            for (let connector of connectorElements) {
+                if (connector.activated) {
+                    // Decrease intensity over time (adaptation)
+                    if (connector.intensity > 0) {
+                        connector.intensity = max(0, connector.intensity - 0.3);
+                    }
+                    
+                    if (millis() - connector.activatedTime > 4000) {
+                        connector.activated = false;
+                    }
+                }
+            }
+            
+            // Check any activated direction elements
+            for (let direction of directionElements) {
+                if (direction.activated) {
+                    // Decrease adaptation level over time
+                    if (direction.adaptLevel > 0) {
+                        direction.adaptLevel = max(0, direction.adaptLevel - 0.2);
+                    }
+                    
+                    if (millis() - direction.activatedTime > 4000) {
+                        direction.activated = false;
+                    }
+                }
+            }
+            
+            // Check activated hope centers
+            for (let center of hopeCenters) {
+                if (center.activated) {
+                    center.activationProgress = min(1, center.activationProgress + 0.005);
+                }
+            }
+            
+            // If we have an active hope center but it's no longer activated
+            if (activeHopeCenter !== null && !hopeCenters[activeHopeCenter].activated) {
+                if (hopeCenters[activeHopeCenter].activationProgress > 0) {
+                    hopeCenters[activeHopeCenter].activationProgress = max(0, hopeCenters[activeHopeCenter].activationProgress - 0.01);
+                } else {
+                    activeHopeCenter = null;
+                    hopeCenterActivated = false;
+                }
+            }
+        }
+        
+        function updateElementPropagation() {
+            // Implement the contagion effect - spread influence between elements
+            
+            // From activated connectors to connected pathways
+            for (let i = 0; i < connectorElements.length; i++) {
+                let connector = connectorElements[i];
+                
+                if (connector.activated && connector.intensity > 20) {
+                    // Spread to connected pathways
+                    for (let connIdx of connector.connections) {
+                        let pathway = pathwayElements[connIdx];
+                        
+                        // Add energy to the pathway (diminished by distance)
+                        let d = dist(connector.x, connector.y, 
+                                    pathway.type === 'horizontal' ? pathway.x + pathway.length/2 : pathway.x,
+                                    pathway.type === 'vertical' ? pathway.y + pathway.length/2 : pathway.y);
+                        
+                        let energyTransfer = max(0, connector.intensity * (1 - d/200) * 0.1);
+                        pathway.energy = min(pathway.maxEnergy, pathway.energy + energyTransfer);
+                        
+                        // Mark as activated if significant energy
+                        if (pathway.energy > 20 && !pathway.activated) {
+                            pathway.activated = true;
+                            pathway.activatedTime = millis();
+                        }
+                    }
+                }
+            }
+            
+            // From activated pathways to nearby direction elements
+            for (let i = 0; i < pathwayElements.length; i++) {
+                let pathway = pathwayElements[i];
+                
+                if (pathway.activated && pathway.energy > 30) {
+                    // Get pathway end coordinates
+                    let endX = pathway.type === 'horizontal' ? 
+                            pathway.x + pathway.length : 
+                            pathway.x;
+                    let endY = pathway.type === 'vertical' ? 
+                            pathway.y + pathway.length : 
+                            pathway.y;
+                    
+                    // Find nearby direction elements
+                    for (let j = 0; j < directionElements.length; j++) {
+                        let direction = directionElements[j];
+                        
+                        let d = dist(endX, endY, direction.x, direction.y);
+                        
+                        if (d < 120) {
+                            // Transfer adaptation level (diminished by distance)
+                            let adaptTransfer = max(0, pathway.energy * (1 - d/120) * 0.15);
+                            direction.adaptLevel = min(direction.maxAdaptLevel, direction.adaptLevel + adaptTransfer);
+                            
+                            // Mark as activated if significant adaptation
+                            if (direction.adaptLevel > 25 && !direction.activated) {
+                                direction.activated = true;
+                                direction.activatedTime = millis();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function setTimePosition(time) {
+            // Set the internal time position
+            const previousMillis = previousTimePosition;
+            const timeDiff = time - previousMillis;
+            
+            // Reset elements if jumping backward more than 2 seconds
+            if (timeDiff < -2000) {
+                resetExperience();
+            }
+        }
+        
+        function resetExperience() {
+            // Reset all elements to their initial state
+            for (let pathway of pathwayElements) {
+                pathway.visible = timePosition > pathway.startTime;
+                pathway.activated = false;
+                pathway.progress = 0;
+                pathway.energy = 0;
+            }
+            
+            for (let connector of connectorElements) {
+                connector.visible = timePosition > connector.startTime;
+                connector.activated = false;
+                connector.intensity = 0;
+            }
+            
+            for (let direction of directionElements) {
+                direction.visible = timePosition > direction.startTime;
+                direction.activated = false;
+                direction.adaptLevel = 0;
+            }
+            
+            for (let line of connectionLines) {
+                line.progress = 0;
+                line.activated = false;
+            }
+            
+            for (let center of hopeCenters) {
+                center.opacity = timePosition > center.startTime ? center.targetOpacity : 0;
+                center.activated = false;
+                center.activationProgress = 0;
+            }
+            
+            handProgress = min(1, timePosition / 20000);
+            activeHopeCenter = null;
+            hopeCenterActivated = false;
+        }
+
+        function drawHandOutline() {
+            // Only start drawing hand after initial elements appear
+            if (timePosition < 10000) return;
+            
+            // Calculate how many points to show based on progress
+            let pointsToShow = floor(handOutlinePoints.length * handProgress);
+            
+            if (pointsToShow < 2) return;
+            
+            // Draw the hand outline
+            noFill();
+            stroke(80, 80, 80, 100); // Soft gray
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let i = 0; i < pointsToShow; i++) {
+                vertex(handOutlinePoints[i].x, handOutlinePoints[i].y);
+            }
+            endShape(pointsToShow === handOutlinePoints.length ? CLOSE : OPEN);
+            
+            // If hand is complete, add some interior detail
+            if (pointsToShow === handOutlinePoints.length) {
+                // Palm line
+                stroke(80, 80, 80, 70);
+                strokeWeight(1);
+                line(
+                    handOutlinePoints[0].x + 5, 
+                    (handOutlinePoints[0].y + handOutlinePoints[15].y) / 2,
+                    handOutlinePoints[14].x - 5,
+                    (handOutlinePoints[0].y + handOutlinePoints[15].y) / 2
+                );
+                
+                // Life line
+                beginShape();
+                curveVertex(handOutlinePoints[15].x - 10, handOutlinePoints[15].y - 15);
+                curveVertex(handOutlinePoints[15].x - 5, handOutlinePoints[15].y - 25);
+                curveVertex(handOutlinePoints[11].x + 5, handOutlinePoints[11].y + 10);
+                curveVertex(handOutlinePoints[11].x + 10, handOutlinePoints[11].y + 20);
+                endShape();
+                
+                // Small hope symbol in palm (star)
+                if (activeHopeCenter !== null && hopeCenters[activeHopeCenter].activationProgress > 0.5) {
+                    let centerX = (handOutlinePoints[0].x + handOutlinePoints[7].x) / 2;
+                    let centerY = (handOutlinePoints[0].y + handOutlinePoints[7].y) / 2;
+                    
+                    fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                        150 * hopeCenters[activeHopeCenter].activationProgress);
+                    noStroke();
+                    
+                    push();
+                    translate(centerX, centerY);
+                    rotate(frameCount * 0.01);
+                    
+                    let starSize = 10 * hopeCenters[activeHopeCenter].activationProgress;
+                    drawStar(0, 0, starSize, starSize*2, 5);
+                    
+                    pop();
+                }
+            }
+        }
+        
+        function drawStar(x, y, radius1, radius2, npoints) {
+            let angle = TWO_PI / npoints;
+            let halfAngle = angle/2.0;
+            
+            beginShape();
+            for (let a = 0; a < TWO_PI; a += angle) {
+                let sx = x + cos(a) * radius2;
+                let sy = y + sin(a) * radius2;
+                vertex(sx, sy);
+                sx = x + cos(a+halfAngle) * radius1;
+                sy = y + sin(a+halfAngle) * radius1;
+                vertex(sx, sy);
+            }
+            endShape(CLOSE);
+        }
+
+        function drawPathwayElements() {
+            // Draw pathway elements (yellow - recognition)
+            
+            for (let i = 0; i < pathwayElements.length; i++) {
+                let pathway = pathwayElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > pathway.startTime) {
+                    pathway.visible = true;
+                    
+                    // Update progress if not fully formed
+                    if (pathway.progress < 1) {
+                        pathway.progress = min(1, pathway.progress + 0.01);
+                    }
+                }
+                
+                if (pathway.visible) {
+                    // Calculate the actual length based on progress
+                    let currentLength = pathway.length * pathway.progress;
+                    
+                    // Enhanced appearance for activated elements
+                    if (pathway.activated || pathway.energy > 0) {
+                        // Energy pulse effect
+                        let energyFactor = pathway.energy / pathway.maxEnergy;
+                        let pulseWidth = pathway.width * (1 + energyFactor * 0.5);
+                        
+                        // Draw glow
+                        noFill();
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 100 * energyFactor);
+                        strokeWeight(pulseWidth + 4);
+                        
+                        if (pathway.type === 'horizontal') {
+                            line(pathway.x, pathway.y, pathway.x + currentLength, pathway.y);
+                        } else {
+                            line(pathway.x, pathway.y, pathway.x, pathway.y + currentLength);
+                        }
+                        
+                        // Draw main line with enhanced color
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                              pathway.opacity * (0.7 + energyFactor * 0.3));
+                    } else {
+                        // Standard appearance
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], pathway.opacity);
+                    }
+                    
+                    strokeWeight(pathway.width);
+                    
+                    if (pathway.type === 'horizontal') {
+                        line(pathway.x, pathway.y, pathway.x + currentLength, pathway.y);
+                    } else {
+                        line(pathway.x, pathway.y, pathway.x, pathway.y + currentLength);
+                    }
+                    
+                    // Add subtle pulse for interactive elements
+                    if (pathway.interactive && !pathway.activated) {
+                        noFill();
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 40);
+                        strokeWeight(1);
+                        
+                        let pulseX = pathway.type === 'horizontal' ? 
+                                    pathway.x + currentLength/2 : pathway.x;
+                        let pulseY = pathway.type === 'vertical' ? 
+                                    pathway.y + currentLength/2 : pathway.y;
+                        
+                        ellipse(pulseX, pulseY, 
+                               10 + sin(millis() * 0.003) * 3, 
+                               10 + sin(millis() * 0.003) * 3);
+                    }
+                }
+            }
+        }
+
+        function drawConnectorElements() {
+            // Draw connector elements (pink - evaluation)
+            
+            for (let i = 0; i < connectorElements.length; i++) {
+                let connector = connectorElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > connector.startTime) {
+                    connector.visible = true;
+                }
+                
+                if (connector.visible) {
+                    // Calculate pulsing for the element
+                    let pulseAmount = sin(millis() * connector.pulseRate);
+                    
+                    // Enhanced appearance for activated connectors
+                    if (connector.activated || connector.intensity > 0) {
+                        // Calculate intensity factor
+                        let intensityFactor = connector.intensity / connector.maxIntensity;
+                        
+                        // Draw glow
+                        noFill();
+                        stroke(colors.pink[0], colors.pink[1], colors.pink[2], 80 * intensityFactor);
+                        strokeWeight(2);
+                        
+                        let pulseSize = connector.size * (1 + pulseAmount * 0.2 + intensityFactor * 0.5);
+                        ellipse(connector.x, connector.y, pulseSize + 8, pulseSize + 8);
+                        
+                        // Draw main circle with enhanced color
+                        fill(colors.pink[0], colors.pink[1], colors.pink[2], 
+                            connector.opacity * (0.7 + intensityFactor * 0.3));
+                    } else {
+                        // Standard appearance
+                        fill(colors.pink[0], colors.pink[1], colors.pink[2], connector.opacity);
+                    }
+                    
+                    noStroke();
+                    
+                    let baseSize = connector.size * (1 + pulseAmount * 0.15);
+                    ellipse(connector.x, connector.y, baseSize, baseSize);
+                    
+                    // Add subtle pulse for interactive elements
+                    if (connector.interactive && !connector.activated) {
+                        noFill();
+                        stroke(colors.pink[0], colors.pink[1], colors.pink[2], 40);
+                        strokeWeight(1);
+                        
+                        ellipse(connector.x, connector.y, 
+                               baseSize + 10 + sin(millis() * 0.002) * 4, 
+                               baseSize + 10 + sin(millis() * 0.002) * 4);
+                    }
+                }
+            }
+        }
+
+        function drawDirectionElements() {
+            // Draw direction elements (green - response)
+            
+            for (let i = 0; i < directionElements.length; i++) {
+                let direction = directionElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > direction.startTime) {
+                    direction.visible = true;
+                }
+                
+                if (direction.visible) {
+                    // Enhanced appearance for activated elements
+                    if (direction.activated || direction.adaptLevel > 0) {
+                        // Calculate adaptation factor
+                        let adaptFactor = direction.adaptLevel / direction.maxAdaptLevel;
+                        
+                        // Draw glow
+                        noFill();
+                        stroke(colors.green[0], colors.green[1], colors.green[2], 80 * adaptFactor);
+                        strokeWeight(2);
+                        
+                        if (direction.type === 'arrow') {
+                            push();
+                            translate(direction.x, direction.y);
+                            rotate(direction.direction);
+                            
+                            let arrowSize = direction.size * (1 + adaptFactor * 0.5);
+                            line(0, 0, arrowSize * 1.5, 0);
+                            line(arrowSize * 1.5, 0, arrowSize, -arrowSize/2);
+                            line(arrowSize * 1.5, 0, arrowSize, arrowSize/2);
+                            
+                            pop();
+                        } else {
+                            // Cross type
+                            let crossSize = direction.size * (1 + adaptFactor * 0.5);
+                            ellipse(direction.x, direction.y, crossSize + 8, crossSize + 8);
+                        }
+                    }
+                    
+                    // Draw main element
+                    if (direction.activated || direction.adaptLevel > 0) {
+                        let adaptFactor = direction.adaptLevel / direction.maxAdaptLevel;
+                        fill(colors.green[0], colors.green[1], colors.green[2], 
+                            direction.opacity * (0.7 + adaptFactor * 0.3));
+                        stroke(colors.green[0], colors.green[1], colors.green[2], 
+                              direction.opacity * (0.7 + adaptFactor * 0.3));
+                    } else {
+                        fill(colors.green[0], colors.green[1], colors.green[2], direction.opacity);
+                        stroke(colors.green[0], colors.green[1], colors.green[2], direction.opacity);
+                    }
+                    
+                    strokeWeight(2);
+                    
+                    if (direction.type === 'arrow') {
+                        push();
+                        translate(direction.x, direction.y);
+                        rotate(direction.direction);
+                        
+                        // Draw arrow
+                        line(0, 0, direction.size, 0);
+                        noStroke();
+                        triangle(
+                            direction.size, 0, 
+                            direction.size - direction.size/3, -direction.size/3, 
+                            direction.size - direction.size/3, direction.size/3
+                        );
+                        
+                        pop();
+                    } else {
+                        // Cross type
+                        noStroke();
+                        rectMode(CENTER);
+                        
+                        push();
+                        translate(direction.x, direction.y);
+                        rotate(PI/4); // 45 degrees
+                        
+                        rect(0, 0, direction.size, direction.size/4);
+                        rect(0, 0, direction.size/4, direction.size);
+                        
+                        pop();
+                    }
+                    
+                    // Add subtle pulse for interactive elements
+                    if (direction.interactive && !direction.activated) {
+                        noFill();
+                        stroke(colors.green[0], colors.green[1], colors.green[2], 40);
+                        strokeWeight(1);
+                        
+                        ellipse(direction.x, direction.y, 
+                               direction.size + 15 + sin(millis() * 0.002) * 5, 
+                               direction.size + 15 + sin(millis() * 0.002) * 5);
+                    }
+                }
+            }
+        }
+
+        function drawConnectionLines() {
+            // Draw connection lines between elements
+            
+            for (let line of connectionLines) {
+                // Only start drawing after the delay
+                if (timePosition > line.startTime) {
+                    // Update progress if animating
+                    if (isAnimating && line.progress < 1) {
+                        line.progress = min(1, line.progress + 0.005);
+                    }
+                    
+                    // Get start and end points based on element types
+                    let startX, startY, endX, endY;
+                    
+                    // Start point
+                    if (line.startElement === 'connector') {
+                        startX = connectorElements[line.startIndex].x;
+                        startY = connectorElements[line.startIndex].y;
+                    } else if (line.startElement === 'pathway') {
+                        let pathway = pathwayElements[line.startIndex];
+                        if (pathway.type === 'horizontal') {
+                            startX = pathway.x + pathway.length * pathway.progress;
+                            startY = pathway.y;
+                        } else {
+                            startX = pathway.x;
+                            startY = pathway.y + pathway.length * pathway.progress;
+                        }
+                    } else {
+                        startX = directionElements[line.startIndex].x;
+                        startY = directionElements[line.startIndex].y;
+                    }
+                    
+                    // End point
+                    if (line.endElement === 'connector') {
+                        endX = connectorElements[line.endIndex].x;
+                        endY = connectorElements[line.endIndex].y;
+                    } else if (line.endElement === 'pathway') {
+                        let pathway = pathwayElements[line.endIndex];
+                        if (pathway.type === 'horizontal') {
+                            // Connect to middle of pathway
+                            endX = pathway.x + pathway.length * pathway.progress / 2;
+                            endY = pathway.y;
+                        } else {
+                            endX = pathway.x;
+                            endY = pathway.y + pathway.length * pathway.progress / 2;
+                        }
+                    } else {
+                        endX = directionElements[line.endIndex].x;
+                        endY = directionElements[line.endIndex].y;
+                    }
+                    
+                    // Only draw if both elements are visible
+                    if (
+                        (line.startElement === 'connector' && connectorElements[line.startIndex].visible) ||
+                        (line.startElement === 'pathway' && pathwayElements[line.startIndex].visible) ||
+                        (line.startElement === 'direction' && directionElements[line.startIndex].visible)
+                    ) {
+                        if (
+                            (line.endElement === 'connector' && connectorElements[line.endIndex].visible) ||
+                            (line.endElement === 'pathway' && pathwayElements[line.endIndex].visible) ||
+                            (line.endElement === 'direction' && directionElements[line.endIndex].visible)
+                        ) {
+                            // Get color based on start and end elements
+                            let lineColor;
+                            if (line.startElement === 'connector' || line.endElement === 'connector') {
+                                lineColor = colors.pink;
+                            } else if (line.startElement === 'pathway' || line.endElement === 'pathway') {
+                                lineColor = colors.yellow;
+                            } else {
+                                lineColor = colors.green;
+                            }
+                            
+                            // Calculate activated state
+                            let isActivated = false;
+                            let activationLevel = 0;
+                            
+                            if (line.startElement === 'connector') {
+                                let connector = connectorElements[line.startIndex];
+                                isActivated = connector.activated;
+                                activationLevel = connector.intensity / connector.maxIntensity;
+                            } else if (line.startElement === 'pathway') {
+                                let pathway = pathwayElements[line.startIndex];
+                                isActivated = pathway.activated;
+                                activationLevel = pathway.energy / pathway.maxEnergy;
+                            } else {
+                                let direction = directionElements[line.startIndex];
+                                isActivated = direction.activated;
+                                activationLevel = direction.adaptLevel / direction.maxAdaptLevel;
+                            }
+                            
+                            // Draw dotted line
+                            let distance = dist(startX, startY, endX, endY);
+                            let numDots = floor(distance / line.dotSpacing);
+                            
+                            // Draw dots along the path
+                            for (let i = 0; i <= numDots * line.progress; i++) {
+                                let t = i / numDots;
+                                let x = lerp(startX, endX, t);
+                                let y = lerp(startY, endY, t);
+                                
+                                // Draw dot
+                                noStroke();
+                                
+                                if (isActivated) {
+                                    // Enhanced appearance for activated lines
+                                    fill(lineColor[0], lineColor[1], lineColor[2], 
+                                        line.opacity * (0.7 + activationLevel * 0.3));
+                                    
+                                    // Make dots pulse when activated
+                                    let pulseSize = line.dotSize * (1 + sin(millis() * 0.005 + i * 0.1) * 0.3);
+                                    ellipse(x, y, pulseSize + activationLevel * 2);
+                                } else {
+                                    fill(lineColor[0], lineColor[1], lineColor[2], line.opacity);
+                                    ellipse(x, y, line.dotSize);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawHopeCenters() {
+            // Only draw hope centers after they should appear
+            for (let i = 0; i < hopeCenters.length; i++) {
+                let center = hopeCenters[i];
+                
+                // Check timing
+                if (timePosition > center.startTime) {
+                    // Fade in opacity
+                    if (center.opacity < center.targetOpacity) {
+                        center.opacity = min(center.targetOpacity, center.opacity + 0.5);
+                    }
+                    
+                    // Calculate pulse effect
+                    let pulseAmount = sin(millis() * center.pulseRate);
+                    let pulseSize = center.size + pulseAmount * 10;
+                    
+                    // Draw outer glow for active hope centers
+                    if (i === activeHopeCenter && center.activationProgress > 0) {
+                        // Radiate outward
+                        for (let j = 0; j < 3; j++) {
+                            let expandedSize = pulseSize + j * 20 * center.activationProgress;
+                            let glowOpacity = (100 - j * 30) * center.activationProgress;
+                            
+                            noFill();
+                            
+                            // Use a blend of colors for the glow
+                            let blendedR = lerp(colors.yellow[0], colors.pink[0], 0.5);
+                            let blendedG = lerp(colors.yellow[1], colors.pink[1], 0.5);
+                            let blendedB = lerp(colors.yellow[2], colors.pink[2], 0.5);
+                            
+                            stroke(blendedR, blendedG, blendedB, glowOpacity);
+                            strokeWeight(2 - j * 0.5);
+                            ellipse(center.x, center.y, expandedSize);
+                        }
+                    }
+                    
+                    // Draw main hope center boundary
+                    noFill();
+                    
+                    // Use yellow as the primary color for hope centers
+                    stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], center.opacity);
+                    strokeWeight(2);
+                    ellipse(center.x, center.y, pulseSize);
+                    
+                    // Draw inner circle
+                    fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], center.opacity * 0.3);
+                    noStroke();
+                    ellipse(center.x, center.y, pulseSize * 0.4);
+                    
+                    // Add interactive hint
+                    if (!center.activated) {
+                        fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                            70 + 30 * sin(millis() * 0.004));
+                        noStroke();
+                        
+                        push();
+                        translate(center.x, center.y);
+                        drawStar(0, 0, 5, 10, 5);
+                        pop();
+                    }
+                }
+            }
+        }
+        
+        function showHopeResonance(message, x, y) {
+            const resonance = document.getElementById('hope-resonance');
+            resonance.innerHTML = message;
+            
+            // Position near the element but within screen bounds
+            let posX = x;
+            let posY = y - 60;
+            
+            // Adjust if would go off screen
+            if (posX < 20) posX = 20;
+            if (posX > window.innerWidth - 270) posX = window.innerWidth - 270;
+            if (posY < 20) posY = 20;
+            if (posY > window.innerHeight - 100) posY = window.innerHeight - 100;
+            
+            resonance.style.left = posX + 'px';
+            resonance.style.top = posY + 'px';
+            resonance.style.transform = 'translateY(0)';
+            resonance.style.opacity = '1';
+            
+            // Hide after 4 seconds
+            setTimeout(() => {
+                resonance.style.opacity = '0';
+                resonance.style.transform = 'translateY(20px)';
+            }, 4000);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        function repositionElements() {
+            // Recalculate hand outline points for new dimensions
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
+            }
+            
+            // Reposition pathway elements
+            for (let pathway of pathwayElements) {
+                pathway.x = (pathway.x / width) * windowWidth;
+                pathway.y = (pathway.y / height) * windowHeight;
+                pathway.length = (pathway.length / (pathway.type === 'horizontal' ? width : height)) * 
+                                (pathway.type === 'horizontal' ? windowWidth : windowHeight);
+            }
+            
+            // Reposition connector elements
+            for (let connector of connectorElements) {
+                connector.x = (connector.x / width) * windowWidth;
+                connector.y = (connector.y / height) * windowHeight;
+            }
+            
+            // Reposition direction elements
+            for (let direction of directionElements) {
+                direction.x = (direction.x / width) * windowWidth;
+                direction.y = (direction.y / height) * windowHeight;
+            }
+            
+            // Reposition hope centers
+            for (let center of hopeCenters) {
+                center.x = (center.x / width) * windowWidth;
+                center.y = (center.y / height) * windowHeight;
+            }
+        }
+        
+        function mousePressed() {
+            // Only process clicks after landing page has disappeared
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                
+                // Check for interactions with hope centers first
+                for (let i = 0; i < hopeCenters.length; i++) {
+                    let center = hopeCenters[i];
+                    
+                    if (timePosition > center.startTime) {
+                        let d = dist(mouseX, mouseY, center.x, center.y);
+                        
+                        if (d < center.size / 2) {
+                            // Toggle hope center activation
+                            center.activated = !center.activated;
+                            
+                            if (center.activated) {
+                                // Set as active hope center
+                                activeHopeCenter = i;
+                                hopeCenterActivated = true;
+                                
+                                // Show hope resonance
+                                showHopeResonance(center.resonance, center.x, center.y);
+                                
+                                // Activate associated elements
+                                for (let element of center.elements) {
+                                    if (element.type === 'pathway') {
+                                        pathwayElements[element.index].activated = true;
+                                        pathwayElements[element.index].activatedTime = millis();
+                                        pathwayElements[element.index].energy = pathwayElements[element.index].maxEnergy * 0.7;
+                                    } else if (element.type === 'connector') {
+                                        connectorElements[element.index].activated = true;
+                                        connectorElements[element.index].activatedTime = millis();
+                                        connectorElements[element.index].intensity = connectorElements[element.index].maxIntensity * 0.8;
+                                    } else {
+                                        directionElements[element.index].activated = true;
+                                        directionElements[element.index].activatedTime = millis();
+                                        directionElements[element.index].adaptLevel = directionElements[element.index].maxAdaptLevel * 0.7;
+                                    }
+                                }
+                                
+                                // Play special sound if enabled
+                                if (soundEnabled && hopeSound) {
+                                    // Could add special sound effect here
+                                }
+                            } else {
+                                // Deactivate
+                                activeHopeCenter = null;
+                                hopeCenterActivated = false;
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with pathway elements
+                for (let pathway of pathwayElements) {
+                    if (pathway.visible && pathway.interactive) {
+                        let hitX, hitY;
+                        
+                        // Calculate hit area based on pathway type
+                        if (pathway.type === 'horizontal') {
+                            hitX = mouseX > pathway.x && mouseX < pathway.x + pathway.length * pathway.progress;
+                            hitY = abs(mouseY - pathway.y) < 10;
+                        } else {
+                            hitX = abs(mouseX - pathway.x) < 10;
+                            hitY = mouseY > pathway.y && mouseY < pathway.y + pathway.length * pathway.progress;
+                        }
+                        
+                        if (hitX && hitY) {
+                            // Toggle activation
+                            pathway.activated = !pathway.activated;
+                            pathway.activatedTime = millis();
+                            
+                            if (pathway.activated) {
+                                // Set energy level
+                                pathway.energy = pathway.maxEnergy * 0.9;
+                                
+                                // Show hope resonance
+                                let resonanceX = pathway.type === 'horizontal' ? 
+                                               pathway.x + pathway.length * pathway.progress / 2 : 
+                                               pathway.x;
+                                let resonanceY = pathway.type === 'vertical' ? 
+                                               pathway.y + pathway.length * pathway.progress / 2 : 
+                                               pathway.y;
+                                
+                                showHopeResonance(getRandomResonance(), resonanceX, resonanceY);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with connector elements
+                for (let connector of connectorElements) {
+                    if (connector.visible && connector.interactive) {
+                        let d = dist(mouseX, mouseY, connector.x, connector.y);
+                        
+                        if (d < connector.size) {
+                            // Toggle activation
+                            connector.activated = !connector.activated;
+                            connector.activatedTime = millis();
+                            
+                            if (connector.activated) {
+                                // Set intensity level
+                                connector.intensity = connector.maxIntensity;
+                                
+                                // Show hope resonance
+                                showHopeResonance(getRandomResonance(), connector.x, connector.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with direction elements
+                for (let direction of directionElements) {
+                    if (direction.visible && direction.interactive) {
+                        let d = dist(mouseX, mouseY, direction.x, direction.y);
+                        
+                        if (d < direction.size) {
+                            // Toggle activation
+                            direction.activated = !direction.activated;
+                            direction.activatedTime = millis();
+                            
+                            if (direction.activated) {
+                                // Set adaptation level
+                                direction.adaptLevel = direction.maxAdaptLevel;
+                                
+                                // Show hope resonance
+                                showHopeResonance(getRandomResonance(), direction.x, direction.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // If no element was clicked, toggle animation
+                isAnimating = !isAnimating;
+                
+                // Update sound based on animation state
+                if (!isAnimating && soundEnabled && soundLoaded && hopeSound.isPlaying()) {
+                    hopeSound.setVolume(0.3, 1);
+                } else if (isAnimating && soundEnabled && soundLoaded) {
+                    hopeSound.setVolume(0.6, 1);
+                }
+            }
+            
+            return false;
+        }
+        
+        // Support touch events
+        function touchStarted() {
+            // Initialize audio context for iOS
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+    </script>
+</body>
+</html>

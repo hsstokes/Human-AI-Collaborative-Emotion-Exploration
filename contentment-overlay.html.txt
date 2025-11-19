@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Contentment - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #fafaf7;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        /* Landing screen that appears first */
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(250, 250, 247, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #446644; /* Forest green for contentment */
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 550px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(68, 102, 68, 0.1);
+           border-radius: 8px;
+           border-left: 3px solid #446644;
+           line-height: 1.6;
+           color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: rgba(68, 102, 68, 0.2);
+            color: #446644;
+            border: 1px solid #446644;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Canvas for the animation */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        /* Contentment resonance popup */
+        .contentment-resonance {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 3px solid #446644;
+        }
+        
+        /* Controls panel */
+        .controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+            stroke: #446644;
+        }
+        
+        /* Hint message */
+        .hint {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            color: #446644;
+        }
+        
+        /* Timeline slider */
+        .timeline {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 500px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(68, 102, 68, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background-color: rgba(68, 102, 68, 0.8);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .timeline-handle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #446644;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important; /* Allow scrolling on mobile */
+                height: auto !important;
+            }
+        
+            #landing-overlay {
+                position: absolute; /* Change from fixed to absolute */
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+                padding: 40px 20px 120px 20px; /* More padding at top and bottom */
+                justify-content: flex-start; /* Start content from the top */
+            }
+        
+            .landing-title {
+                margin-top: 40px;
+            }
+        
+            .start-button {
+                margin-bottom: 60px; /* Ensure button isn't at the very bottom */
+                position: relative;
+            }
+        
+            .emotion-name {
+                font-size: 42px; /* Slightly larger on mobile */
+            }
+        
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
+        }
+        
+        /* Orientation-specific styles */
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px; /* Move controls above timeline in portrait mode */
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%; /* Wider in portrait */
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px; /* Move away from edge and timeline handle */
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%; /* Narrower in landscape to leave room for controls */
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial landing overlay -->
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">CONTENTMENT</h2>
+        <p class="emotion-description" id="emotion-description">
+            An exploration of contentment as a state of peaceful satisfaction, presence, and internal harmony with what is.
+            <br><b>Analysis by Claude</b>
+        </p>
+
+        <!-- AI disclaimer -->
+        <div class="ai-disclaimer">
+            <strong>Note:</strong> This is a simulation of contentment based on my analysis of human descriptions. As an AI, I don't experience emotions or feelings - this is just my interpretation of a human concept.
+        </div>
+        
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
+    
+    <!-- Contentment resonance popup that appears when interacting with elements -->
+    <div class="contentment-resonance" id="contentment-resonance"></div>
+    
+    <!-- Control buttons -->
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Hint for users -->
+    <div class="hint" id="hint">Touch elements to deepen contentment</div>
+    
+    <!-- Timeline interface -->
+    <div class="timeline" id="timeline">
+        <div class="timeline-bar" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress"></div>
+            <div class="timeline-handle" id="timeline-handle"></div>
+        </div>
+    </div>
+    
+    <script>
+        let isAnimating = true;
+        let soundEnabled = true;
+        let contentmentSound;
+        let soundLoaded = false;
+        let timelineActive = false;
+        let isDraggingTimeline = false;
+        let timePosition = 0;
+        let previousTimePosition = 0;
+        let activatedTimeline = false;
+        let breathingPhase = 0;
+        let breathingRate = 0.5; // Slow, steady breathing for contentment
+        
+        // Contentment resonances - text snippets that appear when interacting with elements
+        const contentmentResonances = [
+            "The quiet satisfaction of being exactly where you are",
+            "A moment of complete sufficiency, wanting nothing more",
+            "When the weight of 'should be' lifts, replaced by acceptance of 'is'",
+            "The gentle peace of being at home with yourself",
+            "When restlessness dissolves into present awareness",
+            "The feeling of 'just enough' - neither excess nor lack",
+            "A sense of groundedness, like a tree with deep roots",
+            "The satisfying fullness of a complete breath",
+            "The gentle hum of being in tune with your surroundings",
+            "When time feels abundant rather than scarce",
+            "The subtle joy that needs no specific cause",
+            "A sense of natural balance requiring no effort to maintain",
+            "When the boundaries between self and world soften",
+            "The wholeness that comes from accepting your life exactly as it is",
+            "A quiet mind at rest in the present moment"
+        ];
+        
+        // Color palette for Contentment
+        const colors = {
+            forest: [68, 102, 68],     // Forest Green - Recognition elements (Color A)
+            yellow: [241, 196, 15],    // Warm Yellow - Evaluation connectors (Color B)
+            pink: [231, 154, 163]      // Soft Pink - Response indicators (Color C)
+        };
+        
+        // Elements for each conceptual layer
+        let naturalElements = [];      // Forest green elements - recognition (grounding)
+        let connectionElements = [];   // Yellow elements - evaluation (pathways)
+        let responseElements = [];     // Pink elements - response (boundaries)
+        
+        // Connection lines between elements
+        let connectionLines = [];
+        
+        // Hand outline coordinates (will gradually appear)
+        let handOutlinePoints = [];
+        let handProgress = 0;
+        
+        // Interactive elements
+        let contentmentCenters = []; // Special interactive focal points
+        let activeContentmentCenter = null;
+        let centerActivated = false;
+        
+        // Timeline tracking
+        let timelineProgress = 0;
+        
+        // Function that contains the button action logic
+        function startExperience() {
+            // Fade out landing overlay
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            // After fading out, remove from DOM
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                // Start animation
+                isAnimating = true;
+                loop();
+                
+                // Position controls based on orientation
+                updateLayoutForOrientation();
+                
+                // Start sound if enabled
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        contentmentSound.loop();
+                        contentmentSound.setVolume(0);
+                        contentmentSound.setVolume(0.6, 3); // Fade in over 3 seconds (slower for contentment)
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                // Show controls and hint
+                setTimeout(() => {
+                    document.getElementById('controls').style.opacity = '1';
+                    document.getElementById('hint').style.opacity = '1';
+                    
+                    // Hide hint after 5 seconds
+                    setTimeout(() => {
+                        document.getElementById('hint').style.opacity = '0';
+                    }, 5000);
+                }, 2000);
+            }, 1000);
+        }
+        
+        // Function to update layout based on orientation
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', function() {
+            // Small delay to ensure dimensions have updated
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
+        
+        // Setup for landing page interaction
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault(); // Prevent default to avoid double-firing
+            startExperience();
+        });
+        
+        // Sound toggle
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            
+            // Update sound wave visibility
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && contentmentSound && !contentmentSound.isPlaying()) {
+                contentmentSound.loop();
+                contentmentSound.setVolume(0);
+                contentmentSound.setVolume(0.6, 2);
+            } else if (!soundEnabled && contentmentSound && contentmentSound.isPlaying()) {
+                contentmentSound.setVolume(0, 2); // Slower fade-out for contentment
+                setTimeout(() => {
+                    contentmentSound.pause();
+                }, 2000);
+            }
+        });
+        
+        // Reset button
+        document.getElementById('reset-button').addEventListener('click', function() {
+            // Reset the experience
+            timePosition = 0;
+            previousTimePosition = 0;
+            
+            resetExperience();
+            
+            // Update timeline
+            updateTimelineUI();
+        });
+        
+        // Timeline interaction
+        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        
+        function startTimelineDrag(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            
+            isDraggingTimeline = true;
+            updateTimelinePosition(e);
+            
+            // Add document-level event listeners
+            document.addEventListener('mousemove', updateTimelinePosition);
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
+            document.addEventListener('mouseup', endTimelineDrag);
+            document.addEventListener('touchend', endTimelineDrag);
+        }
+        
+        function updateTimelinePosition(e) {
+            if (!isDraggingTimeline) return;
+            
+            // Prevent scrolling when dragging on mobile
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            
+            const timeline = document.getElementById('timeline-bar');
+            const rect = timeline.getBoundingClientRect();
+            
+            // Get the x position relative to the timeline
+            let clientX;
+            if (e.type.startsWith('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            // Calculate percentage position with boundary handling
+            let percentage = (clientX - rect.left) / rect.width;
+            percentage = Math.max(0, Math.min(1, percentage));
+            
+            // Update UI
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+            
+            // Update timeline position
+            timePosition = percentage * 40000; // 40 seconds of experience timeline (longer for contentment)
+            
+            // Set time position
+            setTimePosition(timePosition);
+        }
+        
+        function endTimelineDrag() {
+            isDraggingTimeline = false;
+            document.removeEventListener('mousemove', updateTimelinePosition);
+            document.removeEventListener('touchmove', updateTimelinePosition);
+            document.removeEventListener('mouseup', endTimelineDrag);
+            document.removeEventListener('touchend', endTimelineDrag);
+            
+            previousTimePosition = timePosition;
+        }
+        
+        function updateTimelineUI() {
+            // Calculate percentage
+            const percentage = timePosition / 40000;
+            
+            // Update UI
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+        }
+        
+        function preload() {
+            // Pre-load sound
+            soundLoaded = false;
+            contentmentSound = loadSound('contentment_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Define hand outline points
+            createHandOutline();
+            
+            // Create natural elements (forest green - recognition)
+            createNaturalElements();
+            
+            // Create connection elements (yellow - evaluation)
+            createConnectionElements();
+            
+            // Create response elements (pink - response)
+            createResponseElements();
+            
+            // Create connection lines between elements
+            createConnectionLines();
+            
+            // Create contentment centers - larger interactive focal points
+            createContentmentCenters();
+            
+            // Initialize audio context for better mobile support
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            // Initially pause animation while on landing page
+            isAnimating = false;
+            noLoop();
+        }
+        
+        function getRandomResonance() {
+            return contentmentResonances[floor(random(contentmentResonances.length))];
+        }
+        
+        function createNaturalElements() {
+            // Create natural elements (forest green) - representing grounding and presence
+            
+            // Main central element (large)
+            naturalElements.push({
+                type: 'circle',
+                x: width * 0.5,
+                y: height * 0.5,
+                size: 30,
+                opacity: 230,
+                startTime: 500,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                growth: 0,
+                maxGrowth: 100,
+                growthRate: 0.02,
+                pulseRate: 0.0008, // Very slow pulse for contentment
+                phase: 0
+            });
+            
+            // Add smaller natural elements (leaves, seeds, etc.)
+            for (let i = 0; i < 12; i++) {
+                let angle = TWO_PI * i / 12;
+                let distance = random(100, max(width, height) * 0.4);
+                
+                // Distribute elements in a loose circle around center
+                let x = width/2 + cos(angle) * distance;
+                let y = height/2 + sin(angle) * distance;
+                
+                naturalElements.push({
+                    type: random([0, 1, 2]), // 0: leaf, 1: seed, 2: stone
+                    x: x + random(-20, 20), // Add some randomness
+                    y: y + random(-20, 20),
+                    size: random(10, 22),
+                    opacity: random(180, 230),
+                    startTime: 800 + i * 400, // Stagger appearance
+                    visible: false,
+                    interactive: random() > 0.4,
+                    activated: false,
+                    activatedTime: 0,
+                    growth: 0,
+                    maxGrowth: random(80, 100),
+                    growthRate: random(0.01, 0.03),
+                    pulseRate: random(0.0005, 0.0015), // Very slow for contentment
+                    phase: random(0, TWO_PI)
+                });
+            }
+            
+            // Add grounding elements along bottom of screen
+            for (let i = 0; i < 5; i++) {
+                let x = width * (0.1 + 0.8 * i/4);
+                let y = height * 0.8 + random(-10, 10);
+                
+                naturalElements.push({
+                    type: 3, // Root/grounding element
+                    x: x,
+                    y: y,
+                    size: random(15, 25),
+                    opacity: random(180, 220),
+                    startTime: 2000 + i * 600,
+                    visible: false,
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    growth: 0,
+                    maxGrowth: random(60, 100),
+                    growthRate: random(0.01, 0.02),
+                    pulseRate: random(0.0004, 0.001), // Extremely slow pulse for grounding
+                    phase: random(0, TWO_PI)
+                });
+            }
+        }
+        
+        function createConnectionElements() {
+            // Create connection elements (yellow) - representing sustainable paths
+            
+            // Main horizontal connection
+            connectionElements.push({
+                type: 'path',
+                points: [
+                    {x: width * 0.3, y: height * 0.5},
+                    {x: width * 0.4, y: height * 0.5},
+                    {x: width * 0.6, y: height * 0.5},
+                    {x: width * 0.7, y: height * 0.5}
+                ],
+                width: 3,
+                opacity: 200,
+                startTime: 2500,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                flow: 0,
+                maxFlow: 100,
+                flowRate: 0.01,
+                progress: 0
+            });
+            
+            // Secondary connections
+            for (let i = 0; i < 6; i++) {
+                let startX = random(width * 0.2, width * 0.8);
+                let startY = random(height * 0.2, height * 0.8);
+                let angle = random(0, TWO_PI);
+                let length = random(80, 150);
+                
+                // Create bezier path with gentle curves
+                let points = [];
+                points.push({x: startX, y: startY});
+                
+                // Add control points
+                let controlX1 = startX + cos(angle) * length/3 + random(-20, 20);
+                let controlY1 = startY + sin(angle) * length/3 + random(-20, 20);
+                let controlX2 = startX + cos(angle) * length*2/3 + random(-20, 20);
+                let controlY2 = startY + sin(angle) * length*2/3 + random(-20, 20);
+                
+                points.push({x: controlX1, y: controlY1});
+                points.push({x: controlX2, y: controlY2});
+                
+                // End point
+                let endX = startX + cos(angle) * length;
+                let endY = startY + sin(angle) * length;
+                points.push({x: endX, y: endY});
+                
+                connectionElements.push({
+                    type: 'path',
+                    points: points,
+                    width: random(2, 4),
+                    opacity: random(160, 210),
+                    startTime: 3000 + i * 800,
+                    visible: false,
+                    interactive: random() > 0.5,
+                    activated: false,
+                    activatedTime: 0,
+                    flow: 0,
+                    maxFlow: random(60, 100),
+                    flowRate: random(0.01, 0.03),
+                    progress: 0
+                });
+            }
+            
+            // Add connection nodes at intersections
+            for (let i = 0; i < 8; i++) {
+                connectionElements.push({
+                    type: 'node',
+                    x: random(width * 0.2, width * 0.8),
+                    y: random(height * 0.2, height * 0.8),
+                    size: random(6, 12),
+                    opacity: random(180, 220),
+                    startTime: 4000 + i * 600,
+                    visible: false,
+                    interactive: random() > 0.3,
+                    activated: false,
+                    activatedTime: 0,
+                    energy: 0,
+                    maxEnergy: random(70, 100),
+                    pulseRate: random(0.001, 0.002), // Slow pulse for contentment
+                    phase: random(0, TWO_PI),
+                    connections: []
+                });
+            }
+        }
+        
+        function createResponseElements() {
+            // Create response elements (pink) - representing boundaries and relationships
+            
+            // Central circle element
+            responseElements.push({
+                type: 'circle',
+                x: width * 0.5,
+                y: height * 0.5,
+                size: 60,
+                thickness: 2,
+                opacity: 180,
+                startTime: 6000,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                expansion: 0,
+                maxExpansion: 100,
+                expansionRate: 0.01,
+                pulseRate: 0.0006 // Very slow for contentment
+            });
+            
+            // Add smaller boundary circles
+            for (let i = 0; i < 5; i++) {
+                let angle = TWO_PI * i / 5;
+                let distance = random(100, max(width, height) * 0.3);
+                
+                responseElements.push({
+                    type: 'circle',
+                    x: width/2 + cos(angle) * distance,
+                    y: height/2 + sin(angle) * distance,
+                    size: random(30, 50),
+                    thickness: random(1, 2.5),
+                    opacity: random(140, 200),
+                    startTime: 7000 + i * 800,
+                    visible: false,
+                    interactive: random() > 0.4,
+                    activated: false,
+                    activatedTime: 0,
+                    expansion: 0,
+                    maxExpansion: random(70, 100),
+                    expansionRate: random(0.005, 0.015),
+                    pulseRate: random(0.0004, 0.001) // Very slow for contentment
+                });
+            }
+            
+            // Add boundary lines
+            for (let i = 0; i < 4; i++) {
+                let startX = random(width * 0.2, width * 0.8);
+                let startY = random(height * 0.2, height * 0.8);
+                let angle = random(0, TWO_PI);
+                let length = random(50, 120);
+                
+                responseElements.push({
+                    type: 'line',
+                    x: startX,
+                    y: startY,
+                    angle: angle,
+                    length: length,
+                    thickness: random(1, 2),
+                    opacity: random(160, 200),
+                    startTime: 9000 + i * 700,
+                    visible: false,
+                    interactive: random() > 0.5,
+                    activated: false,
+                    activatedTime: 0,
+                    completeness: 0,
+                    maxCompleteness: random(80, 100),
+                    completenessRate: random(0.01, 0.02),
+                    pulseRate: random(0.0005, 0.001) // Very slow for contentment
+                });
+            }
+        }
+        
+        function createConnectionLines() {
+            // Create connection lines between elements
+            
+            // Connect natural elements with connection elements
+            for (let i = 0; i < naturalElements.length; i++) {
+                let natural = naturalElements[i];
+                
+                // Find closest connection elements
+                for (let j = 0; j < connectionElements.length; j++) {
+                    let connection = connectionElements[j];
+                    
+                    if (connection.type === 'node') {
+                        let d = dist(natural.x, natural.y, connection.x, connection.y);
+                        
+                        if (d < 150 && random() > 0.5) {
+                            connectionLines.push({
+                                startElement: 'natural',
+                                startIndex: i,
+                                endElement: 'connection',
+                                endIndex: j,
+                                opacity: random(100, 180),
+                                dotSize: random(1.5, 3),
+                                dotSpacing: random(7, 12),
+                                progress: 0,
+                                startTime: max(natural.startTime, connection.startTime) + 800,
+                                activated: false
+                            });
+                            
+                            // Add to connection's connections list
+                            connection.connections.push(i);
+                        }
+                    }
+                }
+                
+                // Connect to response elements
+                for (let j = 0; j < responseElements.length; j++) {
+                    let response = responseElements[j];
+                    
+                    if (response.type === 'circle') {
+                        let d = dist(natural.x, natural.y, response.x, response.y);
+                        
+                        if (d < response.size + 60 && random() > 0.7) {
+                            connectionLines.push({
+                                startElement: 'natural',
+                                startIndex: i,
+                                endElement: 'response',
+                                endIndex: j,
+                                opacity: random(100, 160),
+                                dotSize: random(1.5, 2.5),
+                                dotSpacing: random(8, 12),
+                                progress: 0,
+                                startTime: max(natural.startTime, response.startTime) + 1000,
+                                activated: false
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Connect connection nodes to response elements
+            for (let i = 0; i < connectionElements.length; i++) {
+                let connection = connectionElements[i];
+                
+                if (connection.type === 'node') {
+                    for (let j = 0; j < responseElements.length; j++) {
+                        let response = responseElements[j];
+                        
+                        let d = dist(connection.x, connection.y, response.x, response.y);
+                        
+                        if ((response.type === 'circle' && d < response.size + 40) || 
+                           (response.type === 'line' && d < 80)) {
+                            if (random() > 0.6) {
+                                connectionLines.push({
+                                    startElement: 'connection',
+                                    startIndex: i,
+                                    endElement: 'response',
+                                    endIndex: j,
+                                    opacity: random(100, 170),
+                                    dotSize: random(1.5, 3),
+                                    dotSpacing: random(7, 10),
+                                    progress: 0,
+                                    startTime: max(connection.startTime, response.startTime) + 1200,
+                                    activated: false
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function createHandOutline() {
+            // Create a hand outline representing contentment's physical manifestation
+            // The hand is open and relaxed, palm upward in a receptive but settled pose
+            
+            // Base of palm
+            handOutlinePoints.push({x: 0.55, y: 0.45});
+            handOutlinePoints.push({x: 0.65, y: 0.45});
+            
+            // Right side of hand
+            handOutlinePoints.push({x: 0.68, y: 0.42});
+            handOutlinePoints.push({x: 0.67, y: 0.38});
+            
+            // Fingers extending outward, gently curled (relaxed)
+            handOutlinePoints.push({x: 0.65, y: 0.34});
+            handOutlinePoints.push({x: 0.63, y: 0.31});
+            handOutlinePoints.push({x: 0.61, y: 0.29});
+            
+            // Middle fingers
+            handOutlinePoints.push({x: 0.58, y: 0.28});
+            handOutlinePoints.push({x: 0.55, y: 0.27});
+            handOutlinePoints.push({x: 0.52, y: 0.28});
+            
+            // Left fingers
+            handOutlinePoints.push({x: 0.49, y: 0.29});
+            handOutlinePoints.push({x: 0.47, y: 0.31});
+            handOutlinePoints.push({x: 0.45, y: 0.34});
+            
+            // Left side of palm
+            handOutlinePoints.push({x: 0.47, y: 0.38});
+            handOutlinePoints.push({x: 0.46, y: 0.42});
+            handOutlinePoints.push({x: 0.55, y: 0.45});
+            
+            // Convert relative coordinates to absolute
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
+        }
+        
+        function createContentmentCenters() {
+            // Create interactive contentment centers - focal points of the experience
+            
+            // Main contentment center around hand
+            contentmentCenters.push({
+                x: width * 0.58, // Center of hand
+                y: height * 0.38, // Center of hand
+                size: 100, // Larger for contentment
+                opacity: 0,
+                targetOpacity: 150, // More subtle for contentment
+                pulseRate: 0.0006, // Very slow for contentment
+                activated: false,
+                activationProgress: 0,
+                startTime: 15000,
+                resonance: "Complete presence in your body, at home in this moment",
+                elements: []
+            });
+            
+            // Secondary contentment centers
+            for (let i = 0; i < 2; i++) {
+                contentmentCenters.push({
+                    x: random(width * 0.3, width * 0.7),
+                    y: random(height * 0.3, height * 0.7),
+                    size: random(60, 80),
+                    opacity: 0,
+                    targetOpacity: random(130, 180),
+                    pulseRate: random(0.0004, 0.0008), // Very slow for contentment
+                    activated: false,
+                    activationProgress: 0,
+                    startTime: 20000 + i * 4000,
+                    resonance: getRandomResonance(),
+                    elements: []
+                });
+            }
+            
+            // Assign some elements to each contentment center
+            // For natural elements
+            for (let i = 0; i < naturalElements.length; i++) {
+                let natural = naturalElements[i];
+                
+                // Find the closest contentment center
+                let closestCenter = null;
+                let closestDistance = Infinity;
+                
+                for (let j = 0; j < contentmentCenters.length; j++) {
+                    let d = dist(natural.x, natural.y, contentmentCenters[j].x, contentmentCenters[j].y);
+                    if (d < closestDistance && d < 200) {
+                        closestDistance = d;
+                        closestCenter = j;
+                    }
+                }
+                
+                // Assign to contentment center if close enough
+                if (closestCenter !== null) {
+                    contentmentCenters[closestCenter].elements.push({
+                        type: 'natural',
+                        index: i
+                    });
+                }
+            }
+            
+            // For connection elements
+            for (let i = 0; i < connectionElements.length; i++) {
+                let connection = connectionElements[i];
+                
+                if (connection.type === 'node') {
+                    // Find the closest contentment center
+                    let closestCenter = null;
+                    let closestDistance = Infinity;
+                    
+                    for (let j = 0; j < contentmentCenters.length; j++) {
+                        let d = dist(connection.x, connection.y, contentmentCenters[j].x, contentmentCenters[j].y);
+                        if (d < closestDistance && d < 170) {
+                            closestDistance = d;
+                            closestCenter = j;
+                        }
+                    }
+                    
+                    // Assign to contentment center if close enough
+                    if (closestCenter !== null) {
+                        contentmentCenters[closestCenter].elements.push({
+                            type: 'connection',
+                            index: i
+                        });
+                    }
+                }
+            }
+            
+            // For response elements
+            for (let i = 0; i < responseElements.length; i++) {
+                let response = responseElements[i];
+                
+                if (response.type === 'circle') {
+                    // Find the closest contentment center
+                    let closestCenter = null;
+                    let closestDistance = Infinity;
+                    
+                    for (let j = 0; j < contentmentCenters.length; j++) {
+                        let d = dist(response.x, response.y, contentmentCenters[j].x, contentmentCenters[j].y);
+                        if (d < closestDistance && d < 180) {
+                            closestDistance = d;
+                            closestCenter = j;
+                        }
+                    }
+                    
+                    // Assign to contentment center if close enough
+                    if (closestCenter !== null) {
+                        contentmentCenters[closestCenter].elements.push({
+                            type: 'response',
+                            index: i
+                        });
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            // Clear the canvas with a clean background
+            background(250, 250, 247);
+            
+            // If animating, update time position
+            if (isAnimating && !isDraggingTimeline) {
+                timePosition += deltaTime * 0.8; // Slower for contentment
+                
+                // Limit to 40 seconds
+                if (timePosition > 40000) {
+                    timePosition = 40000;
+                    
+                    // Show timeline if reached end
+                    if (!activatedTimeline) {
+                        showTimeline();
+                        activatedTimeline = true;
+                    }
+                }
+                
+                // Update timeline UI
+                updateTimelineUI();
+                
+                previousTimePosition = timePosition;
+            }
+
+            // Update breathing phase
+            breathingPhase += breathingRate * deltaTime * 0.001;
+            
+            // Draw the layers in appropriate order
+            drawNaturalElements();      // Forest green elements (recognition)
+            drawConnectionLines();      // Connection lines between elements
+            drawConnectionElements();   // Yellow elements (evaluation)
+            drawResponseElements();     // Pink elements (response)
+            drawHandOutline();          // Hand outline representing contentment
+            drawContentmentCenters();   // Interactive contentment centers
+            
+            // Update hand outline progress
+            if (isAnimating) {
+                handProgress = min(1, handProgress + 0.0002); // Slower progress for contentment
+            }
+            
+            // Update activated elements
+            updateActivatedElements();
+            
+            // Update element propagation (subtle contentment effect)
+            updateElementPropagation();
+        }
+        
+        function showTimeline() {
+            // Show the timeline interface
+            document.getElementById('timeline').style.opacity = '1';
+            
+            // Position controls based on orientation when timeline appears
+            updateLayoutForOrientation();
+        }
+        
+        function updateActivatedElements() {
+            // Check any activated natural elements
+            for (let natural of naturalElements) {
+                if (natural.activated) {
+                    // Decrease growth over time (slower for contentment)
+                    if (natural.growth > 0) {
+                        natural.growth = max(0, natural.growth - 0.1);
+                    }
+                    
+                    if (millis() - natural.activatedTime > 5000) { // Longer duration for contentment
+                        natural.activated = false;
+                    }
+                }
+            }
+            
+            // Check any activated connection elements
+            for (let connection of connectionElements) {
+                if (connection.activated) {
+                    if (connection.type === 'node') {
+                        // Decrease energy over time (slower for contentment)
+                        if (connection.energy > 0) {
+                            connection.energy = max(0, connection.energy - 0.15);
+                        }
+                    } else if (connection.type === 'path') {
+                        // Decrease flow over time (slower for contentment)
+                        if (connection.flow > 0) {
+                            connection.flow = max(0, connection.flow - 0.15);
+                        }
+                    }
+                    
+                    if (millis() - connection.activatedTime > 5000) { // Longer duration for contentment
+                        connection.activated = false;
+                    }
+                }
+            }
+            
+            // Check any activated response elements
+            for (let response of responseElements) {
+                if (response.activated) {
+                    if (response.type === 'circle') {
+                        // Decrease expansion over time (slower for contentment)
+                        if (response.expansion > 0) {
+                            response.expansion = max(0, response.expansion - 0.12);
+                        }
+                    } else if (response.type === 'line') {
+                        // Decrease completeness over time (slower for contentment)
+                        if (response.completeness > 0) {
+                            response.completeness = max(0, response.completeness - 0.12);
+                        }
+                    }
+                    
+                    if (millis() - response.activatedTime > 5000) { // Longer duration for contentment
+                        response.activated = false;
+                    }
+                }
+            }
+            
+            // Check activated contentment centers
+            for (let center of contentmentCenters) {
+                if (center.activated) {
+                    center.activationProgress = min(1, center.activationProgress + 0.002); // Slower for contentment
+                }
+            }
+            
+            // If we have an active contentment center but it's no longer activated
+            if (activeContentmentCenter !== null && !contentmentCenters[activeContentmentCenter].activated) {
+                if (contentmentCenters[activeContentmentCenter].activationProgress > 0) {
+                    contentmentCenters[activeContentmentCenter].activationProgress = max(0, contentmentCenters[activeContentmentCenter].activationProgress - 0.005); // Slower fade for contentment
+                } else {
+                    activeContentmentCenter = null;
+                    centerActivated = false;
+                }
+            }
+        }
+        
+        function updateElementPropagation() {
+            // Implement the contentment effect - gentle ripples of influence between elements
+            
+            // From activated natural elements to nearby connection elements
+            for (let i = 0; i < naturalElements.length; i++) {
+                let natural = naturalElements[i];
+                
+                if (natural.activated && natural.growth > 30) {
+                    // Spread to nearby connection nodes
+                    for (let j = 0; j < connectionElements.length; j++) {
+                        let connection = connectionElements[j];
+                        
+                        if (connection.type === 'node') {
+                            let d = dist(natural.x, natural.y, connection.x, connection.y);
+                            
+                            if (d < 180) {
+                                // Transfer energy (diminished by distance)
+                                let energyTransfer = max(0, natural.growth * (1 - d/180) * 0.08); // Slower transfer for contentment
+                                connection.energy = min(connection.maxEnergy, connection.energy + energyTransfer);
+                                
+                                // Mark as activated if significant energy
+                                if (connection.energy > 25 && !connection.activated) {
+                                    connection.activated = true;
+                                    connection.activatedTime = millis();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // From activated connection nodes to nearby response elements
+            for (let i = 0; i < connectionElements.length; i++) {
+                let connection = connectionElements[i];
+                
+                if (connection.type === 'node' && connection.activated && connection.energy > 35) {
+                    // Spread to nearby response elements
+                    for (let j = 0; j < responseElements.length; j++) {
+                        let response = responseElements[j];
+                        
+                        let d = dist(connection.x, connection.y, response.x, response.y);
+                        let transferDistance = response.type === 'circle' ? response.size + 50 : 120;
+                        
+                        if (d < transferDistance) {
+                            // Transfer expansion/completeness (diminished by distance)
+                            let transferAmount = max(0, connection.energy * (1 - d/transferDistance) * 0.07); // Slower transfer for contentment
+                            
+                            if (response.type === 'circle') {
+                                response.expansion = min(response.maxExpansion, response.expansion + transferAmount);
+                            } else {
+                                response.completeness = min(response.maxCompleteness, response.completeness + transferAmount);
+                            }
+                            
+                            // Mark as activated if significant expansion/completeness
+                            if ((response.type === 'circle' && response.expansion > 30) || 
+                               (response.type === 'line' && response.completeness > 30)) {
+                                if (!response.activated) {
+                                    response.activated = true;
+                                    response.activatedTime = millis();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Special interaction: Response elements can enhance natural elements (feedback loop)
+            for (let i = 0; i < responseElements.length; i++) {
+                let response = responseElements[i];
+                
+                if (response.activated) {
+                    let influenceValue = response.type === 'circle' ? response.expansion : response.completeness;
+                    
+                    if (influenceValue > 40) {
+                        // Spread to nearby natural elements
+                        for (let j = 0; j < naturalElements.length; j++) {
+                            let natural = naturalElements[j];
+                            
+                            let d = dist(response.x, response.y, natural.x, natural.y);
+                            let transferDistance = response.type === 'circle' ? response.size + 70 : 150;
+                            
+                            if (d < transferDistance) {
+                                // Transfer growth (diminished by distance)
+                                let growthTransfer = max(0, influenceValue * (1 - d/transferDistance) * 0.05); // Very slow for contentment
+                                natural.growth = min(natural.maxGrowth, natural.growth + growthTransfer);
+                                
+                                // Mark as activated if significant growth
+                                if (natural.growth > 25 && !natural.activated) {
+                                    natural.activated = true;
+                                    natural.activatedTime = millis();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function setTimePosition(time) {
+            // Set the internal time position
+            const previousMillis = previousTimePosition;
+            const timeDiff = time - previousMillis;
+            
+            // Reset elements if jumping backward more than 2 seconds
+            if (timeDiff < -2000) {
+                resetExperience();
+            }
+        }
+        
+        function resetExperience() {
+            // Reset all elements to their initial state
+            for (let natural of naturalElements) {
+                natural.visible = timePosition > natural.startTime;
+                natural.activated = false;
+                natural.growth = 0;
+            }
+            
+            for (let connection of connectionElements) {
+                connection.visible = timePosition > connection.startTime;
+                connection.activated = false;
+                
+                if (connection.type === 'node') {
+                    connection.energy = 0;
+                } else if (connection.type === 'path') {
+                    connection.flow = 0;
+                    connection.progress = 0;
+                }
+            }
+            
+            for (let response of responseElements) {
+                response.visible = timePosition > response.startTime;
+                response.activated = false;
+                
+                if (response.type === 'circle') {
+                    response.expansion = 0;
+                } else if (response.type === 'line') {
+                    response.completeness = 0;
+                }
+            }
+            
+            for (let line of connectionLines) {
+                line.progress = 0;
+                line.activated = false;
+            }
+            
+            for (let center of contentmentCenters) {
+                center.opacity = timePosition > center.startTime ? center.targetOpacity : 0;
+                center.activated = false;
+                center.activationProgress = 0;
+            }
+            
+            handProgress = min(1, timePosition / 25000); // Slower for contentment
+            activeContentmentCenter = null;
+            centerActivated = false;
+        }
+
+        function drawHandOutline() {
+            // Only start drawing hand after initial elements appear
+            if (timePosition < 12000) return; // Later appearance for contentment
+            
+            // Calculate how many points to show based on progress
+            let pointsToShow = floor(handOutlinePoints.length * handProgress);
+            
+            if (pointsToShow < 2) return;
+            
+            // Draw the hand outline
+            noFill();
+            stroke(80, 80, 80, 100); // Soft gray
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let i = 0; i < pointsToShow; i++) {
+                vertex(handOutlinePoints[i].x, handOutlinePoints[i].y);
+            }
+            endShape(pointsToShow === handOutlinePoints.length ? CLOSE : OPEN);
+            
+            // If hand is complete, add some interior detail
+            if (pointsToShow === handOutlinePoints.length) {
+                // Palm lines
+                stroke(80, 80, 80, 70);
+                strokeWeight(1);
+                
+                // Heart line
+                line(
+                    handOutlinePoints[0].x + 5, 
+                    (handOutlinePoints[0].y + handOutlinePoints[15].y) / 2 - 10,
+                    handOutlinePoints[14].x - 5,
+                    (handOutlinePoints[0].y + handOutlinePoints[15].y) / 2 - 10
+                );
+                
+                // Life line
+                beginShape();
+                noFill();
+                curveVertex(handOutlinePoints[15].x - 10, handOutlinePoints[15].y - 15);
+                curveVertex(handOutlinePoints[15].x - 5, handOutlinePoints[15].y - 25);
+                curveVertex(handOutlinePoints[11].x + 5, handOutlinePoints[11].y + 10);
+                curveVertex(handOutlinePoints[11].x + 10, handOutlinePoints[11].y + 20);
+                endShape();
+                
+                // Special contentment symbol in palm
+                if (activeContentmentCenter !== null && contentmentCenters[activeContentmentCenter].activationProgress > 0.5) {
+                    let centerX = (handOutlinePoints[0].x + handOutlinePoints[7].x) / 2;
+                    let centerY = (handOutlinePoints[0].y + handOutlinePoints[7].y) / 2;
+                    
+                    // Gentle breathing effect
+                    let breatheFactor = sin(breathingPhase) * 0.1 + 1;
+                    
+                    // Draw contentment symbol (circular mandala)
+                    push();
+                    translate(centerX, centerY);
+                    
+                    // Outer circle
+                    noFill();
+                    stroke(colors.forest[0], colors.forest[1], colors.forest[2], 
+                          150 * contentmentCenters[activeContentmentCenter].activationProgress);
+                    strokeWeight(1);
+                    ellipse(0, 0, 20 * breatheFactor * contentmentCenters[activeContentmentCenter].activationProgress);
+                    
+                    // Inner pattern
+                    stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                          130 * contentmentCenters[activeContentmentCenter].activationProgress);
+                    strokeWeight(0.5);
+                    
+                    // Draw petals/rays
+                    let numPetals = 8;
+                    for (let i = 0; i < numPetals; i++) {
+                        let angle = TWO_PI * i / numPetals;
+                        line(0, 0, 
+                             cos(angle) * 12 * breatheFactor * contentmentCenters[activeContentmentCenter].activationProgress,
+                             sin(angle) * 12 * breatheFactor * contentmentCenters[activeContentmentCenter].activationProgress);
+                    }
+                    
+                    // Center dot
+                    fill(colors.pink[0], colors.pink[1], colors.pink[2], 
+                         160 * contentmentCenters[activeContentmentCenter].activationProgress);
+                    noStroke();
+                    ellipse(0, 0, 5 * breatheFactor * contentmentCenters[activeContentmentCenter].activationProgress);
+                    
+                    pop();
+                }
+            }
+        }
+        
+        function drawNaturalElements() {
+            // Draw natural elements (forest green - recognition)
+            for (let i = 0; i < naturalElements.length; i++) {
+                let natural = naturalElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > natural.startTime) {
+                    natural.visible = true;
+                }
+                
+                if (natural.visible) {
+                    // Calculate pulsing for the element (very subtle for contentment)
+                    let pulseAmount = sin(millis() * natural.pulseRate + natural.phase) * 0.1; // Much more subtle
+                    
+                    // Enhanced appearance for activated elements
+                    let growthFactor = 0;
+                    if (natural.activated || natural.growth > 0) {
+                        growthFactor = natural.growth / natural.maxGrowth;
+                        
+                        // Draw glow
+                        noFill();
+                        stroke(colors.forest[0], colors.forest[1], colors.forest[2], 60 * growthFactor);
+                        strokeWeight(1.5);
+                        
+                        let glowSize = natural.size * (1 + pulseAmount + growthFactor * 0.3);
+                        ellipse(natural.x, natural.y, glowSize + 8, glowSize + 8);
+                    }
+                    
+                    // Draw the natural element based on type
+                    if (natural.type === 0) { // Leaf
+                        drawLeaf(natural, pulseAmount, growthFactor);
+                    } else if (natural.type === 1) { // Seed
+                        drawSeed(natural, pulseAmount, growthFactor);
+                    } else if (natural.type === 2) { // Stone
+                        drawStone(natural, pulseAmount, growthFactor);
+                    } else if (natural.type === 3) { // Root/grounding element
+                        drawRoot(natural, pulseAmount, growthFactor);
+                    } else { // Default circle
+                        noStroke();
+                        fill(colors.forest[0], colors.forest[1], colors.forest[2], 
+                             natural.opacity * (0.7 + growthFactor * 0.3));
+                        ellipse(natural.x, natural.y, 
+                               natural.size * (1 + pulseAmount), 
+                               natural.size * (1 + pulseAmount));
+                    }
+                    
+                    // Add subtle pulse for interactive elements
+                    if (natural.interactive && !natural.activated) {
+                        noFill();
+                        stroke(colors.forest[0], colors.forest[1], colors.forest[2], 30);
+                        strokeWeight(0.5);
+                        
+                        ellipse(natural.x, natural.y, 
+                               natural.size + 10 + sin(millis() * 0.001) * 3, 
+                               natural.size + 10 + sin(millis() * 0.001) * 3);
+                    }
+                }
+            }
+        }
+        
+        function drawLeaf(natural, pulseAmount, growthFactor) {
+            push();
+            translate(natural.x, natural.y);
+            rotate(natural.phase); // Use phase as rotation
+            
+            // Draw leaf
+            if (natural.activated || natural.growth > 0) {
+                fill(colors.forest[0], colors.forest[1], colors.forest[2], 
+                    natural.opacity * (0.7 + growthFactor * 0.3));
+            } else {
+                fill(colors.forest[0], colors.forest[1], colors.forest[2], natural.opacity);
+            }
+            
+            noStroke();
+            
+            let leafSize = natural.size * (1 + pulseAmount);
+            
+            beginShape();
+            vertex(0, -leafSize/2);
+            bezierVertex(leafSize/3, -leafSize/3, leafSize/2, 0, 0, leafSize/2);
+            bezierVertex(-leafSize/2, 0, -leafSize/3, -leafSize/3, 0, -leafSize/2);
+            endShape();
+            
+            // Leaf vein
+            if (natural.activated || natural.growth > 0) {
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], 
+                      natural.opacity * (0.7 + growthFactor * 0.3));
+            } else {
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], natural.opacity * 0.7);
+            }
+            strokeWeight(0.5);
+            line(0, -leafSize/2, 0, leafSize/2);
+            
+            pop();
+        }
+        
+        function drawSeed(natural, pulseAmount, growthFactor) {
+            push();
+            translate(natural.x, natural.y);
+            rotate(natural.phase); // Use phase as rotation
+            
+            // Draw seed
+            if (natural.activated || natural.growth > 0) {
+                fill(colors.forest[0], colors.forest[1], colors.forest[2], 
+                    natural.opacity * (0.7 + growthFactor * 0.3));
+            } else {
+                fill(colors.forest[0], colors.forest[1], colors.forest[2], natural.opacity);
+            }
+            
+            noStroke();
+            
+            let seedSize = natural.size * (1 + pulseAmount);
+            
+            ellipse(0, 0, seedSize * 0.6, seedSize);
+            
+            // Seed details
+            if (natural.activated || natural.growth > 0) {
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], 
+                      natural.opacity * (0.7 + growthFactor * 0.3));
+            } else {
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], natural.opacity * 0.7);
+            }
+            strokeWeight(0.5);
+            noFill();
+            arc(0, 0, seedSize * 0.3, seedSize * 0.6, PI/4, 3*PI/4);
+            
+            pop();
+        }
+        
+        function drawStone(natural, pulseAmount, growthFactor) {
+            // Draw stone (more solid, less pulsing)
+            if (natural.activated || natural.growth > 0) {
+                fill(colors.forest[0], colors.forest[1], colors.forest[2], 
+                    natural.opacity * (0.7 + growthFactor * 0.3));
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], 
+                      natural.opacity * (0.5 + growthFactor * 0.3));
+            } else {
+                fill(colors.forest[0], colors.forest[1], colors.forest[2], natural.opacity);
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], natural.opacity * 0.5);
+            }
+            
+            strokeWeight(0.5);
+            
+            let stoneSize = natural.size * (1 + pulseAmount * 0.5); // Less pulse for stones
+            
+            push();
+            translate(natural.x, natural.y);
+            rotate(natural.phase * 0.5); // Less rotation for stones
+            
+            beginShape();
+            for (let i = 0; i < 8; i++) {
+                let angle = TWO_PI * i / 8;
+                let radius = stoneSize/2 * (0.8 + sin(i * 1.5) * 0.2);
+                vertex(cos(angle) * radius, sin(angle) * radius);
+            }
+            endShape(CLOSE);
+            
+            pop();
+        }
+        
+        function drawRoot(natural, pulseAmount, growthFactor) {
+            // Draw root/grounding element
+            if (natural.activated || natural.growth > 0) {
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], 
+                      natural.opacity * (0.7 + growthFactor * 0.3));
+            } else {
+                stroke(colors.forest[0], colors.forest[1], colors.forest[2], natural.opacity);
+            }
+            
+            strokeWeight(1.5);
+            noFill();
+            
+            let rootSize = natural.size * (1 + pulseAmount * 0.5); // Less pulse for roots
+            
+            push();
+            translate(natural.x, natural.y);
+            
+            // Main vertical line (tap root)
+            line(0, -rootSize/2, 0, rootSize/2);
+            
+            // Branch roots
+            let numBranches = 6;
+            for (let i = 0; i < numBranches; i++) {
+                let y = map(i, 0, numBranches-1, -rootSize/2 + rootSize*0.2, rootSize/2 - rootSize*0.1);
+                let length = rootSize/2 * (0.4 + sin(i * 2.5) * 0.3);
+                let side = i % 2 === 0 ? 1 : -1;
+                
+                beginShape();
+                vertex(0, y);
+                bezierVertex(
+                    side * length * 0.5, y + rootSize * 0.05,
+                    side * length * 0.7, y + rootSize * 0.1,
+                    side * length, y + rootSize * 0.15
+                );
+                endShape();
+            }
+            
+            pop();
+        }
+
+        function drawConnectionElements() {
+            // Draw connection elements (yellow - evaluation)
+            for (let i = 0; i < connectionElements.length; i++) {
+                let connection = connectionElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > connection.startTime) {
+                    connection.visible = true;
+                    
+                    // Update progress if not fully formed (for paths)
+                    if (connection.type === 'path' && connection.progress < 1) {
+                        connection.progress = min(1, connection.progress + 0.007); // Slower for contentment
+                    }
+                }
+                
+                if (connection.visible) {
+                    if (connection.type === 'node') {
+                        // Connection node (circular)
+                        
+                        // Calculate pulsing (subtle for contentment)
+                        let pulseAmount = sin(millis() * connection.pulseRate + connection.phase) * 0.1;
+                        
+                        // Enhanced appearance for activated nodes
+                        let energyFactor = 0;
+                        if (connection.activated || connection.energy > 0) {
+                            energyFactor = connection.energy / connection.maxEnergy;
+                            
+                            // Draw glow
+                            noFill();
+                            stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 70 * energyFactor);
+                            strokeWeight(1.5);
+                            
+                            let glowSize = connection.size * (1 + pulseAmount + energyFactor * 0.3);
+                            ellipse(connection.x, connection.y, glowSize + 6, glowSize + 6);
+                            
+                            // Draw main circle with enhanced color
+                            fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                                connection.opacity * (0.7 + energyFactor * 0.3));
+                        } else {
+                            // Standard appearance
+                            fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], connection.opacity);
+                        }
+                        
+                        noStroke();
+                        
+                        let nodeSize = connection.size * (1 + pulseAmount);
+                        ellipse(connection.x, connection.y, nodeSize, nodeSize);
+                        
+                        // Add subtle pulse for interactive nodes
+                        if (connection.interactive && !connection.activated) {
+                            noFill();
+                            stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 30);
+                            strokeWeight(0.5);
+                            
+                            ellipse(connection.x, connection.y, 
+                                   nodeSize + 10 + sin(millis() * 0.001) * 3, 
+                                   nodeSize + 10 + sin(millis() * 0.001) * 3);
+                        }
+                    } else if (connection.type === 'path') {
+                        // Connection path
+                        
+                        // Enhanced appearance for activated paths
+                        let flowFactor = 0;
+                        if (connection.activated || connection.flow > 0) {
+                            flowFactor = connection.flow / connection.maxFlow;
+                            
+                            // Draw glow
+                            noFill();
+                            stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 70 * flowFactor);
+                            strokeWeight(connection.width + 2);
+                            
+                            // Calculate bezier curve with progress
+                            if (connection.points.length === 4) { // Bezier curve
+                                let p = connection.points;
+                                let progressLength = connection.progress;
+                                
+                                bezier(
+                                    p[0].x, p[0].y,
+                                    lerp(p[0].x, p[1].x, progressLength), lerp(p[0].y, p[1].y, progressLength),
+                                    lerp(p[2].x, p[3].x, progressLength), lerp(p[2].y, p[3].y, progressLength),
+                                    lerp(p[0].x, p[3].x, progressLength), lerp(p[0].y, p[3].y, progressLength)
+                                );
+                            }
+                            
+                            // Draw main path with enhanced color
+                            stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                                  connection.opacity * (0.7 + flowFactor * 0.3));
+                        } else {
+                            // Standard appearance
+                            stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], connection.opacity);
+                        }
+                        
+                        strokeWeight(connection.width);
+                        noFill();
+                        
+                        // Draw path with progress
+                        if (connection.points.length === 4) { // Bezier curve
+                            let p = connection.points;
+                            let progressLength = connection.progress;
+                            
+                            bezier(
+                                p[0].x, p[0].y,
+                                lerp(p[0].x, p[1].x, progressLength), lerp(p[0].y, p[1].y, progressLength),
+                                lerp(p[2].x, p[3].x, progressLength), lerp(p[2].y, p[3].y, progressLength),
+                                lerp(p[0].x, p[3].x, progressLength), lerp(p[0].y, p[3].y, progressLength)
+                            );
+                        }
+                        
+                        // Add flow particles for activated paths
+                        if (connection.activated || connection.flow > 30) {
+                            noStroke();
+                            fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                                150 * (flowFactor + 0.2));
+                            
+                            // Draw particles along bezier path
+                            if (connection.points.length === 4) {
+                                let p = connection.points;
+                                let numParticles = floor(5 * connection.progress);
+                                
+                                for (let j = 0; j < numParticles; j++) {
+                                    let t = (j / numParticles + (millis() % 3000) / 3000) % 1;
+                                    
+                                    // Calculate position on curve
+                                    let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
+                                    let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
+                                    
+                                    // Draw particle
+                                    let particleSize = 2 + flowFactor * 2;
+                                    ellipse(x, y, particleSize, particleSize);
+                                }
+                            }
+                        }
+                        
+                        // Add subtle pulse for interactive paths
+                        if (connection.interactive && !connection.activated) {
+                            noFill();
+                            stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 30);
+                            strokeWeight(0.5);
+                            
+                            // Add pulse at midpoint of path
+                            if (connection.points.length === 4) {
+                                let p = connection.points;
+                                let midX = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, 0.5);
+                                let midY = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, 0.5);
+                                
+                                ellipse(midX, midY, 
+                                       12 + sin(millis() * 0.001) * 3, 
+                                       12 + sin(millis() * 0.001) * 3);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawResponseElements() {
+            // Draw response elements (pink - response)
+            
+            for (let i = 0; i < responseElements.length; i++) {
+                let response = responseElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > response.startTime) {
+                    response.visible = true;
+                }
+                
+                if (response.visible) {
+                    if (response.type === 'circle') {
+                        // Circular boundary
+                        
+                        // Calculate pulsing (very subtle for contentment)
+                        let pulseAmount = sin(millis() * response.pulseRate) * 0.08;
+                        
+                        // Enhanced appearance for activated circles
+                        let expansionFactor = 0;
+                        if (response.activated || response.expansion > 0) {
+                            expansionFactor = response.expansion / response.maxExpansion;
+                            
+                            // Draw glow
+                            noFill();
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], 60 * expansionFactor);
+                            strokeWeight(response.thickness + 1);
+                            
+                            let glowSize = response.size * (1 + pulseAmount + expansionFactor * 0.2);
+                            ellipse(response.x, response.y, glowSize, glowSize);
+                            
+                            // Draw main circle with enhanced color
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], 
+                                  response.opacity * (0.7 + expansionFactor * 0.3));
+                        } else {
+                            // Standard appearance
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], response.opacity);
+                        }
+                        
+                        strokeWeight(response.thickness);
+                        noFill();
+                        
+                        let circleSize = response.size * (1 + pulseAmount);
+                        ellipse(response.x, response.y, circleSize, circleSize);
+                        
+                        // Add subtle pulse for interactive circles
+                        if (response.interactive && !response.activated) {
+                            noFill();
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], 30);
+                            strokeWeight(0.5);
+                            
+                            ellipse(response.x, response.y, 
+                                   circleSize + 15 + sin(millis() * 0.0009) * 3, 
+                                   circleSize + 15 + sin(millis() * 0.0009) * 3);
+                        }
+                    } else if (response.type === 'line') {
+                        // Boundary line
+                        
+                        // Enhanced appearance for activated lines
+                        let completenessFactor = 0;
+                        if (response.activated || response.completeness > 0) {
+                            completenessFactor = response.completeness / response.maxCompleteness;
+                            
+                            // Draw glow
+                            noFill();
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], 60 * completenessFactor);
+                            strokeWeight(response.thickness + 1);
+                            
+                            push();
+                            translate(response.x, response.y);
+                            rotate(response.angle);
+                            line(0, 0, response.length, 0);
+                            pop();
+                            
+                            // Draw main line with enhanced color
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], 
+                                  response.opacity * (0.7 + completenessFactor * 0.3));
+                        } else {
+                            // Standard appearance
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], response.opacity);
+                        }
+                        
+                        strokeWeight(response.thickness);
+                        
+                        push();
+                        translate(response.x, response.y);
+                        rotate(response.angle);
+                        line(0, 0, response.length, 0);
+                        
+                        // Add cap symbols for activated lines
+                        if (response.activated || response.completeness > 30) {
+                            noStroke();
+                            fill(colors.pink[0], colors.pink[1], colors.pink[2], 
+                                response.opacity * (0.7 + completenessFactor * 0.3));
+                                
+                            // Start cap (circle)
+                            ellipse(0, 0, response.thickness * 2, response.thickness * 2);
+                            
+                            // End cap (circle)
+                            ellipse(response.length, 0, response.thickness * 2, response.thickness * 2);
+                        }
+                        
+                        pop();
+                        
+                        // Add subtle pulse for interactive lines
+                        if (response.interactive && !response.activated) {
+                            noFill();
+                            stroke(colors.pink[0], colors.pink[1], colors.pink[2], 30);
+                            strokeWeight(0.5);
+                            
+                            // Add pulse at midpoint of line
+                            let midX = response.x + cos(response.angle) * (response.length/2);
+                            let midY = response.y + sin(response.angle) * (response.length/2);
+                            
+                            ellipse(midX, midY, 
+                                   10 + sin(millis() * 0.0009) * 3, 
+                                   10 + sin(millis() * 0.0009) * 3);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawConnectionLines() {
+            // Draw connection lines between elements
+            
+            for (let line of connectionLines) {
+                // Only start drawing after the delay
+                if (timePosition > line.startTime) {
+                    // Update progress if animating (slower for contentment)
+                    if (isAnimating && line.progress < 1) {
+                        line.progress = min(1, line.progress + 0.003);
+                    }
+                    
+                    // Get start and end points based on element types
+                    let startX, startY, endX, endY;
+                    
+                    // Start point
+                    if (line.startElement === 'natural') {
+                        startX = naturalElements[line.startIndex].x;
+                        startY = naturalElements[line.startIndex].y;
+                    } else if (line.startElement === 'connection') {
+                        if (connectionElements[line.startIndex].type === 'node') {
+                            startX = connectionElements[line.startIndex].x;
+                            startY = connectionElements[line.startIndex].y;
+                        } else {
+                            // If path, use end point
+                            let path = connectionElements[line.startIndex];
+                            let points = path.points;
+                            startX = points[points.length-1].x;
+                            startY = points[points.length-1].y;
+                        }
+                    } else {
+                        if (responseElements[line.startIndex].type === 'circle') {
+                            startX = responseElements[line.startIndex].x;
+                            startY = responseElements[line.startIndex].y;
+                        } else {
+                            // If line, use end point
+                            let responseLine = responseElements[line.startIndex];
+                            startX = responseLine.x + cos(responseLine.angle) * responseLine.length;
+                            startY = responseLine.y + sin(responseLine.angle) * responseLine.length;
+                        }
+                    }
+                    
+                    // End point
+                    if (line.endElement === 'natural') {
+                        endX = naturalElements[line.endIndex].x;
+                        endY = naturalElements[line.endIndex].y;
+                    } else if (line.endElement === 'connection') {
+                        if (connectionElements[line.endIndex].type === 'node') {
+                            endX = connectionElements[line.endIndex].x;
+                            endY = connectionElements[line.endIndex].y;
+                        } else {
+                            // If path, use start point
+                            let path = connectionElements[line.endIndex];
+                            endX = path.points[0].x;
+                            endY = path.points[0].y;
+                        }
+                    } else {
+                        if (responseElements[line.endIndex].type === 'circle') {
+                            endX = responseElements[line.endIndex].x;
+                            endY = responseElements[line.endIndex].y;
+                        } else {
+                            // If line, use start point
+                            let responseLine = responseElements[line.endIndex];
+                            endX = responseLine.x;
+                            endY = responseLine.y;
+                        }
+                    }
+                    
+                    // Only draw if both elements are visible
+                    let startVisible = false;
+                    let endVisible = false;
+                    
+                    if (line.startElement === 'natural') {
+                        startVisible = naturalElements[line.startIndex].visible;
+                    } else if (line.startElement === 'connection') {
+                        startVisible = connectionElements[line.startIndex].visible;
+                    } else {
+                        startVisible = responseElements[line.startIndex].visible;
+                    }
+                    
+                    if (line.endElement === 'natural') {
+                        endVisible = naturalElements[line.endIndex].visible;
+                    } else if (line.endElement === 'connection') {
+                        endVisible = connectionElements[line.endIndex].visible;
+                    } else {
+                        endVisible = responseElements[line.endIndex].visible;
+                    }
+                    
+                    if (startVisible && endVisible) {
+                        // Get color based on end element (color flows toward)
+                        let lineColor;
+                        if (line.endElement === 'natural') {
+                            lineColor = colors.forest;
+                        } else if (line.endElement === 'connection') {
+                            lineColor = colors.yellow;
+                        } else {
+                            lineColor = colors.pink;
+                        }
+                        
+                        // Calculate activated state
+                        let isActivated = false;
+                        let activationLevel = 0;
+                        
+                        if (line.startElement === 'natural') {
+                            let natural = naturalElements[line.startIndex];
+                            isActivated = natural.activated;
+                            activationLevel = natural.growth / natural.maxGrowth;
+                        } else if (line.startElement === 'connection') {
+                            let connection = connectionElements[line.startIndex];
+                            isActivated = connection.activated;
+                            if (connection.type === 'node') {
+                                activationLevel = connection.energy / connection.maxEnergy;
+                            } else {
+                                activationLevel = connection.flow / connection.maxFlow;
+                            }
+                        } else {
+                            let response = responseElements[line.startIndex];
+                            isActivated = response.activated;
+                            if (response.type === 'circle') {
+                                activationLevel = response.expansion / response.maxExpansion;
+                            } else {
+                                activationLevel = response.completeness / response.maxCompleteness;
+                            }
+                        }
+                        
+                        // Also check end element activation
+                        let endActivated = false;
+                        let endActivationLevel = 0;
+                        
+                        if (line.endElement === 'natural') {
+                            let natural = naturalElements[line.endIndex];
+                            endActivated = natural.activated;
+                            endActivationLevel = natural.growth / natural.maxGrowth;
+                        } else if (line.endElement === 'connection') {
+                            let connection = connectionElements[line.endIndex];
+                            endActivated = connection.activated;
+                            if (connection.type === 'node') {
+                                endActivationLevel = connection.energy / connection.maxEnergy;
+                            } else {
+                                endActivationLevel = connection.flow / connection.maxFlow;
+                            }
+                        } else {
+                            let response = responseElements[line.endIndex];
+                            endActivated = response.activated;
+                            if (response.type === 'circle') {
+                                endActivationLevel = response.expansion / response.maxExpansion;
+                            } else {
+                                endActivationLevel = response.completeness / response.maxCompleteness;
+                            }
+                        }
+                        
+                        // Use higher of the two activation levels
+                        isActivated = isActivated || endActivated;
+                        activationLevel = max(activationLevel, endActivationLevel);
+                        
+                        // Draw dotted line
+                        let distance = dist(startX, startY, endX, endY);
+                        let numDots = floor(distance / line.dotSpacing);
+                        
+                        // Draw dots along the path
+                        for (let i = 0; i <= numDots * line.progress; i++) {
+                            let t = i / numDots;
+                            let x = lerp(startX, endX, t);
+                            let y = lerp(startY, endY, t);
+                            
+                            // Draw dot
+                            noStroke();
+                            
+                            if (isActivated) {
+                                // Enhanced appearance for activated lines
+                                fill(lineColor[0], lineColor[1], lineColor[2], 
+                                    line.opacity * (0.7 + activationLevel * 0.3));
+                                
+                                // Make dots pulse when activated (subtly)
+                                let pulseSize = line.dotSize * (1 + sin(millis() * 0.002 + i * 0.1) * 0.2);
+                                ellipse(x, y, pulseSize + activationLevel * 1);
+                            } else {
+                                fill(lineColor[0], lineColor[1], lineColor[2], line.opacity);
+                                ellipse(x, y, line.dotSize);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawContentmentCenters() {
+            // Only draw contentment centers after they should appear
+            for (let i = 0; i < contentmentCenters.length; i++) {
+                let center = contentmentCenters[i];
+                
+                // Check timing
+                if (timePosition > center.startTime) {
+                    // Fade in opacity (slower for contentment)
+                    if (center.opacity < center.targetOpacity) {
+                        center.opacity = min(center.targetOpacity, center.opacity + 0.3);
+                    }
+                    
+                    // Calculate pulse effect (very subtle for contentment)
+                    let pulseAmount = sin(millis() * center.pulseRate) * 0.08;
+                    let pulseSize = center.size + pulseAmount * 8;
+                    
+                    // Draw outer glow for active contentment centers
+                    if (i === activeContentmentCenter && center.activationProgress > 0) {
+                        // Radiate outward (gentle for contentment)
+                        for (let j = 0; j < 3; j++) {
+                            let expandedSize = pulseSize + j * 15 * center.activationProgress;
+                            let glowOpacity = (80 - j * 25) * center.activationProgress;
+                            
+                            noFill();
+                            
+                            // Use a blend of colors for the glow
+                            let blendedR = lerp(colors.forest[0], colors.pink[0], 0.5);
+                            let blendedG = lerp(colors.forest[1], colors.pink[1], 0.5);
+                            let blendedB = lerp(colors.forest[2], colors.pink[2], 0.5);
+                            
+                            stroke(blendedR, blendedG, blendedB, glowOpacity);
+                            strokeWeight(1 - j * 0.3);
+                            ellipse(center.x, center.y, expandedSize);
+                        }
+                    }
+                    
+                    // Draw main contentment center boundary
+                    noFill();
+                    
+                    // Use forest green as the primary color for contentment centers
+                    stroke(colors.forest[0], colors.forest[1], colors.forest[2], center.opacity);
+                    strokeWeight(1.5); // Thinner for contentment
+                    ellipse(center.x, center.y, pulseSize);
+                    
+                    // Draw inner circle
+                    fill(colors.forest[0], colors.forest[1], colors.forest[2], center.opacity * 0.2);
+                    noStroke();
+                    ellipse(center.x, center.y, pulseSize * 0.3);
+                    
+                    // Add interactive hint
+                    if (!center.activated) {
+                        fill(colors.forest[0], colors.forest[1], colors.forest[2], 
+                            60 + 20 * sin(millis() * 0.003)); // More subtle for contentment
+                        noStroke();
+                        
+                        // Draw mandala symbol instead of star (for contentment)
+                        push();
+                        translate(center.x, center.y);
+                        
+                        // Draw simple mandala
+                        let numPetals = 6;
+                        for (let j = 0; j < numPetals; j++) {
+                            let angle = TWO_PI * j / numPetals;
+                            rotate(angle);
+                            ellipse(0, 12, 4, 8);
+                        }
+                        
+                        pop();
+                    }
+                }
+            }
+        }
+        
+        function showContentmentResonance(message, x, y) {
+            const resonance = document.getElementById('contentment-resonance');
+            resonance.innerHTML = message;
+            
+            // Position near the element but within screen bounds
+            let posX = x;
+            let posY = y - 60;
+            
+            // Adjust if would go off screen
+            if (posX < 20) posX = 20;
+            if (posX > window.innerWidth - 270) posX = window.innerWidth - 270;
+            if (posY < 20) posY = 20;
+            if (posY > window.innerHeight - 100) posY = window.innerHeight - 100;
+            
+            resonance.style.left = posX + 'px';
+            resonance.style.top = posY + 'px';
+            resonance.style.transform = 'translateY(0)';
+            resonance.style.opacity = '1';
+            
+            // Hide after 5 seconds (longer for contentment)
+            setTimeout(() => {
+                resonance.style.opacity = '0';
+                resonance.style.transform = 'translateY(20px)';
+            }, 5000);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        function repositionElements() {
+            // Recalculate hand outline points for new dimensions
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
+            }
+            
+            // Reposition natural elements
+            for (let natural of naturalElements) {
+                natural.x = (natural.x / width) * windowWidth;
+                natural.y = (natural.y / height) * windowHeight;
+            }
+            
+            // Reposition connection elements
+            for (let connection of connectionElements) {
+                if (connection.type === 'node') {
+                    connection.x = (connection.x / width) * windowWidth;
+                    connection.y = (connection.y / height) * windowHeight;
+                } else if (connection.type === 'path') {
+                    for (let point of connection.points) {
+                        point.x = (point.x / width) * windowWidth;
+                        point.y = (point.y / height) * windowHeight;
+                    }
+                }
+            }
+            
+            // Reposition response elements
+            for (let response of responseElements) {
+                response.x = (response.x / width) * windowWidth;
+                response.y = (response.y / height) * windowHeight;
+            }
+            
+            // Reposition contentment centers
+            for (let center of contentmentCenters) {
+                center.x = (center.x / width) * windowWidth;
+                center.y = (center.y / height) * windowHeight;
+            }
+        }
+        
+        function mousePressed() {
+            // Only process clicks after landing page has disappeared
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                
+                // Check for interactions with contentment centers first
+                for (let i = 0; i < contentmentCenters.length; i++) {
+                    let center = contentmentCenters[i];
+                    
+                    if (timePosition > center.startTime) {
+                        let d = dist(mouseX, mouseY, center.x, center.y);
+                        
+                        if (d < center.size / 2) {
+                            // Toggle contentment center activation
+                            center.activated = !center.activated;
+                            
+                            if (center.activated) {
+                                // Set as active contentment center
+                                activeContentmentCenter = i;
+                                centerActivated = true;
+                                
+                                // Show contentment resonance
+                                showContentmentResonance(center.resonance, center.x, center.y);
+                                
+                                // Activate associated elements (more gently for contentment)
+                                for (let element of center.elements) {
+                                    if (element.type === 'natural') {
+                                        naturalElements[element.index].activated = true;
+                                        naturalElements[element.index].activatedTime = millis();
+                                        naturalElements[element.index].growth = naturalElements[element.index].maxGrowth * 0.6;
+                                    } else if (element.type === 'connection') {
+                                        connectionElements[element.index].activated = true;
+                                        connectionElements[element.index].activatedTime = millis();
+                                        
+                                        if (connectionElements[element.index].type === 'node') {
+                                            connectionElements[element.index].energy = connectionElements[element.index].maxEnergy * 0.7;
+                                        } else {
+                                            connectionElements[element.index].flow = connectionElements[element.index].maxFlow * 0.7;
+                                        }
+                                    } else {
+                                        responseElements[element.index].activated = true;
+                                        responseElements[element.index].activatedTime = millis();
+                                        
+                                        if (responseElements[element.index].type === 'circle') {
+                                            responseElements[element.index].expansion = responseElements[element.index].maxExpansion * 0.6;
+                                        } else {
+                                            responseElements[element.index].completeness = responseElements[element.index].maxCompleteness * 0.6;
+                                        }
+                                    }
+                                }
+                                
+                                // Play special sound if enabled
+                                if (soundEnabled && contentmentSound) {
+                                    // Could add special sound effect here
+                                }
+                            } else {
+                                // Deactivate
+                                activeContentmentCenter = null;
+                                centerActivated = false;
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with natural elements
+                for (let natural of naturalElements) {
+                    if (natural.visible && natural.interactive) {
+                        let d = dist(mouseX, mouseY, natural.x, natural.y);
+                        
+                        if (d < natural.size) {
+                            // Toggle activation
+                            natural.activated = !natural.activated;
+                            natural.activatedTime = millis();
+                            
+                            if (natural.activated) {
+                                // Set growth level
+                                natural.growth = natural.maxGrowth * 0.8;
+                                
+                                // Show contentment resonance
+                                showContentmentResonance(getRandomResonance(), natural.x, natural.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with connection elements
+                for (let connection of connectionElements) {
+                    if (connection.visible && connection.interactive) {
+                        if (connection.type === 'node') {
+                            let d = dist(mouseX, mouseY, connection.x, connection.y);
+                            
+                            if (d < connection.size) {
+                                // Toggle activation
+                                connection.activated = !connection.activated;
+                                connection.activatedTime = millis();
+                                
+                                if (connection.activated) {
+                                    // Set energy level
+                                    connection.energy = connection.maxEnergy * 0.8;
+                                    
+                                    // Show contentment resonance
+                                    showContentmentResonance(getRandomResonance(), connection.x, connection.y);
+                                }
+                                
+                                return false;
+                            }
+                        } else if (connection.type === 'path') {
+                            // Check if click is near path
+                            if (connection.points.length === 4) { // Bezier curve
+                                let p = connection.points;
+                                let hitTestPoints = 10;
+                                
+                                // Check multiple points along the curve
+                                for (let j = 0; j < hitTestPoints; j++) {
+                                    let t = j / (hitTestPoints - 1);
+                                    
+                                    let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
+                                    let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
+                                    
+                                    let d = dist(mouseX, mouseY, x, y);
+                                    
+                                    if (d < connection.width + 10) {
+                                        // Toggle activation
+                                        connection.activated = !connection.activated;
+                                        connection.activatedTime = millis();
+                                        
+                                        if (connection.activated) {
+                                            // Set flow level
+                                            connection.flow = connection.maxFlow * 0.8;
+                                            
+                                            // Show contentment resonance
+                                            showContentmentResonance(getRandomResonance(), x, y);
+                                        }
+                                        
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Check for interactions with response elements
+                for (let response of responseElements) {
+                    if (response.visible && response.interactive) {
+                        if (response.type === 'circle') {
+                            // Get distance to circle perimeter
+                            let d = abs(dist(mouseX, mouseY, response.x, response.y) - response.size/2);
+                            
+                            if (d < response.thickness + 8) {
+                                // Toggle activation
+                                response.activated = !response.activated;
+                                response.activatedTime = millis();
+                                
+                                if (response.activated) {
+                                    // Set expansion level
+                                    response.expansion = response.maxExpansion * 0.8;
+                                    
+                                    // Show contentment resonance
+                                    showContentmentResonance(getRandomResonance(), response.x, response.y);
+                                }
+                                
+                                return false;
+                            }
+                        } else if (response.type === 'line') {
+                            // Check if click is near line
+                            let lineStart = createVector(response.x, response.y);
+                            let lineEnd = createVector(
+                                response.x + cos(response.angle) * response.length,
+                                response.y + sin(response.angle) * response.length
+                            );
+                            
+                            let mousePt = createVector(mouseX, mouseY);
+                            let projection = projectionPointOnLine(mousePt, lineStart, lineEnd);
+                            
+                            let d = dist(mouseX, mouseY, projection.x, projection.y);
+                            
+                            if (d < response.thickness + 8) {
+                                // Check if projection is on the line segment
+                                let dStart = dist(projection.x, projection.y, lineStart.x, lineStart.y);
+                                let dEnd = dist(projection.x, projection.y, lineEnd.x, lineEnd.y);
+                                let lineLength = dist(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y);
+                                
+                                if (dStart + dEnd <= lineLength + 0.1) {
+                                    // Toggle activation
+                                    response.activated = !response.activated;
+                                    response.activatedTime = millis();
+                                    
+                                    if (response.activated) {
+                                        // Set completeness level
+                                        response.completeness = response.maxCompleteness * 0.8;
+                                        
+                                        // Show contentment resonance
+                                        showContentmentResonance(getRandomResonance(), projection.x, projection.y);
+                                    }
+                                    
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // If no element was clicked, toggle animation
+                isAnimating = !isAnimating;
+                
+                // Update sound based on animation state
+                if (!isAnimating && soundEnabled && soundLoaded && contentmentSound.isPlaying()) {
+                    contentmentSound.setVolume(0.3, 2); // Slower fade for contentment
+                } else if (isAnimating && soundEnabled && soundLoaded) {
+                    contentmentSound.setVolume(0.6, 2); // Slower fade for contentment
+                }
+            }
+            
+            return false;
+        }
+        
+        // Utility function to find projection of point on line
+        function projectionPointOnLine(p, a, b) {
+            let ap = p5.Vector.sub(p, a);
+            let ab = p5.Vector.sub(b, a);
+            ab.normalize();
+            ab.mult(ap.dot(ab));
+            return p5.Vector.add(a, ab);
+        }
+        
+        // Support touch events
+        function touchStarted() {
+            // Initialize audio context for iOS
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+    </script>
+</body>
+</html>

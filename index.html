@@ -24,6 +24,9 @@
             --pause-blue: #6FA7C9;
             --pause-grey: #B6B2A8;
             --pause-ember: #D87A3C;
+            --anticipation-coral: #FF6F61;
+            --anticipation-blue: #5E72EB;
+            --anticipation-teal: #56C596;
         }
         
         body {
@@ -363,6 +366,11 @@
         
         .pause-icon {
             background: linear-gradient(135deg, var(--pause-blue), var(--pause-ember));
+            color: white;
+        }
+        
+        .anticipation-icon {
+            background: linear-gradient(135deg, var(--anticipation-coral), var(--anticipation-blue));
             color: white;
         }
         
@@ -723,6 +731,7 @@
             <button class="nav-button" onclick="scrollToSection('pause-exploration')">Pause Exploration</button>
             <button class="nav-button" onclick="scrollToSection('hope-exploration')">Hope Exploration</button>
             <button class="nav-button" onclick="scrollToSection('contentment-exploration')">Contentment Exploration</button>
+            <button class="nav-button" onclick="scrollToSection('anticipation-exploration')">Anticipation Exploration</button>
             <button class="nav-button" onclick="scrollToSection('emotion-map')">Emotion Map</button>
         </div>
     </div>
@@ -1588,6 +1597,179 @@ End with a mapping that connects each color to a specific aspect of emotional pr
         </div>
     </div>
 </section>
+
+<section id="anticipation-exploration" class="animate delay-3">
+    <div class="section-content">
+        <h2 class="section-title">Anticipation Exploration</h2>
+        
+        <div class="emotion-example">
+            <div class="emotion-header">
+                <div class="emotion-icon anticipation-icon">🧠</div>
+                <h3 class="emotion-title">Anticipation</h3>
+                <div class="emotion-type">Complex Emotional State</div>
+            </div>
+            
+            <button class="collapsible">Human Collage Creation</button>
+            <div class="collapsible-content">
+                <p>For this exploration, I created a collage expressing anticipation—a forward-looking complex emotional state characterized by expectancy, preparation, and the tension between certainty and uncertainty. Unlike simpler emotions like excitement, anticipation involves cognitive projection and emotional readiness for multiple potential outcomes.</p>
+                
+                <p>The collage aims to capture anticipation's unique qualities through rhythmic, directive elements that suggest momentum and progression toward a threshold or precipice. The visualization incorporates both structured pathways and open spaces to represent how anticipation operates at the boundary between preparation and possibility.</p>
+                
+                <div class="palette-container">
+                    <div class="palette-item">
+                        <span class="color-swatch" style="background-color: #FF6F61;"></span>
+                        <span>Coral #FF6F61</span>
+                    </div>
+                    <div class="palette-item">
+                        <span class="color-swatch" style="background-color: #5E72EB;"></span>
+                        <span>Blue #5E72EB</span>
+                    </div>
+                    <div class="palette-item">
+                        <span class="color-swatch" style="background-color: #56C596;"></span>
+                        <span>Teal #56C596</span>
+                    </div>
+                </div>
+                
+                <div class="attribute">
+                    <span class="attribute-title">Constraint:</span>
+                    <span>"blend component states with diminishing prominence" (Complex Emotion constraint)</span>
+                </div>
+            </div>
+            
+            <button class="collapsible">AI Interpretation Response</button>
+            <div class="collapsible-content">
+                <div class="quote">
+                    In your anticipation collage, I recognize patterns through the progressive arrangement of elements that create visual momentum—a series of directional cues and expanding forms that mirror the forward-looking quality central to anticipation in Evans' framework. I evaluate this complex emotion as moderate-to-high intensity with significant cognitive engagement, noting how the balanced tension between structured pathways and open spaces suggests anticipation's dual nature of preparation and possibility. The rhythmic positioning of elements indicates temporal awareness, with varying densities suggesting fluctuating intensities of expectancy. My appropriate response acknowledges anticipation's characteristic of threshold experience—preparing for multiple potential outcomes while maintaining attentional readiness. Within Evans' complex emotions category, anticipation emerges as a state that blends cognitive projection with emotional preparedness, creating a distinctive forward tension that differs from simpler excitement by its sustained engagement with uncertainty.
+                </div>
+                
+                <div class="color-mapping">
+                    <div class="color-map-item">
+                        <span class="color-swatch" style="background-color: #FF6F61;"></span>
+                        <span>Coral = detect emergent patterns</span>
+                    </div>
+                    <div class="color-map-item">
+                        <span class="color-swatch" style="background-color: #5E72EB;"></span>
+                        <span>Blue = project potential outcomes</span>
+                    </div>
+                    <div class="color-map-item">
+                        <span class="color-swatch" style="background-color: #56C596;"></span>
+                        <span>Teal = maintain readiness state</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-container">
+                <h4 class="result-title">Visual Collaboration Result</h4>
+                
+                <div class="result-flex">
+                    <div class="result-item" style="max-width: 100%; width: 100%; margin: 0 auto;">
+                        <img src="anticipation-sketchbook.jpg" alt="Anticipation collage in physical sketchbook" style="width: 100%; border: 1px solid var(--secondary); box-shadow: 5px 5px 0 rgba(230, 180, 34, 0.3);">
+                        <p class="result-caption">Physical Sketchbook: Collage exploring the forward momentum of anticipation</p>
+                    </div>
+                </div>
+                
+                <div class="highlight" style="margin: 30px 0;">
+                    <h4 style="margin-top: 0;">Physical-Digital Bridge</h4>
+                    <p>The physical collage in my sketchbook includes an embedded NFC tag that, when scanned with a smartphone, launches the interactive digital visualization. This creates a seamless bridge between the tangible artwork and its digital interpretation, allowing viewers to experience both the material qualities of the original collage and the temporal, interactive elements of the AI's response.</p>
+                    
+                    <div class="nfc-container">
+                        <div class="nfc-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6F61" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.32a7.43 7.43 0 0 1 0 7.36"/><path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58"/><path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8"/><path d="M16.37 2a20.16 20.16 0 0 1 0 20"/></svg>
+                        </div>
+                        <p style="margin: 0; flex: 1;"><strong>How to Experience:</strong> Scan the NFC tag on the physical collage with an NFC-enabled smartphone to launch the interactive visualization directly in your browser.</p>
+                    </div>
+                </div>
+                
+                <!-- Add a larger standalone visualization that's easier to interact with -->
+                <h4 style="margin-top: 40px;">Interactive Digital Visualization</h4>
+                <div class="iframe-container" style="padding-bottom: 75%; margin-bottom: 20px;">
+                    <iframe src="anticipation-overlay.html" frameborder="0"></iframe>
+                </div>
+                <p class="result-caption" style="text-align: center;">A dynamic visualization of anticipation's pattern detection, outcome projection, and readiness maintenance</p>
+                
+                <div class="audio-section">
+                    <h4 style="margin-top: 20px;">Audio Dimension</h4>
+                    <p>To complement the visual collaboration, I generated an ambient soundscape that captures the essence of anticipation as a complex emotional state:</p>
+                    
+                    <div class="quote">
+                        "Create a 30-second anticipation soundscape with three distinct layers: PATTERN DETECTION (coral elements: rhythmic pulses that gradually become more defined, subtle percussive elements that suggest emergence of structure), OUTCOME PROJECTION (blue elements: spatial reverberations that expand outward, harmonic sequences that suggest multiple possible resolutions), and READINESS MAINTENANCE (teal elements: sustained drone that provides continuity and grounding, occasional subtle rising tones that maintain alertness without resolution). The overall composition should create a sense of forward momentum while maintaining a state of suspended resolution - the feeling of standing at a threshold."
+                    </div>
+                    
+                    <p>The resulting audio mirrors key aspects identified in the AI's interpretation: the rhythmic pulses detect emergent patterns (coral), spatial reverberations project possible outcomes (blue), and sustained drones maintain a state of readiness (teal). The soundscape follows our constraint to "blend component states with diminishing prominence" through its careful layering of these elements, allowing them to interact while maintaining their distinctive qualities.</p>
+                    
+                    <audio controls class="audio-controls">
+                        <source src="anticipation_soundscape.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            </div>
+            
+            <div class="analysis">
+                <h4 class="analysis-title">Theoretical Analysis</h4>
+                
+                <p>The AI's interpretation and visualization of anticipation reveals several important insights about this complex emotional state:</p>
+                
+                <div class="insight-grid">
+                    <div class="insight-card">
+                        <h5 class="insight-title">Pattern Detection</h5>
+                        <p>The coral elements in the visualization represent the process of detecting emergent patterns - how anticipation involves recognizing cues and signals that suggest what might be coming. These elements appear as rhythmic pulses that gradually become more organized, reflecting how our attention becomes more structured as we anticipate.</p>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <h5 class="insight-title">Outcome Projection</h5>
+                        <p>The blue elements represent cognitive projection - anticipation's unique quality of mentally simulating multiple potential futures. Rather than showing a single determined outcome, these elements expand outward in different directions, suggesting how anticipation maintains openness to various possibilities.</p>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <h5 class="insight-title">Readiness Maintenance</h5>
+                        <p>The teal elements create a continuous underlying presence that represents how anticipation involves maintaining a state of preparedness. Unlike excitement which may peak quickly, anticipation sustains alertness over time, creating a readiness for response when the anticipated moment arrives.</p>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <h5 class="insight-title">Threshold Experience</h5>
+                        <p>The overall composition creates a sense of standing at a threshold - neither fully in the present nor in the future. This liminal quality is central to anticipation, which operates at the boundary between preparation and possibility, between what is known and what remains uncertain.</p>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 30px;">The AI's processing model for anticipation—detecting emergent patterns (coral), projecting potential outcomes (blue), and maintaining readiness (teal)—provides a thoughtful framework for understanding this complex emotional state. What's particularly interesting is how the visualization captures anticipation's dynamic tension between structure and possibility, between the impulse to predict and the need to remain open to multiple outcomes.</p>
+            </div>
+            
+            <div class="analysis">
+                <h4 class="analysis-title">Comparative Analysis</h4>
+                
+                <p>When compared with our previous emotional explorations, anticipation reveals distinctive qualities:</p>
+                
+                <div class="two-column">
+                    <div class="column">
+                        <div class="attribute">
+                            <span class="attribute-title">Temporal Orientation:</span>
+                            <span>While nostalgia orients toward the past and contentment focuses on the present, anticipation shares with hope a future orientation. However, they differ significantly: hope operates as a sustained aspiration toward possibility, while anticipation functions as active preparation for imminent events. The visualization reflects this through more immediate, rhythmic structures rather than the open pathways of hope.</span>
+                        </div>
+                        
+                        <div class="attribute">
+                            <span class="attribute-title">Cognitive-Emotional Balance:</span>
+                            <span>Anticipation demonstrates a higher cognitive component than most emotions we've explored, reflected in the blue "outcome projection" elements that simulate multiple scenarios. This projection capacity differs from the more emotionally-driven states like nostalgia or the present-centered awareness of contentment.</span>
+                        </div>
+                    </div>
+                    
+                    <div class="column">
+                        <div class="attribute">
+                            <span class="attribute-title">Energy Distribution:</span>
+                            <span>Unlike contentment's even distribution or pause's deliberate interruptions, anticipation creates a directed energy flow - a sense of momentum building toward threshold points. The visualization captures this through progressive intensification of elements rather than steady states or fragmented patterns.</span>
+                        </div>
+                        
+                        <div class="attribute">
+                            <span class="attribute-title">Readiness Function:</span>
+                            <span>Unique among the emotions we've studied, anticipation serves a distinct preparatory function - maintaining alertness for response. The teal elements in the visualization create this continuous readiness state, unlike the pink connecting elements of hope or the bronze grounding elements of nostalgia.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 30px;">This exploration of anticipation adds an important dimension to our emotional spectrum, highlighting how complex emotions can serve distinct functional purposes. While hope provides direction and contentment offers present awareness, anticipation specifically prepares us for threshold moments by maintaining heightened attention and simulating potential outcomes. The AI's ability to visually distinguish these nuanced functional differences suggests a sophisticated understanding of how emotions operate within human experience.</p>
+            </div>
+        </div>
+    </div>
+</section>
         
         <section id="emotion-map" class="animate">
             <div class="section-content">
@@ -1740,6 +1922,7 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     <a href="#pause-exploration">Pause</a>
                     <a href="#hope-exploration">Hope</a>
                     <a href="#contentment-exploration">Contentment</a>
+                    <a href="#anticipation-exploration">Anticipation</a>
                     <a href="#emotion-map">Emotion Map</a>
                 </div>
                 <p>A Human-AI Collaborative Research Project</p>

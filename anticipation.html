@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Anticipation - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f7f7f7;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        /* Landing screen that appears first */
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(247, 247, 247, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #4a4a4a; /* Dark grey for anticipation */
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 550px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(74, 74, 74, 0.1);
+           border-radius: 8px;
+           border-left: 3px solid #4a4a4a;
+           line-height: 1.6;
+           color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: rgba(74, 74, 74, 0.2);
+            color: #4a4a4a;
+            border: 1px solid #4a4a4a;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Canvas for the animation */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        /* Anticipation resonance popup */
+        .anticipation-resonance {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 3px solid #4a4a4a;
+        }
+        
+        /* Controls panel */
+        .controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+            stroke: #4a4a4a;
+        }
+        
+        /* Hint message */
+        .hint {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            color: #4a4a4a;
+        }
+        
+        /* Timeline slider */
+        .timeline {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 500px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(74, 74, 74, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background-color: rgba(74, 74, 74, 0.8);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .timeline-handle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #4a4a4a;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important; /* Allow scrolling on mobile */
+                height: auto !important;
+            }
+        
+            #landing-overlay {
+                position: absolute; /* Change from fixed to absolute */
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+                padding: 40px 20px 120px 20px; /* More padding at top and bottom */
+                justify-content: flex-start; /* Start content from the top */
+            }
+        
+            .landing-title {
+                margin-top: 40px;
+            }
+        
+            .start-button {
+                margin-bottom: 60px; /* Ensure button isn't at the very bottom */
+                position: relative;
+            }
+        
+            .emotion-name {
+                font-size: 42px; /* Slightly larger on mobile */
+            }
+        
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
+        }
+        
+        /* Orientation-specific styles */
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px; /* Move controls above timeline in portrait mode */
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%; /* Wider in portrait */
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px; /* Move away from edge and timeline handle */
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%; /* Narrower in landscape to leave room for controls */
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial landing overlay -->
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">ANTICIPATION</h2>
+        <p class="emotion-description" id="emotion-description">
+            An exploration of anticipation as a state of tension between structured expectation and unpredictable disruption.
+            <br><b>Analysis by Claude</b>
+        </p>
+
+        <!-- AI disclaimer -->
+        <div class="ai-disclaimer">
+            <strong>Note:</strong> This is a simulation of anticipation based on my analysis of human descriptions. As an AI, I don't experience emotions or feelings - this is just my interpretation of a human concept.
+        </div>
+        
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
+    
+    <!-- Anticipation resonance popup that appears when interacting with elements -->
+    <div class="anticipation-resonance" id="anticipation-resonance"></div>
+    
+    <!-- Control buttons -->
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Hint for users -->
+    <div class="hint" id="hint">Touch elements to heighten anticipation</div>
+    
+    <!-- Timeline interface -->
+    <div class="timeline" id="timeline">
+        <div class="timeline-bar" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress"></div>
+            <div class="timeline-handle" id="timeline-handle"></div>
+        </div>
+    </div>
+    
+    <script>
+        let isAnimating = true;
+        let soundEnabled = true;
+        let anticipationSound;
+        let soundLoaded = false;
+        let timelineActive = false;
+        let isDraggingTimeline = false;
+        let timePosition = 0;
+        let previousTimePosition = 0;
+        let activatedTimeline = false;
+        let tensionPhase = 0;
+        let tensionRate = 0.8; // Faster for anticipation
+        
+        // Anticipation resonances - text snippets that appear when interacting with elements
+        const anticipationResonances = [
+            "The electric moment before something important happens",
+            "A heightened awareness, poised on the edge of what comes next",
+            "The delicate balance between certainty and surprise",
+            "Time stretching as you wait for resolution",
+            "The pause before a decisive moment",
+            "When possibilities narrow to a single, imminent outcome",
+            "The physical tension of waiting for something significant",
+            "An internal countdown to a meaningful event",
+            "The focused alertness before change arrives",
+            "That suspended moment before resolution",
+            "When patterns build toward an expected conclusion",
+            "The delicious tension of almost-but-not-quite",
+            "A state of readiness for what might come",
+            "The moment when time seems to slow down before action",
+            "The held breath before a revelation"
+        ];
+        
+        // Color palette for Anticipation
+        const colors = {
+            grey: [74, 74, 74],          // Grey tones - Recognition elements (Color A)
+            accent: [233, 30, 99],       // Pink/black - Evaluation elements (Color B)
+            highlight: [255, 152, 0]     // Highlight moments - Response elements (Color C)
+        };
+        
+        // Elements for each conceptual layer
+        let frameworkElements = [];      // Grey elements - temporal frameworks and waiting states
+        let disruptionElements = [];     // Accent elements - potential disruption scenarios
+        let highlightElements = [];      // Highlight elements - balanced continuity and preparedness
+        
+        // Connection lines between elements
+        let connectionLines = [];
+        
+        // Hand outline coordinates (will gradually appear)
+        let handOutlinePoints = [];
+        let handProgress = 0;
+        
+        // Interactive elements
+        let anticipationCenters = [];    // Special interactive focal points
+        let activeAnticipationCenter = null;
+        let centerActivated = false;
+        
+        // Timeline tracking
+        let timelineProgress = 0;
+        
+        // Function that contains the button action logic
+        function startExperience() {
+            // Fade out landing overlay
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            // After fading out, remove from DOM
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                // Start animation
+                isAnimating = true;
+                loop();
+                
+                // Position controls based on orientation
+                updateLayoutForOrientation();
+                
+                // Start sound if enabled
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        anticipationSound.loop();
+                        anticipationSound.setVolume(0);
+                        anticipationSound.setVolume(0.6, 2); // Fade in over 2 seconds
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                // Show controls and hint
+                setTimeout(() => {
+                    document.getElementById('controls').style.opacity = '1';
+                    document.getElementById('hint').style.opacity = '1';
+                    
+                    // Hide hint after 5 seconds
+                    setTimeout(() => {
+                        document.getElementById('hint').style.opacity = '0';
+                    }, 5000);
+                }, 2000);
+            }, 1000);
+        }
+        
+        // Function to update layout based on orientation
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', function() {
+            // Small delay to ensure dimensions have updated
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
+        
+        // Setup for landing page interaction
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault(); // Prevent default to avoid double-firing
+            startExperience();
+        });
+        
+        // Sound toggle
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            
+            // Update sound wave visibility
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && anticipationSound && !anticipationSound.isPlaying()) {
+                anticipationSound.loop();
+                anticipationSound.setVolume(0);
+                anticipationSound.setVolume(0.6, 1);
+            } else if (!soundEnabled && anticipationSound && anticipationSound.isPlaying()) {
+                anticipationSound.setVolume(0, 1); // Quicker fade-out for anticipation
+                setTimeout(() => {
+                    anticipationSound.pause();
+                }, 1000);
+            }
+        });
+        
+        // Reset button
+        document.getElementById('reset-button').addEventListener('click', function() {
+            // Reset the experience
+            timePosition = 0;
+            previousTimePosition = 0;
+            
+            resetExperience();
+            
+            // Update timeline
+            updateTimelineUI();
+        });
+        
+        // Timeline interaction
+        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        
+        function startTimelineDrag(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            
+            isDraggingTimeline = true;
+            updateTimelinePosition(e);
+            
+            // Add document-level event listeners
+            document.addEventListener('mousemove', updateTimelinePosition);
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
+            document.addEventListener('mouseup', endTimelineDrag);
+            document.addEventListener('touchend', endTimelineDrag);
+        }
+        
+        function updateTimelinePosition(e) {
+            if (!isDraggingTimeline) return;
+            
+            // Prevent scrolling when dragging on mobile
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            
+            const timeline = document.getElementById('timeline-bar');
+            const rect = timeline.getBoundingClientRect();
+            
+            // Get the x position relative to the timeline
+            let clientX;
+            if (e.type.startsWith('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            // Calculate percentage position with boundary handling
+            let percentage = (clientX - rect.left) / rect.width;
+            percentage = Math.max(0, Math.min(1, percentage));
+            
+            // Update UI
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+            
+            // Update timeline position
+            timePosition = percentage * 30000; // 30 seconds of experience timeline (shorter for anticipation)
+            
+            // Set time position
+            setTimePosition(timePosition);
+        }
+        
+        function endTimelineDrag() {
+            isDraggingTimeline = false;
+            document.removeEventListener('mousemove', updateTimelinePosition);
+            document.removeEventListener('touchmove', updateTimelinePosition);
+            document.removeEventListener('mouseup', endTimelineDrag);
+            document.removeEventListener('touchend', endTimelineDrag);
+            
+            previousTimePosition = timePosition;
+        }
+        
+        function updateTimelineUI() {
+            // Calculate percentage
+            const percentage = timePosition / 30000;
+            
+            // Update UI
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+        }
+        
+        function preload() {
+            // Pre-load sound
+            soundLoaded = false;
+            anticipationSound = loadSound('anticipation_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Define hand outline points
+            createHandOutline();
+            
+            // Create framework elements (grey - recognition of temporal patterns)
+            createFrameworkElements();
+            
+            // Create disruption elements (accent - evaluation of potential changes)
+            createDisruptionElements();
+            
+            // Create highlight elements (highlight - response with balance of continuity and preparedness)
+            createHighlightElements();
+            
+            // Create connection lines between elements
+            createConnectionLines();
+            
+            // Create anticipation centers - larger interactive focal points
+            createAnticipationCenters();
+            
+            // Initialize audio context for better mobile support
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            // Initially pause animation while on landing page
+            isAnimating = false;
+            noLoop();
+        }
+        
+        function getRandomResonance() {
+            return anticipationResonances[floor(random(anticipationResonances.length))];
+        }
+        
+        function createFrameworkElements() {
+            // Create framework elements (grey) - representing temporal frameworks
+            
+            // Central axis element 
+            frameworkElements.push({
+                type: 'line',
+                x: width * 0.5,
+                y: height * 0.3,
+                length: height * 0.4,
+                width: 3,
+                angle: HALF_PI, // Vertical
+                opacity: 220,
+                startTime: 500,
+                visible: false,
+                interactive: true,
+                activated: false,
+                activatedTime: 0,
+                tension: 0,
+                maxTension: 100,
+                tensionRate: 0.04,
+                pulseRate: 0.001
+            });
+            
+            // Create structured grid elements
+            for (let i = 0; i < 8; i++) {
+                // Grid lines with varying positions
+                let horizontal = i % 2 === 0;
+                let x = horizontal ? width * 0.3 : width * (0.3 + (i % 4) * 0.1);
+                let y = horizontal ? height * (0.3 + (i % 4) * 0.1) : height * 0.3;
+                let length = horizontal ? width * 0.4 : height * 0.4;
+                let angle = horizontal ? 0 : HALF_PI;
+                
+                frameworkElements.push({
+                    type: 'line',
+                    x: x,
+                    y: y,
+                    length: length,
+                    width: random(1, 2),
+                    angle: angle,
+                    opacity: random(160, 220),
+                    startTime: 1000 + i * 300,
+                    visible: false,
+                    interactive: random() > 0.5,
+                    activated: false,
+                    activatedTime: 0,
+                    tension: 0,
+                    maxTension: random(70, 100),
+                    tensionRate: random(0.02, 0.05),
+                    pulseRate: random(0.001, 0.002)
+                });
+            }
+            
+            // Add dotted pattern elements
+            for (let i = 0; i < 10; i++) {
+                frameworkElements.push({
+                    type: 'dots',
+                    x: width * (0.3 + random(0.4)),
+                    y: height * (0.3 + random(0.4)),
+                    size: random(50, 100),
+                    dotSize: random(1.5, 3),
+                    spacing: random(5, 10),
+                    angle: random(TWO_PI),
+                    opacity: random(140, 200),
+                    startTime: 2000 + i * 400,
+                    visible: false,
+                    interactive: random() > 0.3,
+                    activated: false,
+                    activatedTime: 0,
+                    tension: 0,
+                    maxTension: random(60, 100),
+                    tensionRate: random(0.03, 0.06),
+                    pulseRate: random(0.001, 0.002)
+                });
+            }
+            
+            // Add structural geometric shapes
+            for (let i = 0; i < 6; i++) {
+                frameworkElements.push({
+                    type: 'geo',
+                    x: width * (0.25 + random(0.5)),
+                    y: height * (0.25 + random(0.5)),
+                    size: random(15, 40),
+                    sides: floor(random(3, 7)), // Triangle to hexagon
+                    opacity: random(160, 220),
+                    startTime: 3000 + i * 500,
+                    visible: false,
+                    interactive: random() > 0.4,
+                    activated: false,
+                    activatedTime: 0,
+                    tension: 0,
+                    maxTension: random(70, 100),
+                    tensionRate: random(0.02, 0.05),
+                    pulseRate: random(0.001, 0.002),
+                    rotation: random(TWO_PI)
+                });
+            }
+        }
+        
+        function createDisruptionElements() {
+            // Create disruption elements (accent colors) - representing potential disruptions
+            
+            // Add splash elements (sudden disruptions)
+            for (let i = 0; i < 5; i++) {
+                disruptionElements.push({
+                    type: 'splash',
+                    x: width * (0.3 + random(0.4)),
+                    y: height * (0.3 + random(0.4)),
+                    size: random(10, 30),
+                    particles: floor(random(6, 12)),
+                    opacity: random(180, 220),
+                    startTime: 4000 + i * 700,
+                    visible: false,
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    intensity: 0,
+                    maxIntensity: 100,
+                    intensityRate: random(0.03, 0.08), // Faster for disruption
+                    pulseRate: random(0.002, 0.004)
+                });
+            }
+            
+            // Add glitch/static elements
+            for (let i = 0; i < 3; i++) {
+                disruptionElements.push({
+                    type: 'glitch',
+                    x: width * (0.3 + random(0.4)),
+                    y: height * (0.3 + random(0.4)),
+                    width: random(30, 80),
+                    height: random(20, 60),
+                    segments: floor(random(5, 10)),
+                    opacity: random(170, 230),
+                    startTime: 6000 + i * 1000,
+                    visible: false,
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    intensity: 0,
+                    maxIntensity: random(80, 100),
+                    intensityRate: random(0.04, 0.09), // Faster for disruption
+                    pulseRate: random(0.003, 0.005),
+                    nextGlitch: 0
+                });
+            }
+            
+            // Add interference pattern elements
+            for (let i = 0; i < 4; i++) {
+                disruptionElements.push({
+                    type: 'interference',
+                    x: width * (0.3 + random(0.4)),
+                    y: height * (0.3 + random(0.4)),
+                    size: random(40, 90),
+                    waves: floor(random(3, 7)),
+                    amplitude: random(5, 15),
+                    opacity: random(160, 210),
+                    startTime: 8000 + i * 900,
+                    visible: false,
+                    interactive: random() > 0.3,
+                    activated: false,
+                    activatedTime: 0,
+                    intensity: 0,
+                    maxIntensity: random(70, 100),
+                    intensityRate: random(0.03, 0.07),
+                    pulseRate: random(0.002, 0.004),
+                    phase: 0,
+                    phaseSpeed: random(0.001, 0.003)
+                });
+            }
+        }
+        
+        function createHighlightElements() {
+            // Create highlight elements (highlight color) - representing balanced preparedness
+            
+            // Main sequence points (key moments in a sequence)
+            for (let i = 0; i < 5; i++) {
+                let x = width * (0.3 + i * 0.1);
+                let y = height * 0.5;
+                
+                highlightElements.push({
+                    type: 'point',
+                    x: x,
+                    y: y,
+                    size: random(6, 12),
+                    opacity: random(180, 230),
+                    startTime: 10000 + i * 600,
+                    visible: false,
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    energy: 0,
+                    maxEnergy: random(80, 100),
+                    energyRate: random(0.04, 0.07),
+                    pulseRate: random(0.002, 0.004)
+                });
+            }
+            
+            // Add path elements (showing possible trajectories)
+            for (let i = 0; i < 3; i++) {
+                let startX = width * (0.3 + random(0.1));
+                let startY = height * (0.4 + random(0.2));
+                let endX = width * (0.6 + random(0.1));
+                let endY = height * (0.4 + random(0.2));
+                
+                // Create path with control points
+                let points = [];
+                points.push({x: startX, y: startY});
+                
+                // Add control points
+                let controlX1 = lerp(startX, endX, 0.3) + random(-30, 30);
+                let controlY1 = lerp(startY, endY, 0.3) + random(-30, 30);
+                let controlX2 = lerp(startX, endX, 0.7) + random(-30, 30);
+                let controlY2 = lerp(startY, endY, 0.7) + random(-30, 30);
+                
+                points.push({x: controlX1, y: controlY1});
+                points.push({x: controlX2, y: controlY2});
+                points.push({x: endX, y: endY});
+                
+                highlightElements.push({
+                    type: 'path',
+                    points: points,
+                    width: random(2, 3.5),
+                    dashArray: [random(3, 8), random(4, 10)], // Dashed pattern
+                    opacity: random(170, 210),
+                    startTime: 12000 + i * 1000,
+                    visible: false,
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    energy: 0,
+                    maxEnergy: random(80, 100),
+                    energyRate: random(0.04, 0.07),
+                    pulseRate: random(0.002, 0.004),
+                    progress: 0
+                });
+            }
+            
+            // Add boundary elements (defining thresholds)
+            for (let i = 0; i < 4; i++) {
+                highlightElements.push({
+                    type: 'boundary',
+                    x: width * (0.25 + random(0.5)),
+                    y: height * (0.25 + random(0.5)),
+                    radius: random(25, 60),
+                    thickness: random(1.5, 3),
+                    opacity: random(160, 200),
+                    startTime: 14000 + i * 800,
+                    visible: false,
+                    interactive: random() > 0.3,
+                    activated: false,
+                    activatedTime: 0,
+                    energy: 0,
+                    maxEnergy: random(70, 100),
+                    energyRate: random(0.03, 0.06),
+                    pulseRate: random(0.002, 0.003)
+                });
+            }
+        }
+        
+        function createConnectionLines() {
+            // Create connection lines between elements
+            
+            // Connect framework elements with disruption elements
+            for (let i = 0; i < frameworkElements.length; i++) {
+                let framework = frameworkElements[i];
+                
+                // Find closest disruption elements
+                for (let j = 0; j < disruptionElements.length; j++) {
+                    let disruption = disruptionElements[j];
+                    
+                    let d = dist(framework.x, framework.y, disruption.x, disruption.y);
+                    
+                    if (d < 150 && random() > 0.6) {
+                        connectionLines.push({
+                            startElement: 'framework',
+                            startIndex: i,
+                            endElement: 'disruption',
+                            endIndex: j,
+                            opacity: random(100, 180),
+                            dotSize: random(1.5, 3),
+                            dotSpacing: random(7, 12),
+                            progress: 0,
+                            startTime: max(framework.startTime, disruption.startTime) + 800,
+                            activated: false
+                        });
+                    }
+                }
+                
+                // Connect to highlight elements
+                for (let j = 0; j < highlightElements.length; j++) {
+                    let highlight = highlightElements[j];
+                    
+                    if (highlight.type !== 'path') {
+                        let d = dist(framework.x, framework.y, highlight.x, highlight.y);
+                        
+                        if (d < 180 && random() > 0.7) {
+                            connectionLines.push({
+                                startElement: 'framework',
+                                startIndex: i,
+                                endElement: 'highlight',
+                                endIndex: j,
+                                opacity: random(100, 160),
+                                dotSize: random(1.5, 2.5),
+                                dotSpacing: random(8, 12),
+                                progress: 0,
+                                startTime: max(framework.startTime, highlight.startTime) + 1000,
+                                activated: false
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Connect disruption elements to highlight elements
+            for (let i = 0; i < disruptionElements.length; i++) {
+                let disruption = disruptionElements[i];
+                
+                for (let j = 0; j < highlightElements.length; j++) {
+                    let highlight = highlightElements[j];
+                    
+                    if (highlight.type !== 'path') {
+                        let d = dist(disruption.x, disruption.y, highlight.x, highlight.y);
+                        
+                        if (d < 200 && random() > 0.6) {
+                            connectionLines.push({
+                                startElement: 'disruption',
+                                startIndex: i,
+                                endElement: 'highlight',
+                                endIndex: j,
+                                opacity: random(100, 170),
+                                dotSize: random(1.5, 3),
+                                dotSpacing: random(7, 10),
+                                progress: 0,
+                                startTime: max(disruption.startTime, highlight.startTime) + 1200,
+                                activated: false
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        function createHandOutline() {
+            // Create a hand outline representing anticipation's physical manifestation
+            // The hand has fingers slightly tensed, poised in expectation
+            
+            // Base of palm
+            handOutlinePoints.push({x: 0.52, y: 0.65});
+            handOutlinePoints.push({x: 0.62, y: 0.65});
+            
+            // Right side of hand
+            handOutlinePoints.push({x: 0.65, y: 0.60});
+            handOutlinePoints.push({x: 0.64, y: 0.55});
+            
+            // Fingers extended but slightly tensed
+            handOutlinePoints.push({x: 0.62, y: 0.50});
+            handOutlinePoints.push({x: 0.60, y: 0.44});
+            handOutlinePoints.push({x: 0.58, y: 0.40});
+            
+            // Middle fingers
+            handOutlinePoints.push({x: 0.55, y: 0.38});
+            handOutlinePoints.push({x: 0.52, y: 0.36});
+            handOutlinePoints.push({x: 0.49, y: 0.38});
+            
+            // Left fingers
+            handOutlinePoints.push({x: 0.47, y: 0.40});
+            handOutlinePoints.push({x: 0.45, y: 0.44});
+            handOutlinePoints.push({x: 0.43, y: 0.50});
+            
+            // Left side of palm
+            handOutlinePoints.push({x: 0.44, y: 0.55});
+            handOutlinePoints.push({x: 0.43, y: 0.60});
+            handOutlinePoints.push({x: 0.52, y: 0.65});
+            
+            // Convert relative coordinates to absolute
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
+        }
+        
+        function createAnticipationCenters() {
+            // Create interactive anticipation centers - focal points of the experience
+            
+            // Main anticipation center around central axis
+            anticipationCenters.push({
+                x: width * 0.5, 
+                y: height * 0.5,
+                size: 80,
+                opacity: 0,
+                targetOpacity: 180,
+                pulseRate: 0.002, // Faster for anticipation
+                activated: false,
+                activationProgress: 0,
+                startTime: 15000,
+                resonance: "The electric stillness of an imminent breakthrough",
+                elements: []
+            });
+            
+            // Secondary anticipation centers
+            for (let i = 0; i < 2; i++) {
+                anticipationCenters.push({
+                    x: random(width * 0.3, width * 0.7),
+                    y: random(height * 0.3, height * 0.7),
+                    size: random(50, 70),
+                    opacity: 0,
+                    targetOpacity: random(150, 200),
+                    pulseRate: random(0.0015, 0.003), // Faster for anticipation
+                    activated: false,
+                    activationProgress: 0,
+                    startTime: 18000 + i * 3000,
+                    resonance: getRandomResonance(),
+                    elements: []
+                });
+            }
+            
+            // Assign some elements to each anticipation center
+            // For framework elements
+            for (let i = 0; i < frameworkElements.length; i++) {
+                let framework = frameworkElements[i];
+                
+                // Find the closest anticipation center
+                let closestCenter = null;
+                let closestDistance = Infinity;
+                
+                for (let j = 0; j < anticipationCenters.length; j++) {
+                    let d = dist(framework.x, framework.y, anticipationCenters[j].x, anticipationCenters[j].y);
+                    if (d < closestDistance && d < 200) {
+                        closestDistance = d;
+                        closestCenter = j;
+                    }
+                }
+                
+                // Assign to anticipation center if close enough
+                if (closestCenter !== null) {
+                    anticipationCenters[closestCenter].elements.push({
+                        type: 'framework',
+                        index: i
+                    });
+                }
+            }
+            
+            // For disruption elements
+            for (let i = 0; i < disruptionElements.length; i++) {
+                let disruption = disruptionElements[i];
+                
+                // Find the closest anticipation center
+                let closestCenter = null;
+                let closestDistance = Infinity;
+                
+                for (let j = 0; j < anticipationCenters.length; j++) {
+                    let d = dist(disruption.x, disruption.y, anticipationCenters[j].x, anticipationCenters[j].y);
+                    if (d < closestDistance && d < 170) {
+                        closestDistance = d;
+                        closestCenter = j;
+                    }
+                }
+                
+                // Assign to anticipation center if close enough
+                if (closestCenter !== null) {
+                    anticipationCenters[closestCenter].elements.push({
+                        type: 'disruption',
+                        index: i
+                    });
+                }
+            }
+            
+            // For highlight elements
+            for (let i = 0; i < highlightElements.length; i++) {
+                let highlight = highlightElements[i];
+                
+                if (highlight.type !== 'path') {
+                    // Find the closest anticipation center
+                    let closestCenter = null;
+                    let closestDistance = Infinity;
+                    
+                    for (let j = 0; j < anticipationCenters.length; j++) {
+                        let d = dist(highlight.x, highlight.y, anticipationCenters[j].x, anticipationCenters[j].y);
+                        if (d < closestDistance && d < 180) {
+                            closestDistance = d;
+                            closestCenter = j;
+                        }
+                    }
+                    
+                    // Assign to anticipation center if close enough
+                    if (closestCenter !== null) {
+                        anticipationCenters[closestCenter].elements.push({
+                            type: 'highlight',
+                            index: i
+                        });
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            // Clear the canvas with a clean background
+            background(247, 247, 247);
+            
+            // If animating, update time position
+            if (isAnimating && !isDraggingTimeline) {
+                timePosition += deltaTime; // Normal speed for anticipation
+                
+                // Limit to 30 seconds
+                if (timePosition > 30000) {
+                    timePosition = 30000;
+                    
+                    // Show timeline if reached end
+                    if (!activatedTimeline) {
+                        showTimeline();
+                        activatedTimeline = true;
+                    }
+                }
+                
+                // Update timeline UI
+                updateTimelineUI();
+                
+                previousTimePosition = timePosition;
+            }
+
+            // Update tension phase
+            tensionPhase += tensionRate * deltaTime * 0.001;
+            
+            // Draw the layers in appropriate order
+            drawFrameworkElements();    // Grey elements (recognition)
+            drawConnectionLines();      // Connection lines between elements
+            drawDisruptionElements();   // Accent elements (evaluation)
+            drawHighlightElements();    // Highlight elements (response)
+            drawHandOutline();          // Hand outline representing anticipation
+            drawAnticipationCenters();  // Interactive anticipation centers
+            
+            // Update hand outline progress
+            if (isAnimating) {
+                handProgress = min(1, handProgress + 0.0004); // Faster progress for anticipation
+            }
+            
+            // Update activated elements
+            updateActivatedElements();
+            
+            // Update element propagation (anticipation tension effect)
+            updateElementPropagation();
+        }
+        
+        function showTimeline() {
+            // Show the timeline interface
+            document.getElementById('timeline').style.opacity = '1';
+            
+            // Position controls based on orientation when timeline appears
+            updateLayoutForOrientation();
+        }
+        
+        function updateActivatedElements() {
+            // Check any activated framework elements
+            for (let framework of frameworkElements) {
+                if (framework.activated) {
+                    // Decrease tension over time (more quickly for anticipation)
+                    if (framework.tension > 0) {
+                        framework.tension = max(0, framework.tension - 0.4);
+                    }
+                    
+                    if (millis() - framework.activatedTime > 3000) { // Shorter duration for anticipation
+                        framework.activated = false;
+                    }
+                }
+            }
+            
+            // Check any activated disruption elements
+            for (let disruption of disruptionElements) {
+                if (disruption.activated) {
+                    // Decrease intensity over time (more quickly for anticipation)
+                    if (disruption.intensity > 0) {
+                        disruption.intensity = max(0, disruption.intensity - 0.6);
+                    }
+                    
+                    if (millis() - disruption.activatedTime > 3000) { // Shorter duration for anticipation
+                        disruption.activated = false;
+                    }
+                }
+            }
+            
+            // Check any activated highlight elements
+            for (let highlight of highlightElements) {
+                if (highlight.activated) {
+                    // Decrease energy over time (more quickly for anticipation)
+                    if (highlight.energy > 0) {
+                        highlight.energy = max(0, highlight.energy - 0.5);
+                    }
+                    
+                    if (millis() - highlight.activatedTime > 3000) { // Shorter duration for anticipation
+                        highlight.activated = false;
+                    }
+                }
+            }
+            
+            // Check activated anticipation centers
+            for (let center of anticipationCenters) {
+                if (center.activated) {
+                    center.activationProgress = min(1, center.activationProgress + 0.01); // Faster for anticipation
+                }
+            }
+            
+            // If we have an active anticipation center but it's no longer activated
+            if (activeAnticipationCenter !== null && !anticipationCenters[activeAnticipationCenter].activated) {
+                if (anticipationCenters[activeAnticipationCenter].activationProgress > 0) {
+                    anticipationCenters[activeAnticipationCenter].activationProgress = max(0, anticipationCenters[activeAnticipationCenter].activationProgress - 0.02); // Faster fade for anticipation
+                } else {
+                    activeAnticipationCenter = null;
+                    centerActivated = false;
+                }
+            }
+        }
+        
+        function updateElementPropagation() {
+            // Implement the anticipation effect - spreading tension between elements
+            
+            // From activated framework elements to nearby disruption elements
+            for (let i = 0; i < frameworkElements.length; i++) {
+                let framework = frameworkElements[i];
+                
+                if (framework.activated && framework.tension > 30) {
+                    // Spread to nearby disruption elements
+                    for (let j = 0; j < disruptionElements.length; j++) {
+                        let disruption = disruptionElements[j];
+                        let d = dist(framework.x, framework.y, disruption.x, disruption.y);
+                        
+                        if (d < 180) {
+                            // Transfer intensity (influenced by distance)
+                            let intensityTransfer = max(0, framework.tension * (1 - d/180) * 0.2); // Faster transfer for anticipation
+                            disruption.intensity = min(disruption.maxIntensity, disruption.intensity + intensityTransfer);
+                            
+                            // Mark as activated if significant intensity
+                            if (disruption.intensity > 25 && !disruption.activated) {
+                                disruption.activated = true;
+                                disruption.activatedTime = millis();
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // From activated disruption elements to nearby highlight elements
+            for (let i = 0; i < disruptionElements.length; i++) {
+                let disruption = disruptionElements[i];
+                
+                if (disruption.activated && disruption.intensity > 35) {
+                    // Spread to nearby highlight elements
+                    for (let j = 0; j < highlightElements.length; j++) {
+                        let highlight = highlightElements[j];
+                        
+                        if (highlight.type !== 'path') {
+                            let d = dist(disruption.x, disruption.y, highlight.x, highlight.y);
+                            
+                            if (d < 200) {
+                                // Transfer energy (influenced by distance)
+                                let energyTransfer = max(0, disruption.intensity * (1 - d/200) * 0.15); // Faster transfer for anticipation
+                                highlight.energy = min(highlight.maxEnergy, highlight.energy + energyTransfer);
+                                
+                                // Mark as activated if significant energy
+                                if (highlight.energy > 30 && !highlight.activated) {
+                                    highlight.activated = true;
+                                    highlight.activatedTime = millis();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Special feedback: Highlight elements can intensify framework elements (feedback loop for anticipation)
+            for (let i = 0; i < highlightElements.length; i++) {
+                let highlight = highlightElements[i];
+                
+                if (highlight.activated) {
+                    let energyValue = highlight.energy;
+                    
+                    if (energyValue > 40) {
+                        // Spread to nearby framework elements
+                        for (let j = 0; j < frameworkElements.length; j++) {
+                            let framework = frameworkElements[j];
+                            
+                            let d = dist(highlight.x, highlight.y, framework.x, framework.y);
+                            
+                            if (d < 180) {
+                                // Transfer tension (influenced by distance)
+                                let tensionTransfer = max(0, energyValue * (1 - d/180) * 0.1); // Quick for anticipation
+                                framework.tension = min(framework.maxTension, framework.tension + tensionTransfer);
+                                
+                                // Mark as activated if significant tension
+                                if (framework.tension > 25 && !framework.activated) {
+                                    framework.activated = true;
+                                    framework.activatedTime = millis();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function setTimePosition(time) {
+            // Set the internal time position
+            const previousMillis = previousTimePosition;
+            const timeDiff = time - previousMillis;
+            
+            // Reset elements if jumping backward more than 2 seconds
+            if (timeDiff < -2000) {
+                resetExperience();
+            }
+        }
+        
+        function resetExperience() {
+            // Reset all elements to their initial state
+            for (let framework of frameworkElements) {
+                framework.visible = timePosition > framework.startTime;
+                framework.activated = false;
+                framework.tension = 0;
+            }
+            
+            for (let disruption of disruptionElements) {
+                disruption.visible = timePosition > disruption.startTime;
+                disruption.activated = false;
+                disruption.intensity = 0;
+                if (disruption.type === 'glitch') {
+                    disruption.nextGlitch = 0;
+                } else if (disruption.type === 'interference') {
+                    disruption.phase = 0;
+                }
+            }
+            
+            for (let highlight of highlightElements) {
+                highlight.visible = timePosition > highlight.startTime;
+                highlight.activated = false;
+                highlight.energy = 0;
+                
+                if (highlight.type === 'path') {
+                    highlight.progress = 0;
+                }
+            }
+            
+            for (let line of connectionLines) {
+                line.progress = 0;
+                line.activated = false;
+            }
+            
+            for (let center of anticipationCenters) {
+                center.opacity = timePosition > center.startTime ? center.targetOpacity : 0;
+                center.activated = false;
+                center.activationProgress = 0;
+            }
+            
+            handProgress = min(1, timePosition / 20000); // Faster for anticipation
+            activeAnticipationCenter = null;
+            centerActivated = false;
+        }
+
+        function drawHandOutline() {
+            // Only start drawing hand after initial elements appear
+            if (timePosition < 10000) return; // Earlier appearance for anticipation
+            
+            // Calculate how many points to show based on progress
+            let pointsToShow = floor(handOutlinePoints.length * handProgress);
+            
+            if (pointsToShow < 2) return;
+            
+            // Draw the hand outline
+            noFill();
+            stroke(70, 70, 70, 120); // Darker for anticipation
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let i = 0; i < pointsToShow; i++) {
+                vertex(handOutlinePoints[i].x, handOutlinePoints[i].y);
+            }
+            endShape(pointsToShow === handOutlinePoints.length ? CLOSE : OPEN);
+            
+            // If hand is complete, add some interior detail
+            if (pointsToShow === handOutlinePoints.length) {
+                // Palm lines
+                stroke(70, 70, 70, 90);
+                strokeWeight(1);
+                
+                // Heart line
+                line(
+                    handOutlinePoints[0].x + 5, 
+                    (handOutlinePoints[0].y + handOutlinePoints[15].y) / 2 - 10,
+                    handOutlinePoints[14].x - 5,
+                    (handOutlinePoints[0].y + handOutlinePoints[15].y) / 2 - 10
+                );
+                
+                // Life line
+                beginShape();
+                noFill();
+                curveVertex(handOutlinePoints[15].x - 10, handOutlinePoints[15].y - 15);
+                curveVertex(handOutlinePoints[15].x - 5, handOutlinePoints[15].y - 25);
+                curveVertex(handOutlinePoints[11].x + 5, handOutlinePoints[11].y + 10);
+                curveVertex(handOutlinePoints[11].x + 10, handOutlinePoints[11].y + 20);
+                endShape();
+                
+                // Special anticipation symbol in palm - more tense, prepared
+                if (activeAnticipationCenter !== null && anticipationCenters[activeAnticipationCenter].activationProgress > 0.5) {
+                    let centerX = (handOutlinePoints[0].x + handOutlinePoints[7].x) / 2;
+                    let centerY = (handOutlinePoints[0].y + handOutlinePoints[7].y) / 2;
+                    
+                    // Tension effect
+                    let tensionFactor = sin(tensionPhase) * 0.15 + 0.95; // More dramatic oscillation for anticipation
+                    
+                    // Draw anticipation symbol (arrow/countdown symbol)
+                    push();
+                    translate(centerX, centerY);
+                    
+                    // Outer circle - pulsing faster
+                    noFill();
+                    stroke(colors.grey[0], colors.grey[1], colors.grey[2], 
+                          170 * anticipationCenters[activeAnticipationCenter].activationProgress);
+                    strokeWeight(1);
+                    ellipse(0, 0, 20 * tensionFactor * anticipationCenters[activeAnticipationCenter].activationProgress);
+                    
+                    // Countdown markers
+                    stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                          160 * anticipationCenters[activeAnticipationCenter].activationProgress);
+                    strokeWeight(1.5);
+                    
+                    // Draw ticking markers
+                    let numMarkers = 12;
+                    let currentMarker = floor((millis() % 4000) / 4000 * numMarkers);
+                    
+                    for (let i = 0; i < numMarkers; i++) {
+                        let angle = TWO_PI * i / numMarkers;
+                        let markerLength = i === currentMarker ? 8 : 4; // Highlight current position
+                        
+                        push();
+                        rotate(angle);
+                        line(0, -10 * tensionFactor * anticipationCenters[activeAnticipationCenter].activationProgress, 
+                             0, -10 * tensionFactor * anticipationCenters[activeAnticipationCenter].activationProgress + markerLength);
+                        pop();
+                    }
+                    
+                    // Center dot - disruption color
+                    fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                         180 * anticipationCenters[activeAnticipationCenter].activationProgress);
+                    noStroke();
+                    ellipse(0, 0, 5 * tensionFactor * anticipationCenters[activeAnticipationCenter].activationProgress);
+                    
+                    pop();
+                }
+            }
+        }
+        
+        function drawFrameworkElements() {
+            // Draw framework elements (grey - recognition patterns)
+            for (let i = 0; i < frameworkElements.length; i++) {
+                let framework = frameworkElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > framework.startTime) {
+                    framework.visible = true;
+                }
+                
+                if (framework.visible) {
+                    // Calculate tension effects
+                    let tensionAmount = sin(millis() * framework.pulseRate) * 0.15; // More noticeable for anticipation
+                    
+                    // Enhanced appearance for activated elements
+                    let tensionFactor = 0;
+                    if (framework.activated || framework.tension > 0) {
+                        tensionFactor = framework.tension / framework.maxTension;
+                        
+                        // Draw tension glow
+                        noFill();
+                        stroke(colors.grey[0], colors.grey[1], colors.grey[2], 80 * tensionFactor);
+                        strokeWeight(2);
+                        
+                        if (framework.type === 'line') {
+                            // Glow for lines
+                            push();
+                            translate(framework.x, framework.y);
+                            rotate(framework.angle);
+                            
+                            let glowLength = framework.length * (1 + tensionFactor * 0.1);
+                            line(0, 0, glowLength, 0);
+                            
+                            pop();
+                        } else if (framework.type === 'dots') {
+                            // Glow for dot patterns
+                            ellipse(framework.x, framework.y, framework.size + 15 * tensionFactor);
+                        } else if (framework.type === 'geo') {
+                            // Glow for geometric shapes
+                            push();
+                            translate(framework.x, framework.y);
+                            rotate(framework.rotation + tensionFactor * 0.2); // More rotation when tense
+                            
+                            let glowSize = framework.size * (1 + tensionFactor * 0.2);
+                            beginShape();
+                            for (let j = 0; j < framework.sides; j++) {
+                                let angle = TWO_PI * j / framework.sides;
+                                vertex(cos(angle) * glowSize, sin(angle) * glowSize);
+                            }
+                            endShape(CLOSE);
+                            
+                            pop();
+                        }
+                    }
+                    
+                    // Draw the framework element based on type
+                    if (framework.type === 'line') {
+                        drawFrameworkLine(framework, tensionAmount, tensionFactor);
+                    } else if (framework.type === 'dots') {
+                        drawDotPattern(framework, tensionAmount, tensionFactor);
+                    } else if (framework.type === 'geo') {
+                        drawGeometricShape(framework, tensionAmount, tensionFactor);
+                    }
+                    
+                    // Add subtle pulse for interactive elements
+                    if (framework.interactive && !framework.activated) {
+                        noFill();
+                        stroke(colors.grey[0], colors.grey[1], colors.grey[2], 40);
+                        strokeWeight(0.8);
+                        
+                        if (framework.type === 'line') {
+                            // Find midpoint of line
+                            let midX = framework.x + cos(framework.angle) * framework.length/2;
+                            let midY = framework.y + sin(framework.angle) * framework.length/2;
+                            
+                            ellipse(midX, midY, 
+                                   12 + sin(millis() * 0.002) * 4, // More dramatic pulse for anticipation
+                                   12 + sin(millis() * 0.002) * 4);
+                        } else {
+                            ellipse(framework.x, framework.y, 
+                                   framework.size + 10 + sin(millis() * 0.002) * 4, // More dramatic pulse for anticipation
+                                   framework.size + 10 + sin(millis() * 0.002) * 4);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawFrameworkLine(framework, tensionAmount, tensionFactor) {
+            if (framework.activated || framework.tension > 0) {
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], 
+                    framework.opacity * (0.7 + tensionFactor * 0.3));
+            } else {
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], framework.opacity);
+            }
+            
+            strokeWeight(framework.width + (framework.activated ? tensionFactor * 2 : 0));
+            
+            push();
+            translate(framework.x, framework.y);
+            rotate(framework.angle);
+            
+            // Add subtle wave for tension
+            if (tensionFactor > 0.2) {
+                beginShape();
+                noFill();
+                
+                let segments = 20;
+                let waveAmplitude = tensionFactor * 3;
+                let waveFrequency = 3 + tensionFactor * 5;
+                
+                for (let i = 0; i <= segments; i++) {
+                    let x = i * framework.length / segments;
+                    let y = sin(i * 0.5 + millis() * 0.003) * waveAmplitude; // Wobble effect for tension
+                    
+                    vertex(x, y);
+                }
+                
+                endShape();
+            } else {
+                // Just draw a straight line if not much tension
+                line(0, 0, framework.length, 0);
+            }
+            
+            pop();
+        }
+        
+        function drawDotPattern(framework, tensionAmount, tensionFactor) {
+            if (framework.activated || framework.tension > 0) {
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], 
+                    framework.opacity * (0.7 + tensionFactor * 0.3));
+            } else {
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], framework.opacity);
+            }
+            
+            noStroke();
+            
+            // Draw dot pattern
+            push();
+            translate(framework.x, framework.y);
+            rotate(framework.angle);
+            
+            let numDots = floor(framework.size / framework.spacing);
+            let tension = tensionFactor * 5; // More dramatic for anticipation
+            
+            for (let i = -numDots/2; i <= numDots/2; i++) {
+                for (let j = -numDots/2; j <= numDots/2; j++) {
+                    let x = i * framework.spacing;
+                    let y = j * framework.spacing;
+                    
+                    // Skip if outside the radius
+                    if (dist(0, 0, x, y) > framework.size/2) continue;
+                    
+                    // Add tension effect - dots getting pulled toward center
+                    if (tensionFactor > 0) {
+                        let d = dist(0, 0, x, y);
+                        let pull = map(d, 0, framework.size/2, 0, tension);
+                        let angle = atan2(y, x);
+                        
+                        x -= cos(angle) * pull;
+                        y -= sin(angle) * pull;
+                    }
+                    
+                    // Vary dot size with tension
+                    let dotSize = framework.dotSize * (1 + (tensionFactor > 0 ? sin(dist(0, 0, x, y) * 0.1 + millis() * 0.002) * 0.3 : 0));
+                    
+                    ellipse(x, y, dotSize, dotSize);
+                }
+            }
+            
+            pop();
+        }
+        
+        function drawGeometricShape(framework, tensionAmount, tensionFactor) {
+            if (framework.activated || framework.tension > 0) {
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], 
+                    framework.opacity * (0.7 + tensionFactor * 0.3));
+            } else {
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], framework.opacity);
+            }
+            
+            if (tensionFactor > 0) {
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], framework.opacity * 0.5);
+                strokeWeight(0.5);
+            } else {
+                noStroke();
+            }
+            
+            push();
+            translate(framework.x, framework.y);
+            rotate(framework.rotation + (tensionFactor > 0 ? sin(millis() * 0.002) * 0.2 : 0)); // Add rotation when tense
+            
+            beginShape();
+            for (let i = 0; i < framework.sides; i++) {
+                let angle = TWO_PI * i / framework.sides;
+                // Add tension effect - corners extend outward
+                let radius = framework.size/2;
+                if (tensionFactor > 0) {
+                    radius += sin(angle * 3 + millis() * 0.002) * tensionFactor * 4;
+                }
+                vertex(cos(angle) * radius, sin(angle) * radius);
+            }
+            endShape(CLOSE);
+            
+            pop();
+        }
+
+        function drawDisruptionElements() {
+            // Draw disruption elements (accent colors - evaluation)
+            for (let i = 0; i < disruptionElements.length; i++) {
+                let disruption = disruptionElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > disruption.startTime) {
+                    disruption.visible = true;
+                }
+                
+                if (disruption.visible) {
+                    if (disruption.type === 'splash') {
+                        drawSplashElement(disruption);
+                    } else if (disruption.type === 'glitch') {
+                        drawGlitchElement(disruption);
+                    } else if (disruption.type === 'interference') {
+                        drawInterferenceElement(disruption);
+                    }
+                }
+            }
+        }
+        
+        function drawSplashElement(disruption) {
+            // Enhanced appearance for activated splashes
+            let intensityFactor = 0;
+            if (disruption.activated || disruption.intensity > 0) {
+                intensityFactor = disruption.intensity / disruption.maxIntensity;
+            }
+            
+            push();
+            translate(disruption.x, disruption.y);
+            
+            // Draw splash particles
+            for (let i = 0; i < disruption.particles; i++) {
+                let angle = TWO_PI * i / disruption.particles;
+                
+                // Add some randomness to angles for natural look
+                angle += random(-0.3, 0.3);
+                
+                // Calculate radius with pulsing effect
+                let baseRadius = disruption.size * (0.6 + random(0.4));
+                let pulseEffect = sin(millis() * disruption.pulseRate + i) * 0.2;
+                
+                // Add intensity effect - particles move outward
+                let radius = baseRadius * (1 + pulseEffect + (intensityFactor * random(0.5, 1.5)));
+                
+                // Calculate position
+                let x = cos(angle) * radius;
+                let y = sin(angle) * radius;
+                
+                // Draw particle
+                if (disruption.activated || disruption.intensity > 0) {
+                    fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                         disruption.opacity * (0.6 + intensityFactor * 0.4));
+                } else {
+                    fill(colors.accent[0], colors.accent[1], colors.accent[2], disruption.opacity);
+                }
+                
+                noStroke();
+                
+                // Particles get larger with intensity
+                let particleSize = random(2, 4) * (1 + intensityFactor * 0.5);
+                ellipse(x, y, particleSize, particleSize);
+                
+                // Add connecting lines between particles when activated
+                if (intensityFactor > 0.3 && i > 0) {
+                    stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                          disruption.opacity * 0.3 * intensityFactor);
+                    strokeWeight(0.5);
+                    
+                    // Connect to previous particle
+                    let prevAngle = TWO_PI * (i-1) / disruption.particles;
+                    let prevX = cos(prevAngle) * baseRadius * (1 + intensityFactor * 0.8);
+                    let prevY = sin(prevAngle) * baseRadius * (1 + intensityFactor * 0.8);
+                    
+                    line(x, y, prevX, prevY);
+                }
+            }
+            
+            // Add center splash when activated
+            if (intensityFactor > 0) {
+                // Central glow
+                noFill();
+                stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                      disruption.opacity * 0.5 * intensityFactor);
+                strokeWeight(1 + intensityFactor * 2);
+                
+                ellipse(0, 0, disruption.size * 0.6 * (1 + intensityFactor), disruption.size * 0.6 * (1 + intensityFactor));
+                
+                // Center point
+                fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                     disruption.opacity * intensityFactor);
+                noStroke();
+                ellipse(0, 0, 3 + intensityFactor * 2, 3 + intensityFactor * 2);
+            }
+            
+            pop();
+            
+            // Add subtle pulse for interactive elements
+            if (disruption.interactive && !disruption.activated) {
+                noFill();
+                stroke(colors.accent[0], colors.accent[1], colors.accent[2], 40);
+                strokeWeight(0.8);
+                
+                ellipse(disruption.x, disruption.y, 
+                       disruption.size + 10 + sin(millis() * 0.003) * 5, // More dramatic pulse for anticipation
+                       disruption.size + 10 + sin(millis() * 0.003) * 5);
+            }
+        }
+        
+        function drawGlitchElement(disruption) {
+            // Update glitch state
+            if (millis() > disruption.nextGlitch) {
+                // Set next glitch time
+                let delay = disruption.activated ? random(100, 300) : random(500, 1200); // More frequent when activated
+                disruption.nextGlitch = millis() + delay;
+            }
+            
+            // Enhanced appearance for activated glitches
+            let intensityFactor = 0;
+            if (disruption.activated || disruption.intensity > 0) {
+                intensityFactor = disruption.intensity / disruption.maxIntensity;
+            }
+            
+            push();
+            translate(disruption.x, disruption.y);
+            
+            // Calculate base dimensions with pulse effect
+            let pulseEffect = sin(millis() * disruption.pulseRate) * 0.15; // More noticeable for anticipation
+            let glitchWidth = disruption.width * (1 + pulseEffect);
+            let glitchHeight = disruption.height * (1 + pulseEffect);
+            
+            // Draw glitch segments
+            for (let i = 0; i < disruption.segments; i++) {
+                // Calculate segment position with glitching effect
+                let yPos = (i - disruption.segments/2) * (glitchHeight / disruption.segments);
+                
+                // Apply horizontal offset (glitching)
+                let xOffset = 0;
+                if (millis() < disruption.nextGlitch - (disruption.activated ? 50 : 100)) {
+                    xOffset = random(-5, 5) * (intensityFactor + 0.3);
+                }
+                
+                // Apply segment height variation
+                let segmentHeight = (glitchHeight / disruption.segments) * random(0.8, 1.2);
+                
+                if (disruption.activated || disruption.intensity > 0) {
+                    fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                         disruption.opacity * (0.5 + intensityFactor * 0.5) * random(0.7, 1));
+                } else {
+                    fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                        disruption.opacity * random(0.7, 1));
+                }
+                
+                noStroke();
+                rect(xOffset - glitchWidth/2, yPos - segmentHeight/2, 
+                    glitchWidth * random(0.9, 1.1), // Width variation
+                    segmentHeight);
+                
+                // Add digital noise when activated
+                if (intensityFactor > 0.3) {
+                    for (let j = 0; j < 5; j++) {
+                        let noiseX = random(-glitchWidth/2, glitchWidth/2);
+                        let noiseY = yPos + random(-segmentHeight/2, segmentHeight/2);
+                        let noiseSize = random(1, 3) * intensityFactor;
+                        
+                        fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                             disruption.opacity * 0.7 * intensityFactor);
+                        ellipse(noiseX, noiseY, noiseSize, noiseSize);
+                    }
+                }
+            }
+            
+            // Add frame for activated glitches
+            if (intensityFactor > 0) {
+                noFill();
+                stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                      disruption.opacity * 0.6 * intensityFactor);
+                strokeWeight(1 + intensityFactor);
+                
+                // Distorted frame
+                beginShape();
+                vertex(-glitchWidth/2 + random(-5, 5) * intensityFactor, -glitchHeight/2 + random(-5, 5) * intensityFactor);
+                vertex(glitchWidth/2 + random(-5, 5) * intensityFactor, -glitchHeight/2 + random(-5, 5) * intensityFactor);
+                vertex(glitchWidth/2 + random(-5, 5) * intensityFactor, glitchHeight/2 + random(-5, 5) * intensityFactor);
+                vertex(-glitchWidth/2 + random(-5, 5) * intensityFactor, glitchHeight/2 + random(-5, 5) * intensityFactor);
+                endShape(CLOSE);
+            }
+            
+            pop();
+            
+            // Add subtle pulse for interactive elements
+            if (disruption.interactive && !disruption.activated) {
+                noFill();
+                stroke(colors.accent[0], colors.accent[1], colors.accent[2], 40);
+                strokeWeight(0.8);
+                
+                rect(disruption.x - disruption.width/2, disruption.y - disruption.height/2,
+                    disruption.width, disruption.height);
+            }
+        }
+        
+        function drawInterferenceElement(disruption) {
+            // Update interference phase
+            disruption.phase += disruption.phaseSpeed * (disruption.activated ? 3 : 1); // Faster when activated
+            
+            // Enhanced appearance for activated interference
+            let intensityFactor = 0;
+            if (disruption.activated || disruption.intensity > 0) {
+                intensityFactor = disruption.intensity / disruption.maxIntensity;
+            }
+            
+            push();
+            translate(disruption.x, disruption.y);
+            
+            // Draw interference pattern - concentric waves
+            for (let i = 0; i < disruption.waves; i++) {
+                let waveRadius = (i+1) * (disruption.size / disruption.waves);
+                
+                if (disruption.activated || disruption.intensity > 0) {
+                    stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                          disruption.opacity * (0.5 + intensityFactor * 0.5) * (1 - i/disruption.waves * 0.5));
+                } else {
+                    stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                          disruption.opacity * (1 - i/disruption.waves * 0.5));
+                }
+                
+                strokeWeight(1 + intensityFactor * 1.5);
+                noFill();
+                
+                // Draw wave with displacement
+                beginShape();
+                let segments = 36;
+                for (let j = 0; j <= segments; j++) {
+                    let angle = TWO_PI * j / segments;
+                    
+                    // Calculate radius with wave effect
+                    let r = waveRadius;
+                    r += sin(angle * 3 + disruption.phase * (i+1) + millis() * 0.001) * disruption.amplitude * (1 + intensityFactor);
+                    
+                    // Add more complex distortion when activated
+                    if (intensityFactor > 0.2) {
+                        r += sin(angle * 8 + disruption.phase * 2) * disruption.amplitude * 0.5 * intensityFactor;
+                    }
+                    
+                    vertex(cos(angle) * r, sin(angle) * r);
+                }
+                endShape(CLOSE);
+            }
+            
+            // Add center point with intensity variation
+            if (disruption.activated || disruption.intensity > 0) {
+                fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                     disruption.opacity * intensityFactor);
+                noStroke();
+                
+                let centerSize = 4 + intensityFactor * 5;
+                ellipse(0, 0, centerSize, centerSize);
+                
+                // Add radiation lines when activated
+                if (intensityFactor > 0.4) {
+                    stroke(colors.accent[0], colors.accent[1], colors.accent[2], 
+                          disruption.opacity * 0.6 * intensityFactor);
+                    strokeWeight(1);
+                    
+                    let numLines = 8;
+                    for (let i = 0; i < numLines; i++) {
+                        let angle = TWO_PI * i / numLines + millis() * 0.0005;
+                        let length = disruption.size * 0.2 * intensityFactor;
+                        
+                        line(0, 0, cos(angle) * length, sin(angle) * length);
+                    }
+                }
+            }
+            
+            pop();
+            
+            // Add subtle pulse for interactive elements
+            if (disruption.interactive && !disruption.activated) {
+                noFill();
+                stroke(colors.accent[0], colors.accent[1], colors.accent[2], 40);
+                strokeWeight(0.8);
+                
+                ellipse(disruption.x, disruption.y, 
+                       disruption.size + 15 + sin(millis() * 0.003) * 5,
+                       disruption.size + 15 + sin(millis() * 0.003) * 5);
+            }
+        }
+
+        function drawHighlightElements() {
+            // Draw highlight elements (highlight color - response)
+            for (let i = 0; i < highlightElements.length; i++) {
+                let highlight = highlightElements[i];
+                
+                // Check if this element should be visible based on timing
+                if (timePosition > highlight.startTime) {
+                    highlight.visible = true;
+                    
+                    // Update progress if not fully formed (for paths)
+                    if (highlight.type === 'path' && highlight.progress < 1) {
+                        highlight.progress = min(1, highlight.progress + 0.01); // Faster for anticipation
+                    }
+                }
+                
+                if (highlight.visible) {
+                    if (highlight.type === 'point') {
+                        drawHighlightPoint(highlight);
+                    } else if (highlight.type === 'path') {
+                        drawHighlightPath(highlight);
+                    } else if (highlight.type === 'boundary') {
+                        drawHighlightBoundary(highlight);
+                    }
+                }
+            }
+        }
+        
+        function drawHighlightPoint(highlight) {
+            // Calculate pulsing effects
+            let pulseAmount = sin(millis() * highlight.pulseRate) * 0.2; // More noticeable for anticipation
+            
+            // Enhanced appearance for activated points
+            let energyFactor = 0;
+            if (highlight.activated || highlight.energy > 0) {
+                energyFactor = highlight.energy / highlight.maxEnergy;
+                
+                // Draw energy glow
+                noFill();
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                      100 * energyFactor);
+                strokeWeight(1.5);
+                
+                let glowSize = highlight.size * (1.5 + energyFactor * 1); // More dramatic for anticipation
+                ellipse(highlight.x, highlight.y, glowSize, glowSize);
+                
+                // Draw main point with enhanced color
+                fill(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                    highlight.opacity * (0.7 + energyFactor * 0.3));
+            } else {
+                // Standard appearance
+                fill(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                    highlight.opacity);
+            }
+            
+            noStroke();
+            
+            // Point gets larger with energy
+            let pointSize = highlight.size * (1 + pulseAmount + energyFactor * 0.5);
+            ellipse(highlight.x, highlight.y, pointSize, pointSize);
+            
+            // Add energy rays when highly activated
+            if (energyFactor > 0.6) {
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                      highlight.opacity * 0.5 * energyFactor);
+                strokeWeight(1);
+                
+                let numRays = 6;
+                for (let j = 0; j < numRays; j++) {
+                    let angle = TWO_PI * j / numRays + millis() * 0.001;
+                    let length = highlight.size * (1 + energyFactor);
+                    
+                    line(highlight.x, highlight.y, 
+                         highlight.x + cos(angle) * length, 
+                         highlight.y + sin(angle) * length);
+                }
+            }
+            
+            // Add subtle pulse for interactive elements
+            if (highlight.interactive && !highlight.activated) {
+                noFill();
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 40);
+                strokeWeight(0.8);
+                
+                ellipse(highlight.x, highlight.y, 
+                       highlight.size + 12 + sin(millis() * 0.003) * 5, // More dramatic for anticipation
+                       highlight.size + 12 + sin(millis() * 0.003) * 5);
+            }
+        }
+        
+        function drawHighlightPath(highlight) {
+            // Enhanced appearance for activated paths
+            let energyFactor = 0;
+            if (highlight.activated || highlight.energy > 0) {
+                energyFactor = highlight.energy / highlight.maxEnergy;
+                
+                // Draw energy glow
+                noFill();
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                      80 * energyFactor);
+                strokeWeight(highlight.width + 2);
+                
+                // Draw path with progress and glow
+                if (highlight.points.length === 4) { // Bezier curve
+                    let p = highlight.points;
+                    let progressLength = highlight.progress;
+                    
+                    bezier(
+                        p[0].x, p[0].y,
+                        lerp(p[0].x, p[1].x, progressLength), lerp(p[0].y, p[1].y, progressLength),
+                        lerp(p[2].x, p[3].x, progressLength), lerp(p[2].y, p[3].y, progressLength),
+                        lerp(p[0].x, p[3].x, progressLength), lerp(p[0].y, p[3].y, progressLength)
+                    );
+                }
+                
+                // Draw main path with enhanced color
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                      highlight.opacity * (0.7 + energyFactor * 0.3));
+            } else {
+                // Standard appearance
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], highlight.opacity);
+            }
+            
+            strokeWeight(highlight.width);
+            noFill();
+            
+            // Draw dashed path with progress
+            if (highlight.points.length === 4) { // Bezier curve
+                let p = highlight.points;
+                let progressLength = highlight.progress;
+                
+                // Draw dashed bezier
+                drawDashedBezier(
+                    p[0].x, p[0].y,
+                    p[1].x, p[1].y,
+                    p[2].x, p[2].y,
+                    p[3].x, p[3].y,
+                    highlight.dashArray,
+                    progressLength
+                );
+            }
+            
+            // Add flow particles for activated paths
+            if (energyFactor > 0) {
+                noStroke();
+                fill(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                    170 * energyFactor);
+                
+                // Draw particles along bezier path
+                if (highlight.points.length === 4) {
+                    let p = highlight.points;
+                    let numParticles = floor(6 * highlight.progress);
+                    
+                    for (let j = 0; j < numParticles; j++) {
+                        let t = (j / numParticles + (millis() % 2000) / 2000) % 1;
+                        // Only show particles up to current progress
+                        if (t > highlight.progress) continue;
+                        
+                        // Calculate position on curve
+                        let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
+                        let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
+                        
+                        // Calculate tangent for motion effect
+                        let tx = bezierTangent(p[0].x, p[1].x, p[2].x, p[3].x, t);
+                        let ty = bezierTangent(p[0].y, p[1].y, p[2].y, p[3].y, t);
+                        let angle = atan2(ty, tx);
+                        
+                        // Draw particle with motion blur
+                        let particleSize = 3 + energyFactor * 3;
+                        ellipse(x, y, particleSize, particleSize);
+                        
+                        // Add motion streak
+                        if (energyFactor > 0.5) {
+                            stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                                  100 * energyFactor);
+                            strokeWeight(1);
+                            
+                            line(x, y, 
+                                 x - cos(angle) * 8 * energyFactor, 
+                                 y - sin(angle) * 8 * energyFactor);
+                            
+                            noStroke();
+                        }
+                    }
+                }
+            }
+            
+            // Add interactive hint
+            if (highlight.interactive && !highlight.activated) {
+                noFill();
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 40);
+                strokeWeight(0.8);
+                
+                // Add pulse at endpoints of path
+                if (highlight.points.length === 4) {
+                    let p = highlight.points;
+                    
+                    // Start point pulse
+                    ellipse(p[0].x, p[0].y, 
+                           10 + sin(millis() * 0.003) * 3, 
+                           10 + sin(millis() * 0.003) * 3);
+                    
+                    // End point pulse
+                    ellipse(p[3].x, p[3].y, 
+                           10 + sin(millis() * 0.003 + 1) * 3, 
+                           10 + sin(millis() * 0.003 + 1) * 3);
+                }
+            }
+        }
+        
+        function drawDashedBezier(x1, y1, x2, y2, x3, y3, x4, y4, pattern, progressLimit) {
+            // Draw a dashed bezier curve with the given dash pattern
+            // pattern[0] = dash length, pattern[1] = gap length
+            
+            let dashLength = pattern[0];
+            let gapLength = pattern[1];
+            
+            // Number of segments to approximate the curve
+            let numSegments = 100;
+            
+            let x = x1;
+            let y = y1;
+            let prevX = x;
+            let prevY = y;
+            
+            let dashOn = true;
+            let dashDistance = 0;
+            
+            // Draw the bezier curve segment by segment
+            for (let i = 1; i <= numSegments; i++) {
+                let t = i / numSegments;
+                
+                // Only draw up to the progress limit
+                if (t > progressLimit) break;
+                
+                // Calculate point on bezier curve
+                x = bezierPoint(x1, x2, x3, x4, t);
+                y = bezierPoint(y1, y2, y3, y4, t);
+                
+                // Calculate distance to previous point
+                let segmentLength = dist(prevX, prevY, x, y);
+                
+                // Update dash distance
+                dashDistance += segmentLength;
+                
+                // Check if we need to toggle dash state
+                if (dashOn && dashDistance >= dashLength) {
+                    dashOn = false;
+                    dashDistance = 0;
+                } else if (!dashOn && dashDistance >= gapLength) {
+                    dashOn = true;
+                    dashDistance = 0;
+                }
+                
+                // Draw line segment if dash is on
+                if (dashOn) {
+                    line(prevX, prevY, x, y);
+                }
+                
+                prevX = x;
+                prevY = y;
+            }
+        }
+        
+        function drawHighlightBoundary(highlight) {
+            // Calculate pulse effects
+            let pulseAmount = sin(millis() * highlight.pulseRate) * 0.15; // More noticeable for anticipation
+            
+            // Enhanced appearance for activated boundaries
+            let energyFactor = 0;
+            if (highlight.activated || highlight.energy > 0) {
+                energyFactor = highlight.energy / highlight.maxEnergy;
+                
+                // Draw energy glow
+                noFill();
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                      80 * energyFactor);
+                strokeWeight(highlight.thickness + 1.5);
+                
+                let glowRadius = highlight.radius * (1 + pulseAmount + energyFactor * 0.2);
+                ellipse(highlight.x, highlight.y, glowRadius * 2, glowRadius * 2);
+                
+                // Draw main boundary with enhanced color
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                      highlight.opacity * (0.7 + energyFactor * 0.3));
+            } else {
+                // Standard appearance
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], highlight.opacity);
+            }
+            
+            strokeWeight(highlight.thickness + (highlight.activated ? energyFactor : 0));
+            noFill();
+            
+            // Draw boundary circle with pulse
+            let boundaryRadius = highlight.radius * (1 + pulseAmount);
+            
+            // Draw dashed circle for anticipation
+            drawDashedCircle(
+                highlight.x, highlight.y, 
+                boundaryRadius * 2, 
+                [10, 4], // Dash pattern
+                energyFactor > 0.5 ? millis() * 0.05 : 0 // Rotation when activated
+            );
+            
+            // Add threshold markers when activated
+            if (energyFactor > 0) {
+                // Draw threshold markers
+                let numMarkers = 8;
+                for (let j = 0; j < numMarkers; j++) {
+                    let angle = TWO_PI * j / numMarkers + (energyFactor > 0.5 ? millis() * 0.001 : 0);
+                    
+                    stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 
+                          highlight.opacity * 0.8 * energyFactor);
+                    strokeWeight(1);
+                    
+                    let markerLength = 8 + energyFactor * 5;
+                    
+                    // Draw marker line
+                    push();
+                    translate(highlight.x, highlight.y);
+                    rotate(angle);
+                    line(boundaryRadius - markerLength/2, 0, 
+                         boundaryRadius + markerLength/2, 0);
+                    pop();
+                }
+            }
+            
+            // Add subtle pulse for interactive elements
+            if (highlight.interactive && !highlight.activated) {
+                noFill();
+                stroke(colors.highlight[0], colors.highlight[1], colors.highlight[2], 40);
+                strokeWeight(0.8);
+                
+                ellipse(highlight.x, highlight.y, 
+                       boundaryRadius * 2 + 15 + sin(millis() * 0.003) * 5, // More dramatic for anticipation
+                       boundaryRadius * 2 + 15 + sin(millis() * 0.003) * 5);
+            }
+        }
+        
+        function drawDashedCircle(x, y, diameter, pattern, rotation) {
+            // Draw a dashed circle with the given dash pattern
+            // pattern[0] = dash length, pattern[1] = gap length
+            
+            let radius = diameter / 2;
+            let dashLength = pattern[0];
+            let gapLength = pattern[1];
+            let circumference = PI * diameter;
+            
+            // Calculate total length of one dash+gap
+            let dashGapLength = dashLength + gapLength;
+            
+            // Calculate number of dashes
+            let numDashes = floor(circumference / dashGapLength);
+            
+            // Draw dashes
+            for (let i = 0; i < numDashes; i++) {
+                let startAngle = TWO_PI * i / numDashes;
+                let endAngle = TWO_PI * (i + dashLength / dashGapLength) / numDashes;
+                
+                // Apply rotation if provided
+                startAngle += rotation;
+                endAngle += rotation;
+                
+                // Draw arc
+                arc(x, y, diameter, diameter, startAngle, endAngle);
+            }
+        }
+
+        function drawConnectionLines() {
+            // Draw connection lines between elements
+            
+            for (let line of connectionLines) {
+                // Only start drawing after the delay
+                if (timePosition > line.startTime) {
+                    // Update progress if animating
+                    if (isAnimating && line.progress < 1) {
+                        line.progress = min(1, line.progress + 0.006); // Faster for anticipation
+                    }
+                    
+                    // Get start and end points based on element types
+                    let startX, startY, endX, endY;
+                    
+                    // Start point
+                    if (line.startElement === 'framework') {
+                        let framework = frameworkElements[line.startIndex];
+                        
+                        if (framework.type === 'line') {
+                            // If line, use midpoint
+                            startX = framework.x + cos(framework.angle) * framework.length/2;
+                            startY = framework.y + sin(framework.angle) * framework.length/2;
+                        } else {
+                            startX = framework.x;
+                            startY = framework.y;
+                        }
+                    } else if (line.startElement === 'disruption') {
+                        startX = disruptionElements[line.startIndex].x;
+                        startY = disruptionElements[line.startIndex].y;
+                    } else {
+                        let highlight = highlightElements[line.startIndex];
+                        if (highlight.type === 'path') {
+                            // If path, use start point
+                            startX = highlight.points[0].x;
+                            startY = highlight.points[0].y;
+                        } else {
+                            startX = highlight.x;
+                            startY = highlight.y;
+                        }
+                    }
+                    
+                    // End point
+                    if (line.endElement === 'framework') {
+                        let framework = frameworkElements[line.endIndex];
+                        
+                        if (framework.type === 'line') {
+                            // If line, use midpoint
+                            endX = framework.x + cos(framework.angle) * framework.length/2;
+                            endY = framework.y + sin(framework.angle) * framework.length/2;
+                        } else {
+                            endX = framework.x;
+                            endY = framework.y;
+                        }
+                    } else if (line.endElement === 'disruption') {
+                        endX = disruptionElements[line.endIndex].x;
+                        endY = disruptionElements[line.endIndex].y;
+                    } else {
+                        let highlight = highlightElements[line.endIndex];
+                        if (highlight.type === 'path') {
+                            // If path, use end point
+                            endX = highlight.points[3].x;
+                            endY = highlight.points[3].y;
+                        } else {
+                            endX = highlight.x;
+                            endY = highlight.y;
+                        }
+                    }
+                    
+                    // Only draw if both elements are visible
+                    let startVisible = false;
+                    let endVisible = false;
+                    
+                    if (line.startElement === 'framework') {
+                        startVisible = frameworkElements[line.startIndex].visible;
+                    } else if (line.startElement === 'disruption') {
+                        startVisible = disruptionElements[line.startIndex].visible;
+                    } else {
+                        startVisible = highlightElements[line.startIndex].visible;
+                    }
+                    
+                    if (line.endElement === 'framework') {
+                        endVisible = frameworkElements[line.endIndex].visible;
+                    } else if (line.endElement === 'disruption') {
+                        endVisible = disruptionElements[line.endIndex].visible;
+                    } else {
+                        endVisible = highlightElements[line.endIndex].visible;
+                    }
+                    
+                    if (startVisible && endVisible) {
+                        // Get color based on end element
+                        let lineColor;
+                        if (line.endElement === 'framework') {
+                            lineColor = colors.grey;
+                        } else if (line.endElement === 'disruption') {
+                            lineColor = colors.accent;
+                        } else {
+                            lineColor = colors.highlight;
+                        }
+                        
+                        // Calculate activated state
+                        let isActivated = false;
+                        let activationLevel = 0;
+                        
+                        if (line.startElement === 'framework') {
+                            let framework = frameworkElements[line.startIndex];
+                            isActivated = framework.activated;
+                            activationLevel = framework.tension / framework.maxTension;
+                        } else if (line.startElement === 'disruption') {
+                            let disruption = disruptionElements[line.startIndex];
+                            isActivated = disruption.activated;
+                            activationLevel = disruption.intensity / disruption.maxIntensity;
+                        } else {
+                            let highlight = highlightElements[line.startIndex];
+                            isActivated = highlight.activated;
+                            activationLevel = highlight.energy / highlight.maxEnergy;
+                        }
+                        
+                        // Also check end element activation
+                        let endActivated = false;
+                        let endActivationLevel = 0;
+                        
+                        if (line.endElement === 'framework') {
+                            let framework = frameworkElements[line.endIndex];
+                            endActivated = framework.activated;
+                            endActivationLevel = framework.tension / framework.maxTension;
+                        } else if (line.endElement === 'disruption') {
+                            let disruption = disruptionElements[line.endIndex];
+                            endActivated = disruption.activated;
+                            endActivationLevel = disruption.intensity / disruption.maxIntensity;
+                        } else {
+                            let highlight = highlightElements[line.endIndex];
+                            endActivated = highlight.activated;
+                            endActivationLevel = highlight.energy / highlight.maxEnergy;
+                        }
+                        
+                        // Use higher of the two activation levels
+                        isActivated = isActivated || endActivated;
+                        activationLevel = max(activationLevel, endActivationLevel);
+                        
+                        // Draw dotted line
+                        let distance = dist(startX, startY, endX, endY);
+                        let numDots = floor(distance / line.dotSpacing);
+                        
+                        // Draw dots along the path
+                        for (let i = 0; i <= numDots * line.progress; i++) {
+                            let t = i / numDots;
+                            
+                            // Add slight curve for anticipation (tension effect)
+                            let midX = (startX + endX) / 2;
+                            let midY = (startY + endY) / 2 - 10 * sin(PI * t); // Arc upward slightly
+                            
+                            let x, y;
+                            
+                            if (isActivated && activationLevel > 0.3) {
+                                // More pronounced curve when activated
+                                let ctrlX = midX + sin(millis() * 0.002) * 15 * activationLevel;
+                                let ctrlY = midY - 20 * activationLevel;
+                                
+                                // Quadratic interpolation for curved path
+                                let u = 1 - t;
+                                x = u*u*startX + 2*u*t*ctrlX + t*t*endX;
+                                y = u*u*startY + 2*u*t*ctrlY + t*t*endY;
+                                
+                                // Add slight oscillation for tension
+                                let oscAmount = activationLevel * 3 * sin(t * PI * 3 + millis() * 0.003);
+                                let perpX = -(endY - startY);
+                                let perpY = (endX - startX);
+                                let perpLen = sqrt(perpX*perpX + perpY*perpY);
+                                
+                                if (perpLen > 0) {
+                                    x += (perpX / perpLen) * oscAmount;
+                                    y += (perpY / perpLen) * oscAmount;
+                                }
+                                
+                            } else {
+                                // Simpler path when not activated
+                                x = lerp(startX, endX, t);
+                                y = lerp(startY, endY, t);
+                            }
+                            
+                            // Draw dot
+                            noStroke();
+                            
+                            if (isActivated) {
+                                // Enhanced appearance for activated lines
+                                fill(lineColor[0], lineColor[1], lineColor[2], 
+                                    line.opacity * (0.7 + activationLevel * 0.3));
+                                
+                                // Make dots pulse when activated
+                                let pulseSize = line.dotSize * (1 + sin(millis() * 0.003 + i * 0.2) * 0.3);
+                                ellipse(x, y, pulseSize + activationLevel * 2);
+                                
+                                // Add flow effect for higher activation
+                                if (activationLevel > 0.5 && i % 3 === 0) {
+                                    fill(lineColor[0], lineColor[1], lineColor[2], 
+                                        line.opacity * 0.3 * activationLevel);
+                                    
+                                    ellipse(x, y, pulseSize * 2 * activationLevel);
+                                }
+                            } else {
+                                fill(lineColor[0], lineColor[1], lineColor[2], line.opacity);
+                                ellipse(x, y, line.dotSize);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawAnticipationCenters() {
+            // Only draw anticipation centers after they should appear
+            for (let i = 0; i < anticipationCenters.length; i++) {
+                let center = anticipationCenters[i];
+                
+                // Check timing
+                if (timePosition > center.startTime) {
+                    // Fade in opacity
+                    if (center.opacity < center.targetOpacity) {
+                        center.opacity = min(center.targetOpacity, center.opacity + 1); // Faster for anticipation
+                    }
+                    
+                    // Calculate pulse effect
+                    let pulseAmount = sin(millis() * center.pulseRate) * 0.15; // More dramatic for anticipation
+                    let pulseSize = center.size * (1 + pulseAmount);
+                    
+                    // Draw outer glow for active anticipation centers
+                    if (i === activeAnticipationCenter && center.activationProgress > 0) {
+                        // Create expanding rings effect for anticipation
+                        for (let j = 0; j < 3; j++) {
+                            let expandedSize = pulseSize + j * 20 * center.activationProgress;
+                            let glowOpacity = (90 - j * 25) * center.activationProgress;
+                            
+                            noFill();
+                            
+                            // Use a blend of grey and highlight colors
+                            let blendedR = lerp(colors.grey[0], colors.highlight[0], 0.5);
+                            let blendedG = lerp(colors.grey[1], colors.highlight[1], 0.5);
+                            let blendedB = lerp(colors.grey[2], colors.highlight[2], 0.5);
+                            
+                            stroke(blendedR, blendedG, blendedB, glowOpacity);
+                            strokeWeight(1.5 - j * 0.4);
+                            ellipse(center.x, center.y, expandedSize);
+                            
+                            // Add crossing lines for tension
+                            if (j === 0) {
+                                let crossSize = expandedSize * 0.7;
+                                let angle = millis() * 0.0005;
+                                
+                                line(center.x - cos(angle) * crossSize/2, center.y - sin(angle) * crossSize/2,
+                                     center.x + cos(angle) * crossSize/2, center.y + sin(angle) * crossSize/2);
+                                     
+                                line(center.x - sin(angle) * crossSize/2, center.y + cos(angle) * crossSize/2,
+                                     center.x + sin(angle) * crossSize/2, center.y - cos(angle) * crossSize/2);
+                            }
+                        }
+                    }
+                    
+                    // Draw main anticipation center boundary
+                    noFill();
+                    
+                    // Use grey as the primary color for anticipation centers
+                    stroke(colors.grey[0], colors.grey[1], colors.grey[2], center.opacity);
+                    strokeWeight(2); // Thicker for anticipation
+                    
+                    // Draw dashed circle for anticipation
+                    drawDashedCircle(
+                        center.x, center.y, 
+                        pulseSize, 
+                        [15, 5], // Dash pattern
+                        millis() * 0.0003 // Slow rotation
+                    );
+                    
+                    // Draw inner circle
+                    fill(colors.grey[0], colors.grey[1], colors.grey[2], center.opacity * 0.15);
+                    noStroke();
+                    ellipse(center.x, center.y, pulseSize * 0.4);
+                    
+                    // Add interactive hint
+                    if (!center.activated) {
+                        // Use accent color for interactive hint
+                        fill(colors.accent[0], colors.accent[1], colors.accent[2], 
+                            70 + 30 * sin(millis() * 0.005)); // More dramatic pulse for anticipation
+                        noStroke();
+                        
+                        // Draw countdown/alert symbol for anticipation
+                        push();
+                        translate(center.x, center.y);
+                        
+                        // Draw arrow pattern
+                        let arrowSize = 10;
+                        for (let j = 0; j < 3; j++) {
+                            let yOffset = (j - 1) * arrowSize * 0.8;
+                            
+                            // Draw triangle/arrow
+                            beginShape();
+                            vertex(-arrowSize, yOffset - arrowSize/2);
+                            vertex(0, yOffset + arrowSize/2);
+                            vertex(arrowSize, yOffset - arrowSize/2);
+                            endShape(CLOSE);
+                        }
+                        
+                        pop();
+                    }
+                }
+            }
+        }
+        
+        function showAnticipationResonance(message, x, y) {
+            const resonance = document.getElementById('anticipation-resonance');
+            resonance.innerHTML = message;
+            
+            // Position near the element but within screen bounds
+            let posX = x;
+            let posY = y - 60;
+            
+            // Adjust if would go off screen
+            if (posX < 20) posX = 20;
+            if (posX > window.innerWidth - 270) posX = window.innerWidth - 270;
+            if (posY < 20) posY = 20;
+            if (posY > window.innerHeight - 100) posY = window.innerHeight - 100;
+            
+            resonance.style.left = posX + 'px';
+            resonance.style.top = posY + 'px';
+            resonance.style.transform = 'translateY(0)';
+            resonance.style.opacity = '1';
+            
+            // Hide after 4 seconds (shorter for anticipation)
+            setTimeout(() => {
+                resonance.style.opacity = '0';
+                resonance.style.transform = 'translateY(20px)';
+            }, 4000);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        function repositionElements() {
+            // Recalculate hand outline points for new dimensions
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
+            }
+            
+            // Reposition framework elements
+            for (let framework of frameworkElements) {
+                framework.x = (framework.x / width) * windowWidth;
+                framework.y = (framework.y / height) * windowHeight;
+                
+                if (framework.type === 'line') {
+                    framework.length = (framework.length / width) * windowWidth;
+                } else if (framework.type === 'dots' || framework.type === 'geo') {
+                    framework.size = (framework.size / width) * windowWidth;
+                }
+            }
+            
+            // Reposition disruption elements
+            for (let disruption of disruptionElements) {
+                disruption.x = (disruption.x / width) * windowWidth;
+                disruption.y = (disruption.y / height) * windowHeight;
+                
+                if (disruption.type === 'splash') {
+                    disruption.size = (disruption.size / width) * windowWidth;
+                } else if (disruption.type === 'glitch') {
+                    disruption.width = (disruption.width / width) * windowWidth;
+                    disruption.height = (disruption.height / height) * windowHeight;
+                } else if (disruption.type === 'interference') {
+                    disruption.size = (disruption.size / width) * windowWidth;
+                    disruption.amplitude = (disruption.amplitude / width) * windowWidth;
+                }
+            }
+            
+            // Reposition highlight elements
+            for (let highlight of highlightElements) {
+                if (highlight.type !== 'path') {
+                    highlight.x = (highlight.x / width) * windowWidth;
+                    highlight.y = (highlight.y / height) * windowHeight;
+                    
+                    if (highlight.type === 'boundary') {
+                        highlight.radius = (highlight.radius / width) * windowWidth;
+                    }
+                } else {
+                    // Reposition path points
+                    for (let point of highlight.points) {
+                        point.x = (point.x / width) * windowWidth;
+                        point.y = (point.y / height) * windowHeight;
+                    }
+                }
+            }
+            
+            // Reposition anticipation centers
+            for (let center of anticipationCenters) {
+                center.x = (center.x / width) * windowWidth;
+                center.y = (center.y / height) * windowHeight;
+                center.size = (center.size / width) * windowWidth;
+            }
+        }
+        
+        function mousePressed() {
+            // Only process clicks after landing page has disappeared
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                
+                // Check for interactions with anticipation centers first
+                for (let i = 0; i < anticipationCenters.length; i++) {
+                    let center = anticipationCenters[i];
+                    
+                    if (timePosition > center.startTime) {
+                        let d = dist(mouseX, mouseY, center.x, center.y);
+                        
+                        if (d < center.size / 2) {
+                            // Toggle anticipation center activation
+                            center.activated = !center.activated;
+                            
+                            if (center.activated) {
+                                // Set as active anticipation center
+                                activeAnticipationCenter = i;
+                                centerActivated = true;
+                                
+                                // Show anticipation resonance
+                                showAnticipationResonance(center.resonance, center.x, center.y);
+                                
+                                // Activate associated elements
+                                for (let element of center.elements) {
+                                    if (element.type === 'framework') {
+                                        frameworkElements[element.index].activated = true;
+                                        frameworkElements[element.index].activatedTime = millis();
+                                        frameworkElements[element.index].tension = frameworkElements[element.index].maxTension * 0.8;
+                                    } else if (element.type === 'disruption') {
+                                        disruptionElements[element.index].activated = true;
+                                        disruptionElements[element.index].activatedTime = millis();
+                                        disruptionElements[element.index].intensity = disruptionElements[element.index].maxIntensity * 0.9;
+                                    } else {
+                                        highlightElements[element.index].activated = true;
+                                        highlightElements[element.index].activatedTime = millis();
+                                        highlightElements[element.index].energy = highlightElements[element.index].maxEnergy * 0.85;
+                                    }
+                                }
+                                
+                                // Play special sound if enabled
+                                if (soundEnabled && anticipationSound) {
+                                    // Could add special sound effect here
+                                }
+                            } else {
+                                // Deactivate
+                                activeAnticipationCenter = null;
+                                centerActivated = false;
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with framework elements
+                for (let i = 0; i < frameworkElements.length; i++) {
+                    let framework = frameworkElements[i];
+                    
+                    if (framework.visible && framework.interactive) {
+                        let hitTest = false;
+                        
+                        if (framework.type === 'line') {
+                            // Check if click is near line
+                            let lineStart = createVector(framework.x, framework.y);
+                            let lineEnd = createVector(
+                                framework.x + cos(framework.angle) * framework.length,
+                                framework.y + sin(framework.angle) * framework.length
+                            );
+                            
+                            let mousePt = createVector(mouseX, mouseY);
+                            let projection = projectionPointOnLine(mousePt, lineStart, lineEnd);
+                            
+                            let d = dist(mouseX, mouseY, projection.x, projection.y);
+                            
+                            // Check if projection is on the line segment
+                            let dStart = dist(projection.x, projection.y, lineStart.x, lineStart.y);
+                            let dEnd = dist(projection.x, projection.y, lineEnd.x, lineEnd.y);
+                            let lineLength = dist(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y);
+                            
+                            hitTest = (d < framework.width + 8) && (dStart + dEnd <= lineLength + 0.1);
+                        } else {
+                            // For dots and geometric shapes, use distance to center
+                            let d = dist(mouseX, mouseY, framework.x, framework.y);
+                            hitTest = (d < framework.size / 2);
+                        }
+                        
+                        if (hitTest) {
+                            // Toggle activation
+                            framework.activated = !framework.activated;
+                            framework.activatedTime = millis();
+                            
+                            if (framework.activated) {
+                                // Set tension level
+                                framework.tension = framework.maxTension * 0.8;
+                                
+                                // Show anticipation resonance
+                                showAnticipationResonance(getRandomResonance(), 
+                                    framework.type === 'line' ? 
+                                    framework.x + cos(framework.angle) * framework.length/2 : 
+                                    framework.x, 
+                                    framework.type === 'line' ? 
+                                    framework.y + sin(framework.angle) * framework.length/2 : 
+                                    framework.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with disruption elements
+                for (let i = 0; i < disruptionElements.length; i++) {
+                    let disruption = disruptionElements[i];
+                    
+                    if (disruption.visible && disruption.interactive) {
+                        let hitTest = false;
+                        let testDistance = disruption.type === 'glitch' ? 
+                            max(disruption.width, disruption.height)/2 :
+                            disruption.size;
+                            
+                        let d = dist(mouseX, mouseY, disruption.x, disruption.y);
+                        hitTest = (d < testDistance);
+                        
+                        if (hitTest) {
+                            // Toggle activation
+                            disruption.activated = !disruption.activated;
+                            disruption.activatedTime = millis();
+                            
+                            if (disruption.activated) {
+                                // Set intensity level
+                                disruption.intensity = disruption.maxIntensity * 0.9;
+                                
+                                // Reset glitch timing for immediate effect
+                                if (disruption.type === 'glitch') {
+                                    disruption.nextGlitch = millis();
+                                }
+                                
+                                // Show anticipation resonance
+                                showAnticipationResonance(getRandomResonance(), disruption.x, disruption.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check for interactions with highlight elements
+                for (let i = 0; i < highlightElements.length; i++) {
+                    let highlight = highlightElements[i];
+                    
+                    if (highlight.visible && highlight.interactive) {
+                        let hitTest = false;
+                        
+                        if (highlight.type === 'path') {
+                            // Check if click is near path
+                            if (highlight.points.length === 4) { // Bezier curve
+                                let p = highlight.points;
+                                let hitTestPoints = 10;
+                                
+                                // Check multiple points along the curve
+                                for (let j = 0; j < hitTestPoints; j++) {
+                                    let t = j / (hitTestPoints - 1);
+                                    
+                                    let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
+                                    let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
+                                    
+                                    let d = dist(mouseX, mouseY, x, y);
+                                    
+                                    if (d < highlight.width + 10) {
+                                        hitTest = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if (highlight.type === 'boundary') {
+                            // Check if click is near the boundary circle
+                            let d = abs(dist(mouseX, mouseY, highlight.x, highlight.y) - highlight.radius);
+                            hitTest = (d < highlight.thickness + 8);
+                        } else {
+                            // For points, use distance to center
+                            let d = dist(mouseX, mouseY, highlight.x, highlight.y);
+                            hitTest = (d < highlight.size + 5);
+                        }
+                        
+                        if (hitTest) {
+                            // Toggle activation
+                            highlight.activated = !highlight.activated;
+                            highlight.activatedTime = millis();
+                            
+                            if (highlight.activated) {
+                                // Set energy level
+                                highlight.energy = highlight.maxEnergy * 0.85;
+                                
+                                // Show anticipation resonance
+                                if (highlight.type === 'path') {
+                                    let p = highlight.points;
+                                    showAnticipationResonance(getRandomResonance(), 
+                                        (p[0].x + p[3].x)/2, 
+                                        (p[0].y + p[3].y)/2);
+                                } else {
+                                    showAnticipationResonance(getRandomResonance(), highlight.x, highlight.y);
+                                }
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // If no element was clicked, toggle animation
+                isAnimating = !isAnimating;
+                
+                // Update sound based on animation state
+                if (!isAnimating && soundEnabled && soundLoaded && anticipationSound.isPlaying()) {
+                    anticipationSound.setVolume(0.3, 1);
+                } else if (isAnimating && soundEnabled && soundLoaded) {
+                    anticipationSound.setVolume(0.6, 1);
+                }
+            }
+            
+            return false;
+        }
+        
+        // Utility function to find projection of point on line
+        function projectionPointOnLine(p, a, b) {
+            let ap = p5.Vector.sub(p, a);
+            let ab = p5.Vector.sub(b, a);
+            ab.normalize();
+            ab.mult(ap.dot(ab));
+            return p5.Vector.add(a, ab);
+        }
+        
+        // Support touch events
+        function touchStarted() {
+            // Initialize audio context for iOS
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+    </script>
+</body>
+</html>

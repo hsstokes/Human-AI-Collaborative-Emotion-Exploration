@@ -213,6 +213,20 @@
             cursor: pointer;
         }
         
+        /* Loading indicator */
+        #loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Roboto Mono', monospace;
+            z-index: 10000;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
         /* Mobile-specific styles */
         @media (max-width: 768px) {
             body {
@@ -277,6 +291,9 @@
     </style>
 </head>
 <body>
+    <!-- Loading indicator -->
+    <div id="loading-indicator">Loading experience...</div>
+    
     <!-- Initial landing overlay -->
     <div id="landing-overlay">
         <h1 class="landing-title">Emotional Collage Experience</h1>
@@ -326,10 +343,18 @@
     </div>
     
     <script>
+        // Performance monitoring variables
+        let lastFrameTime = 0;
+        let frameRates = [];
+        let lowPerformanceMode = false;
+        let lastPerformanceCheck = 0;
+        
+        // Core variables
         let isAnimating = true;
         let soundEnabled = true;
         let disappointmentSound;
         let soundLoaded = false;
+        let soundLoadTimeout;
         let timelineActive = false;
         let isDraggingTimeline = false;
         let timePosition = 0;
@@ -337,6 +362,22 @@
         let activatedTimeline = false;
         let tensionPhase = 0;
         let tensionRate = 0.6; // Slower for disappointment
+        let resizeTimeout;
+        let mouseEventThrottled = false;
+        
+        // Element collections
+        let frameworkElements = [];      // Black elements - interrupted expectation pathways
+        let disruptionElements = [];     // Yellow elements - emotional intensity evaluation 
+        let highlightElements = [];      // Brown elements - stabilizing response to disruption
+        let connectionLines = [];        // Connection lines between elements
+        let handOutlinePoints = [];      // Hand outline coordinates
+        let disappointmentCenters = [];  // Special interactive focal points
+        
+        // Current state variables
+        let handProgress = 0;
+        let activeDisappointmentCenter = null;
+        let centerActivated = false;
+        let timelineProgress = 0;
         
         // Disappointment resonances - text snippets that appear when interacting with elements
         const disappointmentResonances = [
@@ -364,25 +405,153 @@
             brown: [121, 85, 72]      // Brown/beige - Response elements (Color C)
         };
         
-        // Elements for each conceptual layer
-        let frameworkElements = [];      // Black elements - interrupted expectation pathways
-        let disruptionElements = [];     // Yellow elements - emotional intensity evaluation 
-        let highlightElements = [];      // Brown elements - stabilizing response to disruption
+        // Spatial partitioning for optimization
+        const GRID_SIZE = 100; // Size of each grid cell
+        let spatialGrid = {};
         
-        // Connection lines between elements
-        let connectionLines = [];
+        // Performance monitoring function
+        function monitorPerformance() {
+            const currentTime = millis();
+            const elapsed = currentTime - lastFrameTime;
+            if (elapsed > 0) {
+                const currentFPS = 1000 / elapsed;
+                
+                // Keep a rolling average of last 10 frames
+                frameRates.push(currentFPS);
+                if (frameRates.length > 10) {
+                    frameRates.shift();
+                }
+                
+                // Check if we need to enter low performance mode
+                if (currentTime - lastPerformanceCheck > 1000) { // Check every second
+                    const avgFPS = frameRates.reduce((a, b) => a + b, 0) / frameRates.length;
+                    
+                    if (avgFPS < 20 && !lowPerformanceMode) {
+                        console.log("Entering low performance mode");
+                        lowPerformanceMode = true;
+                    } else if (avgFPS > 28 && lowPerformanceMode) {
+                        console.log("Exiting low performance mode");
+                        lowPerformanceMode = false;
+                    }
+                    
+                    lastPerformanceCheck = currentTime;
+                }
+            }
+            
+            lastFrameTime = currentTime;
+        }
         
-        // Hand outline coordinates (will gradually appear)
-        let handOutlinePoints = [];
-        let handProgress = 0;
+        // Initialize spatial grid for faster collision detection
+        function initSpatialGrid() {
+            spatialGrid = {};
+            
+            // Add framework elements to grid
+            for (let i = 0; i < frameworkElements.length; i++) {
+                addToSpatialGrid('framework', i, frameworkElements[i]);
+            }
+            
+            // Add disruption elements to grid
+            for (let i = 0; i < disruptionElements.length; i++) {
+                addToSpatialGrid('disruption', i, disruptionElements[i]);
+            }
+            
+            // Add highlight elements to grid
+            for (let i = 0; i < highlightElements.length; i++) {
+                addToSpatialGrid('highlight', i, highlightElements[i]);
+            }
+            
+            // Add disappointment centers to grid
+            for (let i = 0; i < disappointmentCenters.length; i++) {
+                const center = disappointmentCenters[i];
+                const cellX = Math.floor(center.x / GRID_SIZE);
+                const cellY = Math.floor(center.y / GRID_SIZE);
+                const cellKey = `${cellX},${cellY}`;
+                
+                if (!spatialGrid[cellKey]) {
+                    spatialGrid[cellKey] = [];
+                }
+                
+                spatialGrid[cellKey].push({
+                    type: 'center',
+                    index: i
+                });
+            }
+        }
         
-        // Interactive elements
-        let disappointmentCenters = [];    // Special interactive focal points
-        let activeDisappointmentCenter = null;
-        let centerActivated = false;
+        // Add element to spatial grid
+        function addToSpatialGrid(type, index, element) {
+            if (!element.x) return;
+            
+            const cellX = Math.floor(element.x / GRID_SIZE);
+            const cellY = Math.floor(element.y / GRID_SIZE);
+            const cellKey = `${cellX},${cellY}`;
+            
+            if (!spatialGrid[cellKey]) {
+                spatialGrid[cellKey] = [];
+            }
+            
+            spatialGrid[cellKey].push({
+                type: type,
+                index: index
+            });
+            
+            // For larger elements, add to neighboring cells too
+            let radius = 0;
+            if (type === 'framework') {
+                if (element.type === 'line') {
+                    radius = element.length / 2;
+                } else if (element.type === 'container') {
+                    radius = Math.max(element.width, element.height) / 2;
+                } else {
+                    radius = element.size / 2;
+                }
+            } else if (type === 'disruption') {
+                radius = element.size || Math.max(element.width || 0, element.height || 0) / 2;
+            } else if (type === 'highlight') {
+                radius = element.size || Math.max(element.width || 0, element.height || 0) / 2;
+            }
+            
+            // If element is large enough to span cells
+            if (radius > GRID_SIZE / 2) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        if (dx === 0 && dy === 0) continue; // Skip center cell (already added)
+                        
+                        const neighborKey = `${cellX + dx},${cellY + dy}`;
+                        if (!spatialGrid[neighborKey]) {
+                            spatialGrid[neighborKey] = [];
+                        }
+                        
+                        spatialGrid[neighborKey].push({
+                            type: type,
+                            index: index
+                        });
+                    }
+                }
+            }
+        }
         
-        // Timeline tracking
-        let timelineProgress = 0;
+        // Query spatial grid for elements near a point
+        function querySpatialGrid(x, y) {
+            const cellX = Math.floor(x / GRID_SIZE);
+            const cellY = Math.floor(y / GRID_SIZE);
+            const cellKey = `${cellX},${cellY}`;
+            
+            let results = [];
+            
+            // Check current cell and neighbors
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const neighborKey = `${cellX + dx},${cellY + dy}`;
+                    
+                    if (spatialGrid[neighborKey]) {
+                        results = results.concat(spatialGrid[neighborKey]);
+                    }
+                }
+            }
+            
+            return results;
+        }
         
         // Function that contains the button action logic
         function startExperience() {
@@ -443,11 +612,12 @@
         // Listen for orientation changes
         window.addEventListener('orientationchange', function() {
             // Small delay to ensure dimensions have updated
-            setTimeout(() => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
                 resizeCanvas(windowWidth, windowHeight);
                 repositionElements();
                 updateLayoutForOrientation();
-            }, 100);
+            }, 300);
         });
         
         // Setup for landing page interaction
@@ -464,14 +634,16 @@
             // Update sound wave visibility
             document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
             
-            if (soundEnabled && disappointmentSound && !disappointmentSound.isPlaying()) {
+            if (soundEnabled && disappointmentSound && soundLoaded && !disappointmentSound.isPlaying()) {
                 disappointmentSound.loop();
                 disappointmentSound.setVolume(0);
                 disappointmentSound.setVolume(0.6, 1);
-            } else if (!soundEnabled && disappointmentSound && disappointmentSound.isPlaying()) {
+            } else if (!soundEnabled && disappointmentSound && soundLoaded && disappointmentSound.isPlaying()) {
                 disappointmentSound.setVolume(0, 1.5); // Slightly slower fade-out for disappointment
                 setTimeout(() => {
-                    disappointmentSound.pause();
+                    if (!soundEnabled && disappointmentSound && disappointmentSound.isPlaying()) {
+                        disappointmentSound.pause();
+                    }
                 }, 1500);
             }
         });
@@ -488,15 +660,16 @@
             updateTimelineUI();
         });
         
-        // Timeline interaction
-        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
-        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        // Timeline interaction - use event delegation for better performance
+        const timelineBar = document.getElementById('timeline-bar');
+        
+        timelineBar.addEventListener('mousedown', startTimelineDrag);
+        timelineBar.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            startTimelineDrag(e);
+        });
         
         function startTimelineDrag(e) {
-            if (e.type === 'touchstart') {
-                e.preventDefault();
-            }
-            
             isDraggingTimeline = true;
             updateTimelinePosition(e);
             
@@ -561,40 +734,70 @@
         }
         
         function preload() {
-            // Pre-load sound
+            // Pre-load sound with better error handling
             soundLoaded = false;
-            disappointmentSound = loadSound('disappointment_soundscape.mp3', 
-                function() {
-                    console.log("Sound loaded successfully");
-                    soundLoaded = true;
-                },
-                function(err) {
-                    console.error("Error loading sound:", err);
+            
+            try {
+                disappointmentSound = loadSound('disappointment_soundscape.mp3', 
+                    function() {
+                        console.log("Sound loaded successfully");
+                        soundLoaded = true;
+                        clearTimeout(soundLoadTimeout);
+                    },
+                    function(err) {
+                        console.error("Error loading sound:", err);
+                        soundEnabled = false;
+                        clearTimeout(soundLoadTimeout);
+                    }
+                );
+                
+                // Set a timeout in case sound loading hangs
+                soundLoadTimeout = setTimeout(() => {
+                    console.log("Sound loading timed out");
                     soundEnabled = false;
-                }
-            );
+                    soundLoaded = false;
+                }, 10000);
+            } catch(e) {
+                console.error("Could not load sound:", e);
+                soundEnabled = false;
+            }
         }
 
         function setup() {
             createCanvas(windowWidth, windowHeight);
             
+            // Set frame rate for better performance
+            frameRate(30);
+            
             // Define hand outline points - more relaxed, deflated for disappointment
             createHandOutline();
             
-            // Create framework elements (black - recognition of interrupted patterns)
+            // Create elements in batches with small delays to prevent freezing
             createFrameworkElements();
             
-            // Create disruption elements (yellow - evaluation of emotional intensity)
-            createDisruptionElements();
-            
-            // Create highlight elements (brown - stabilizing response to disruption)
-            createHighlightElements();
-            
-            // Create connection lines between elements
-            createConnectionLines();
-            
-            // Create disappointment centers - larger interactive focal points
-            createDisappointmentCenters();
+            // Use a series of setTimeout calls to spread out initialization
+            setTimeout(() => {
+                createDisruptionElements();
+                
+                setTimeout(() => {
+                    createHighlightElements();
+                    
+                    setTimeout(() => {
+                        createConnectionLines();
+                        
+                        setTimeout(() => {
+                            createDisappointmentCenters();
+                            
+                            // Initialize spatial grid for optimization
+                            initSpatialGrid();
+                            
+                            // Hide loading indicator once setup is complete
+                            document.getElementById('loading-indicator').style.display = 'none';
+                            
+                        }, 50);
+                    }, 50);
+                }, 50);
+            }, 50);
             
             // Initialize audio context for better mobile support
             if (getAudioContext().state !== 'running') {
@@ -607,7 +810,7 @@
         }
         
         function getRandomResonance() {
-            return disappointmentResonances[floor(random(disappointmentResonances.length))];
+            return disappointmentResonances[Math.floor(random(disappointmentResonances.length))];
         }
         
         function createFrameworkElements() {
@@ -1207,6 +1410,9 @@
         }
 
         function draw() {
+            // Monitor performance
+            monitorPerformance();
+            
             // Clear the canvas with a clean background
             background(247, 247, 247);
             
@@ -1236,7 +1442,15 @@
             
             // Draw the layers in appropriate order
             drawFrameworkElements();    // Black elements (recognition of interrupted patterns)
-            drawConnectionLines();      // Connection lines between elements (some broken)
+            
+            // Only draw connections in normal performance mode
+            if (!lowPerformanceMode) {
+                drawConnectionLines();  // Connection lines between elements
+            } else {
+                // Draw just a subset of connection lines in low performance mode
+                drawReducedConnectionLines();
+            }
+            
             drawDisruptionElements();   // Yellow elements (evaluation of emotional intensity)
             drawHighlightElements();    // Brown elements (stabilizing response)
             drawHandOutline();          // Hand outline representing disappointment
@@ -1252,6 +1466,70 @@
             
             // Update element propagation (disappointment effect - less energetic)
             updateElementPropagation();
+        }
+        
+        // Simplified connection line drawing for low performance mode
+        function drawReducedConnectionLines() {
+            // Draw only visible and critical connection lines
+            for (let i = 0; i < connectionLines.length; i++) {
+                // Skip some connections in low performance mode
+                if (i % 3 !== 0) continue;
+                
+                let line = connectionLines[i];
+                
+                // Only start drawing after the delay
+                if (timePosition > line.startTime) {
+                    // Simplified drawing code...
+                    let startElement, endElement;
+                    let startX, startY, endX, endY;
+                    
+                    // Get start element
+                    if (line.startElement === 'framework') {
+                        startElement = frameworkElements[line.startIndex];
+                        startX = startElement.x;
+                        startY = startElement.y;
+                    } else if (line.startElement === 'disruption') {
+                        startElement = disruptionElements[line.startIndex];
+                        startX = startElement.x;
+                        startY = startElement.y;
+                    } else {
+                        startElement = highlightElements[line.startIndex];
+                        startX = startElement.x;
+                        startY = startElement.y;
+                    }
+                    
+                    // Get end element
+                    if (line.endElement === 'framework') {
+                        endElement = frameworkElements[line.endIndex];
+                        endX = endElement.x;
+                        endY = endElement.y;
+                    } else if (line.endElement === 'disruption') {
+                        endElement = disruptionElements[line.endIndex];
+                        endX = endElement.x;
+                        endY = endElement.y;
+                    } else {
+                        endElement = highlightElements[line.endIndex];
+                        endX = endElement.x;
+                        endY = endElement.y;
+                    }
+                    
+                    // Only draw if both elements are visible
+                    if (startElement.visible && endElement.visible) {
+                        // Draw simplified connection
+                        noFill();
+                        stroke(0, 0, 0, line.opacity * 0.7);
+                        strokeWeight(1);
+                        if (!line.broken || (startElement.activated || endElement.activated)) {
+                            line(startX, startY, endX, endY);
+                        } else {
+                            // Draw broken line
+                            let midX = (startX + endX) / 2;
+                            let midY = (startY + endY) / 2;
+                            line(startX, startY, midX, midY);
+                        }
+                    }
+                }
+            }
         }
         
         function showTimeline() {
@@ -1324,6 +1602,9 @@
         }
         
         function updateElementPropagation() {
+            // Skip propagation in low performance mode if needed
+            if (lowPerformanceMode && frameCount % 3 !== 0) return;
+            
             // Implement the disappointment effect - less energetic propagation between elements
             
             // From activated framework elements to nearby disruption elements
@@ -1564,78 +1845,78 @@
                     framework.visible = true;
                 }
                 
-                if (framework.visible) {
-                    // Calculate subtle undulation effects
-                    let undulationAmount = sin(millis() * framework.pulseRate) * 0.1; // Less dramatic for disappointment
+                if (!framework.visible) continue;
+                
+                // Calculate subtle undulation effects
+                let undulationAmount = sin(millis() * framework.pulseRate) * 0.1; // Less dramatic for disappointment
+                
+                // Enhanced appearance for activated elements
+                let tensionFactor = 0;
+                if (framework.activated || framework.tension > 0) {
+                    tensionFactor = framework.tension / framework.maxTension;
                     
-                    // Enhanced appearance for activated elements
-                    let tensionFactor = 0;
-                    if (framework.activated || framework.tension > 0) {
-                        tensionFactor = framework.tension / framework.maxTension;
-                        
-                        // Draw tension glow
-                        noFill();
-                        stroke(0, 0, 0, 60 * tensionFactor);
-                        strokeWeight(1.5);
-                        
-                        if (framework.type === 'line') {
-                            // Glow for lines
-                            push();
-                            translate(framework.x, framework.y);
-                            rotate(framework.angle);
-                            
-                            let glowLength = framework.length * (1 + tensionFactor * 0.08);
-                            line(0, 0, glowLength, 0);
-                            
-                            pop();
-                        } else if (framework.type === 'dots') {
-                            // Glow for dot patterns
-                            ellipse(framework.x, framework.y, framework.size + 12 * tensionFactor);
-                        } else if (framework.type === 'container') {
-                            // Glow for containers
-                            if (framework.shape === 'rect') {
-                                rect(framework.x - framework.width/2 - 5 * tensionFactor, 
-                                     framework.y - framework.height/2 - 5 * tensionFactor,
-                                     framework.width + 10 * tensionFactor, 
-                                     framework.height + 10 * tensionFactor);
-                            } else {
-                                ellipse(framework.x, framework.y, 
-                                       framework.width + 10 * tensionFactor, 
-                                       framework.height + 10 * tensionFactor);
-                            }
-                        }
-                    }
+                    // Draw tension glow
+                    noFill();
+                    stroke(0, 0, 0, 60 * tensionFactor);
+                    strokeWeight(1.5);
                     
-                    // Draw the framework element based on type
                     if (framework.type === 'line') {
-                        drawFrameworkLine(framework, undulationAmount, tensionFactor);
-                    } else if (framework.type === 'dots') {
-                        drawDotPattern(framework, undulationAmount, tensionFactor);
-                    } else if (framework.type === 'container') {
-                        drawContainer(framework, undulationAmount, tensionFactor);
-                    }
-                    
-                    // Add subtle pulse for interactive elements
-                    if (framework.interactive && !framework.activated) {
-                        noFill();
-                        stroke(0, 0, 0, 30);
-                        strokeWeight(0.8);
+                        // Glow for lines
+                        push();
+                        translate(framework.x, framework.y);
+                        rotate(framework.angle);
                         
-                        if (framework.type === 'line') {
-                            // Find midpoint of line
-                            let midX = framework.x + cos(framework.angle) * framework.length/2;
-                            let midY = framework.y + sin(framework.angle) * framework.length/2;
-                            
-                            ellipse(midX, midY, 
-                                   12 + sin(millis() * 0.001) * 3, // Less dramatic pulse for disappointment
-                                   12 + sin(millis() * 0.001) * 3);
+                        let glowLength = framework.length * (1 + tensionFactor * 0.08);
+                        line(0, 0, glowLength, 0);
+                        
+                        pop();
+                    } else if (framework.type === 'dots') {
+                        // Glow for dot patterns
+                        ellipse(framework.x, framework.y, framework.size + 12 * tensionFactor);
+                    } else if (framework.type === 'container') {
+                        // Glow for containers
+                        if (framework.shape === 'rect') {
+                            rect(framework.x - framework.width/2 - 5 * tensionFactor, 
+                                 framework.y - framework.height/2 - 5 * tensionFactor,
+                                 framework.width + 10 * tensionFactor, 
+                                 framework.height + 10 * tensionFactor);
                         } else {
                             ellipse(framework.x, framework.y, 
-                                   framework.type === 'container' ? framework.width * 0.5 : framework.size * 0.5 + 
-                                   sin(millis() * 0.001) * 3, // Less dramatic pulse for disappointment
-                                   framework.type === 'container' ? framework.height * 0.5 : framework.size * 0.5 + 
-                                   sin(millis() * 0.001) * 3);
+                                   framework.width + 10 * tensionFactor, 
+                                   framework.height + 10 * tensionFactor);
                         }
+                    }
+                }
+                
+                // Draw the framework element based on type
+                if (framework.type === 'line') {
+                    drawFrameworkLine(framework, undulationAmount, tensionFactor);
+                } else if (framework.type === 'dots') {
+                    drawDotPattern(framework, undulationAmount, tensionFactor);
+                } else if (framework.type === 'container') {
+                    drawContainer(framework, undulationAmount, tensionFactor);
+                }
+                
+                // Add subtle pulse for interactive elements
+                if (!lowPerformanceMode && framework.interactive && !framework.activated) {
+                    noFill();
+                    stroke(0, 0, 0, 30);
+                    strokeWeight(0.8);
+                    
+                    if (framework.type === 'line') {
+                        // Find midpoint of line
+                        let midX = framework.x + cos(framework.angle) * framework.length/2;
+                        let midY = framework.y + sin(framework.angle) * framework.length/2;
+                        
+                        ellipse(midX, midY, 
+                               12 + sin(millis() * 0.001) * 3, // Less dramatic pulse for disappointment
+                               12 + sin(millis() * 0.001) * 3);
+                    } else {
+                        ellipse(framework.x, framework.y, 
+                               framework.type === 'container' ? framework.width * 0.5 : framework.size * 0.5 + 
+                               sin(millis() * 0.001) * 3, // Less dramatic pulse for disappointment
+                               framework.type === 'container' ? framework.height * 0.5 : framework.size * 0.5 + 
+                               sin(millis() * 0.001) * 3);
                     }
                 }
             }
@@ -1659,7 +1940,8 @@
                 beginShape();
                 noFill();
                 
-                let segments = 20;
+                // Reduce segments in low performance mode
+                let segments = lowPerformanceMode ? 10 : 20;
                 let waveAmplitude = tensionFactor * 2; // Less amplitude for disappointment
                 
                 for (let i = 0; i <= segments; i++) {
@@ -1695,6 +1977,11 @@
             let numDots = floor(framework.size / framework.spacing);
             let tension = tensionFactor * 4; // Less dramatic for disappointment
             
+            // Reduce dots in low performance mode
+            if (lowPerformanceMode) {
+                numDots = max(3, floor(numDots * 0.7));
+            }
+            
             for (let i = -numDots/2; i <= numDots/2; i++) {
                 for (let j = -numDots/2; j <= numDots/2; j++) {
                     let x = i * framework.spacing;
@@ -1702,6 +1989,9 @@
                     
                     // Skip if outside the radius
                     if (dist(0, 0, x, y) > framework.size/2) continue;
+                    
+                    // Skip some dots in low performance mode
+                    if (lowPerformanceMode && (i + j) % 2 !== 0) continue;
                     
                     // Add tension effect - dots getting pulled outward slightly for disappointment
                     if (tensionFactor > 0.3) {
@@ -1757,7 +2047,8 @@
                 } else {
                     // Distorted ellipse (approximate with vertices)
                     beginShape();
-                    let steps = 24;
+                    // Reduce steps in low performance mode
+                    let steps = lowPerformanceMode ? 12 : 24;
                     for (let i = 0; i < steps; i++) {
                         let angle = TWO_PI * i / steps;
                         let r = 1 + sin(angle * 3 + millis() * 0.001) * distortAmount;
@@ -1789,14 +2080,14 @@
                     disruption.visible = true;
                 }
                 
-                if (disruption.visible) {
-                    if (disruption.type === 'triangle') {
-                        drawTriangleElement(disruption);
-                    } else if (disruption.type === 'block') {
-                        drawBlockElement(disruption);
-                    } else if (disruption.type === 'alert') {
-                        drawAlertElement(disruption);
-                    }
+                if (!disruption.visible) continue;
+                
+                if (disruption.type === 'triangle') {
+                    drawTriangleElement(disruption);
+                } else if (disruption.type === 'block') {
+                    drawBlockElement(disruption);
+                } else if (disruption.type === 'alert') {
+                    drawAlertElement(disruption);
                 }
             }
         }
@@ -1848,7 +2139,7 @@
             pop();
             
             // Add subtle pulse for interactive elements
-            if (disruption.interactive && !disruption.activated) {
+            if (!lowPerformanceMode && disruption.interactive && !disruption.activated) {
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 40);
                 strokeWeight(0.8);
@@ -1902,7 +2193,7 @@
             pop();
             
             // Add subtle pulse for interactive elements
-            if (disruption.interactive && !disruption.activated) {
+            if (!lowPerformanceMode && disruption.interactive && !disruption.activated) {
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 40);
                 strokeWeight(0.8);
@@ -1961,7 +2252,7 @@
             }
             
             // Add radiating circles for higher activation
-            if (intensityFactor > 0.6) {
+            if (!lowPerformanceMode && intensityFactor > 0.6) {
                 noFill();
                 for (let i = 0; i < 3; i++) {
                     let pulseFactor = (sin(disruption.phase * 0.5 - i * 0.7) * 0.5 + 0.5) * intensityFactor;
@@ -1979,7 +2270,7 @@
             pop();
             
             // Add subtle pulse for interactive elements
-            if (disruption.interactive && !disruption.activated) {
+            if (!lowPerformanceMode && disruption.interactive && !disruption.activated) {
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 40);
                 strokeWeight(0.8);
@@ -2005,14 +2296,14 @@
                     }
                 }
                 
-                if (highlight.visible) {
-                    if (highlight.type === 'platform') {
-                        drawPlatformElement(highlight);
-                    } else if (highlight.type === 'organic') {
-                        drawOrganicElement(highlight);
-                    } else if (highlight.type === 'path') {
-                        drawPathElement(highlight);
-                    }
+                if (!highlight.visible) continue;
+                
+                if (highlight.type === 'platform') {
+                    drawPlatformElement(highlight);
+                } else if (highlight.type === 'organic') {
+                    drawOrganicElement(highlight);
+                } else if (highlight.type === 'path') {
+                    drawPathElement(highlight);
                 }
             }
         }
@@ -2055,7 +2346,7 @@
             rect(highlight.x - width/2, highlight.y - height/2, width, height);
             
             // Add texture/grain when activated
-            if (energyFactor > 0.3) {
+            if (!lowPerformanceMode && energyFactor > 0.3) {
                 // Wood grain pattern
                 stroke(colors.brown[0] * 0.8, colors.brown[1] * 0.8, colors.brown[2] * 0.8, 
                       highlight.opacity * 0.4 * energyFactor);
@@ -2076,7 +2367,7 @@
             }
             
             // Add subtle pulse for interactive elements
-            if (highlight.interactive && !highlight.activated) {
+            if (!lowPerformanceMode && highlight.interactive && !highlight.activated) {
                 noFill();
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], 40);
                 strokeWeight(0.8);
@@ -2107,23 +2398,29 @@
                 rotate(highlight.rotation);
                 
                 let glowSize = highlight.size * (1 + energyFactor * 0.15);
-                beginShape();
-                for (let i = 0; i < highlight.points; i++) {
-                    let angle = TWO_PI * i / highlight.points;
-                    let radius = glowSize/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0001) * 0.3);
-                    let x = cos(angle) * radius;
-                    let y = sin(angle) * radius;
-                    curveVertex(x, y);
+                
+                // Use simplified shapes in low performance mode
+                if (lowPerformanceMode) {
+                    ellipse(0, 0, glowSize, glowSize);
+                } else {
+                    beginShape();
+                    for (let i = 0; i < highlight.points; i++) {
+                        let angle = TWO_PI * i / highlight.points;
+                        let radius = glowSize/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0001) * 0.3);
+                        let x = cos(angle) * radius;
+                        let y = sin(angle) * radius;
+                        curveVertex(x, y);
+                    }
+                    // Repeat first three points for smooth curve
+                    for (let i = 0; i < 3; i++) {
+                        let angle = TWO_PI * i / highlight.points;
+                        let radius = glowSize/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0001) * 0.3);
+                        let x = cos(angle) * radius;
+                        let y = sin(angle) * radius;
+                        curveVertex(x, y);
+                    }
+                    endShape();
                 }
-                // Repeat first three points for smooth curve
-                for (let i = 0; i < 3; i++) {
-                    let angle = TWO_PI * i / highlight.points;
-                    let radius = glowSize/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0001) * 0.3);
-                    let x = cos(angle) * radius;
-                    let y = sin(angle) * radius;
-                    curveVertex(x, y);
-                }
-                endShape();
                 
                 pop();
                 
@@ -2145,30 +2442,35 @@
             translate(highlight.x, highlight.y);
             rotate(highlight.rotation + (energyFactor > 0 ? sin(millis() * 0.001) * 0.1 : 0));
             
-            beginShape();
-            
-            // Create a more organic, flowing shape
-            for (let i = 0; i < highlight.points; i++) {
-                let angle = TWO_PI * i / highlight.points;
-                let radius = size/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0002 * (1 + energyFactor)) * 0.3);
-                let x = cos(angle) * radius;
-                let y = sin(angle) * radius;
-                curveVertex(x, y);
+            // Use simplified shapes in low performance mode
+            if (lowPerformanceMode) {
+                ellipse(0, 0, size, size);
+            } else {
+                beginShape();
+                
+                // Create a more organic, flowing shape
+                for (let i = 0; i < highlight.points; i++) {
+                    let angle = TWO_PI * i / highlight.points;
+                    let radius = size/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0002 * (1 + energyFactor)) * 0.3);
+                    let x = cos(angle) * radius;
+                    let y = sin(angle) * radius;
+                    curveVertex(x, y);
+                }
+                
+                // Repeat first three points for smooth curve
+                for (let i = 0; i < 3; i++) {
+                    let angle = TWO_PI * i / highlight.points;
+                    let radius = size/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0002 * (1 + energyFactor)) * 0.3);
+                    let x = cos(angle) * radius;
+                    let y = sin(angle) * radius;
+                    curveVertex(x, y);
+                }
+                
+                endShape();
             }
-            
-            // Repeat first three points for smooth curve
-            for (let i = 0; i < 3; i++) {
-                let angle = TWO_PI * i / highlight.points;
-                let radius = size/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0002 * (1 + energyFactor)) * 0.3);
-                let x = cos(angle) * radius;
-                let y = sin(angle) * radius;
-                curveVertex(x, y);
-            }
-            
-            endShape();
             
             // Add inner detail when activated
-            if (energyFactor > 0.4) {
+            if (!lowPerformanceMode && energyFactor > 0.4) {
                 // Inner ring/texture
                 noFill();
                 stroke(colors.brown[0] * 0.8, colors.brown[1] * 0.8, colors.brown[2] * 0.8, 
@@ -2198,7 +2500,7 @@
             pop();
             
             // Add subtle pulse for interactive elements
-            if (highlight.interactive && !highlight.activated) {
+            if (!lowPerformanceMode && highlight.interactive && !highlight.activated) {
                 noFill();
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], 40);
                 strokeWeight(0.8);
@@ -2250,19 +2552,37 @@
                 let p = highlight.points;
                 let progressLength = highlight.progress;
                 
-                // Draw dashed bezier - more gaps for disappointment
-                drawDashedBezier(
-                    p[0].x, p[0].y,
-                    p[1].x, p[1].y,
-                    p[2].x, p[2].y,
-                    p[3].x, p[3].y,
-                    highlight.dashArray,
-                    progressLength
-                );
+                // In low performance mode, use a simplified path
+                if (lowPerformanceMode) {
+                    let x1 = p[0].x;
+                    let y1 = p[0].y;
+                    let x4 = p[3].x;
+                    let y4 = p[3].y;
+                    
+                    // Calculate midpoint of path
+                    let midX = (x1 + x4) / 2;
+                    let midY = (y1 + y4) / 2 - 30; // Curve upward slightly
+                    
+                    // Draw a simple curved line
+                    beginShape();
+                    vertex(x1, y1);
+                    quadraticVertex(midX, midY, lerp(x1, x4, progressLength), lerp(y1, y4, progressLength));
+                    endShape();
+                } else {
+                    // Draw dashed bezier - more gaps for disappointment
+                    drawDashedBezier(
+                        p[0].x, p[0].y,
+                        p[1].x, p[1].y,
+                        p[2].x, p[2].y,
+                        p[3].x, p[3].y,
+                        highlight.dashArray,
+                        progressLength
+                    );
+                }
             }
             
             // Add particles for activated paths - fewer for disappointment
-            if (energyFactor > 0.5) {
+            if (!lowPerformanceMode && energyFactor > 0.5) {
                 noStroke();
                 fill(colors.brown[0], colors.brown[1], colors.brown[2], 
                     160 * energyFactor);
@@ -2289,7 +2609,7 @@
             }
             
             // Add interactive hint
-            if (highlight.interactive && !highlight.activated) {
+            if (!lowPerformanceMode && highlight.interactive && !highlight.activated) {
                 noFill();
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], 40);
                 strokeWeight(0.8);
@@ -2368,7 +2688,9 @@
         function drawConnectionLines() {
             // Draw connection lines between elements
             
-            for (let line of connectionLines) {
+            for (let i = 0; i < connectionLines.length; i++) {
+                let line = connectionLines[i];
+                
                 // Only start drawing after the delay
                 if (timePosition > line.startTime) {
                     // Update progress if animating
@@ -2510,86 +2832,115 @@
                             breakPoint = random(0.4, 0.7); // Vary the break point slightly
                         }
                         
-                        // Draw dotted line
-                        let distance = dist(startX, startY, endX, endY);
-                        let numDots = floor(distance / line.dotSpacing);
-                        let dotsToShow = line.broken && !isActivated ? 
-                                        floor(numDots * breakPoint) : numDots;
-                        
-                        // Draw dots along the path
-                        for (let i = 0; i <= min(dotsToShow, numDots * line.progress); i++) {
-                            let t = i / numDots;
-                            
-                            let x, y;
-                            
-                            // For disappointment, lines have less dramatic curves
-                            if (isActivated && activationLevel > 0.4) {
-                                // Slight curve when activated
-                                let midX = (startX + endX) / 2;
-                                let midY = (startY + endY) / 2 - 5 * sin(PI * t); // Less arc
-                                
-                                // Quadratic interpolation for curved path
-                                let u = 1 - t;
-                                x = u*u*startX + 2*u*t*midX + t*t*endX;
-                                y = u*u*startY + 2*u*t*midY + t*t*endY;
-                                
-                                // Add slight undulation
-                                let oscAmount = activationLevel * 2 * sin(t * PI * 3 + millis() * 0.002);
-                                let perpX = -(endY - startY);
-                                let perpY = (endX - startX);
-                                let perpLen = sqrt(perpX*perpX + perpY*perpY);
-                                
-                                if (perpLen > 0) {
-                                    x += (perpX / perpLen) * oscAmount;
-                                    y += (perpY / perpLen) * oscAmount;
-                                }
-                                
-                            } else {
-                                // Linear path when not activated - direct
-                                x = lerp(startX, endX, t);
-                                y = lerp(startY, endY, t);
-                            }
-                            
-                            // Draw dot
-                            noStroke();
-                            
+                        // Draw dotted line - simplified in low performance mode
+                        if (lowPerformanceMode) {
+                            // Draw simplified line
+                            noFill();
                             if (isActivated) {
-                                // Enhanced appearance for activated lines
-                                fill(lineColor[0], lineColor[1], lineColor[2], 
-                                    line.opacity * (0.6 + activationLevel * 0.4));
-                                
-                                // Make dots pulse when activated
-                                let pulseSize = line.dotSize * (1 + sin(millis() * 0.002 + i * 0.2) * 0.2);
-                                ellipse(x, y, pulseSize + activationLevel * 1.5);
-                                
-                                // For broken connections that get fixed when activated
-                                if (line.broken && i > dotsToShow && i % 2 === 0) {
-                                    fill(lineColor[0], lineColor[1], lineColor[2], 
-                                        line.opacity * 0.4 * activationLevel);
-                                    ellipse(x, y, pulseSize * 0.7);
-                                }
+                                stroke(lineColor[0], lineColor[1], lineColor[2], line.opacity * (0.6 + activationLevel * 0.4));
                             } else {
-                                fill(lineColor[0], lineColor[1], lineColor[2], line.opacity);
-                                ellipse(x, y, line.dotSize);
+                                stroke(lineColor[0], lineColor[1], lineColor[2], line.opacity);
                             }
-                        }
-                        
-                        // For broken connections, draw a disruption marker at the break point
-                        if (line.broken && !isActivated) {
-                            let t = breakPoint;
-                            let x = lerp(startX, endX, t);
-                            let y = lerp(startY, endY, t);
                             
-                            // Draw small "x" mark
-                            stroke(lineColor[0], lineColor[1], lineColor[2], line.opacity * 0.7);
-                            strokeWeight(1);
-                            let markSize = line.dotSize * 1.5;
-                            line(x - markSize/2, y - markSize/2, x + markSize/2, y + markSize/2);
-                            line(x - markSize/2, y + markSize/2, x + markSize/2, y - markSize/2);
+                            strokeWeight(1.5);
+                            setLineDash([5, 7]); // Dashed line
+                            
+                            if (line.broken && !isActivated) {
+                                let midX = lerp(startX, endX, breakPoint);
+                                let midY = lerp(startY, endY, breakPoint);
+                                line(startX, startY, midX, midY);
+                            } else {
+                                line(startX, startY, endX, endY);
+                            }
+                            
+                            setLineDash([]); // Reset line style
+                        } else {
+                            // Full dotted line rendering
+                            let distance = dist(startX, startY, endX, endY);
+                            let numDots = floor(distance / line.dotSpacing);
+                            let dotsToShow = line.broken && !isActivated ? 
+                                            floor(numDots * breakPoint) : numDots;
+                            
+                            // Draw dots along the path
+                            for (let i = 0; i <= min(dotsToShow, numDots * line.progress); i++) {
+                                let t = i / numDots;
+                                
+                                let x, y;
+                                
+                                // For disappointment, lines have less dramatic curves
+                                if (isActivated && activationLevel > 0.4) {
+                                    // Slight curve when activated
+                                    let midX = (startX + endX) / 2;
+                                    let midY = (startY + endY) / 2 - 5 * sin(PI * t); // Less arc
+                                    
+                                    // Quadratic interpolation for curved path
+                                    let u = 1 - t;
+                                    x = u*u*startX + 2*u*t*midX + t*t*endX;
+                                    y = u*u*startY + 2*u*t*midY + t*t*endY;
+                                    
+                                    // Add slight undulation
+                                    let oscAmount = activationLevel * 2 * sin(t * PI * 3 + millis() * 0.002);
+                                    let perpX = -(endY - startY);
+                                    let perpY = (endX - startX);
+                                    let perpLen = sqrt(perpX*perpX + perpY*perpY);
+                                    
+                                    if (perpLen > 0) {
+                                        x += (perpX / perpLen) * oscAmount;
+                                        y += (perpY / perpLen) * oscAmount;
+                                    }
+                                    
+                                } else {
+                                    // Linear path when not activated - direct
+                                    x = lerp(startX, endX, t);
+                                    y = lerp(startY, endY, t);
+                                }
+                                
+                                // Draw dot
+                                noStroke();
+                                
+                                if (isActivated) {
+                                    // Enhanced appearance for activated lines
+                                    fill(lineColor[0], lineColor[1], lineColor[2], 
+                                        line.opacity * (0.6 + activationLevel * 0.4));
+                                    
+                                    // Make dots pulse when activated
+                                    let pulseSize = line.dotSize * (1 + sin(millis() * 0.002 + i * 0.2) * 0.2);
+                                    ellipse(x, y, pulseSize + activationLevel * 1.5);
+                                    
+                                    // For broken connections that get fixed when activated
+                                    if (line.broken && i > dotsToShow && i % 2 === 0) {
+                                        fill(lineColor[0], lineColor[1], lineColor[2], 
+                                            line.opacity * 0.4 * activationLevel);
+                                        ellipse(x, y, pulseSize * 0.7);
+                                    }
+                                } else {
+                                    fill(lineColor[0], lineColor[1], lineColor[2], line.opacity);
+                                    ellipse(x, y, line.dotSize);
+                                }
+                            }
+                            
+                            // For broken connections, draw a disruption marker at the break point
+                            if (line.broken && !isActivated) {
+                                let t = breakPoint;
+                                let x = lerp(startX, endX, t);
+                                let y = lerp(startY, endY, t);
+                                
+                                // Draw small "x" mark
+                                stroke(lineColor[0], lineColor[1], lineColor[2], line.opacity * 0.7);
+                                strokeWeight(1);
+                                let markSize = line.dotSize * 1.5;
+                                line(x - markSize/2, y - markSize/2, x + markSize/2, y + markSize/2);
+                                line(x - markSize/2, y + markSize/2, x + markSize/2, y - markSize/2);
+                            }
                         }
                     }
                 }
             }
+        }
+        
+        // Helper for dashed lines in low performance mode
+        function setLineDash(list) {
+            drawingContext.setLineDash(list);
         }
         
         function drawDisappointmentCenters() {
@@ -2656,7 +3007,7 @@
                     arc(center.x, center.y, pulseSize * 0.4, pulseSize * 0.4, PI/4, TWO_PI - PI/4); // Incomplete
                     
                     // Add interactive hint
-                    if (!center.activated) {
+                    if (!lowPerformanceMode && !center.activated) {
                         // Use yellow color for interactive hint
                         fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
                             60 + 20 * sin(millis() * 0.003)); // Less dramatic pulse
@@ -2706,316 +3057,376 @@
         }
 
         function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-            repositionElements();
-            updateLayoutForOrientation();
+            // Throttle resize events
+            clearTimeout(resizeTimeout);
+            
+            resizeTimeout = setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+                
+                // Update spatial grid after resizing
+                initSpatialGrid();
+            }, 100);
         }
         
         function repositionElements() {
+            // Calculate scaling factors
+            const widthFactor = windowWidth / width;
+            const heightFactor = windowHeight / height;
+            
+            // Store new canvas dimensions
+            width = windowWidth;
+            height = windowHeight;
+            
             // Recalculate hand outline points for new dimensions
             for (let i = 0; i < handOutlinePoints.length; i++) {
-                handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
-                handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
+                handOutlinePoints[i].x *= widthFactor;
+                handOutlinePoints[i].y *= heightFactor;
             }
             
             // Reposition framework elements
             for (let framework of frameworkElements) {
-                framework.x = (framework.x / width) * windowWidth;
-                framework.y = (framework.y / height) * windowHeight;
+                framework.x *= widthFactor;
+                framework.y *= heightFactor;
                 
                 if (framework.type === 'line') {
-                    framework.length = (framework.length / width) * windowWidth;
+                    framework.length *= widthFactor;
                 } else if (framework.type === 'dots') {
-                    framework.size = (framework.size / width) * windowWidth;
+                    framework.size *= widthFactor;
                 } else if (framework.type === 'container') {
-                    framework.width = (framework.width / width) * windowWidth;
-                    framework.height = (framework.height / height) * windowHeight;
+                    framework.width *= widthFactor;
+                    framework.height *= heightFactor;
                 }
             }
             
             // Reposition disruption elements
             for (let disruption of disruptionElements) {
-                disruption.x = (disruption.x / width) * windowWidth;
-                disruption.y = (disruption.y / height) * windowHeight;
+                disruption.x *= widthFactor;
+                disruption.y *= heightFactor;
                 
                 if (disruption.type === 'triangle' || disruption.type === 'alert') {
-                    disruption.size = (disruption.size / width) * windowWidth;
+                    disruption.size *= widthFactor;
                 } else if (disruption.type === 'block') {
-                    disruption.width = (disruption.width / width) * windowWidth;
-                    disruption.height = (disruption.height / height) * windowHeight;
+                    disruption.width *= widthFactor;
+                    disruption.height *= heightFactor;
                 }
             }
             
             // Reposition highlight elements
             for (let highlight of highlightElements) {
                 if (highlight.type !== 'path') {
-                    highlight.x = (highlight.x / width) * windowWidth;
-                    highlight.y = (highlight.y / height) * windowHeight;
+                    highlight.x *= widthFactor;
+                    highlight.y *= heightFactor;
                     
                     if (highlight.type === 'platform') {
-                        highlight.width = (highlight.width / width) * windowWidth;
-                        highlight.height = (highlight.height / height) * windowHeight;
+                        highlight.width *= widthFactor;
+                        highlight.height *= heightFactor;
                     } else if (highlight.type === 'organic') {
-                        highlight.size = (highlight.size / width) * windowWidth;
+                        highlight.size *= widthFactor;
                     }
                 } else {
                     // Reposition path points
                     for (let point of highlight.points) {
-                        point.x = (point.x / width) * windowWidth;
-                        point.y = (point.y / height) * windowHeight;
+                        point.x *= widthFactor;
+                        point.y *= heightFactor;
                     }
                 }
             }
             
             // Reposition disappointment centers
             for (let center of disappointmentCenters) {
-                center.x = (center.x / width) * windowWidth;
-                center.y = (center.y / height) * windowHeight;
-                center.size = (center.size / width) * windowWidth;
+                center.x *= widthFactor;
+                center.y *= heightFactor;
+                center.size *= widthFactor;
             }
         }
         
         function mousePressed() {
+            // Throttle mouse events for better performance
+            if (mouseEventThrottled) return false;
+            mouseEventThrottled = true;
+            setTimeout(() => { mouseEventThrottled = false; }, 100);
+            
             // Only process clicks after landing page has disappeared
             if (document.getElementById('landing-overlay').style.display === 'none') {
                 
+                // Use spatial partitioning to efficiently find elements near the mouse
+                const nearbyElements = querySpatialGrid(mouseX, mouseY);
+                
                 // Check for interactions with disappointment centers first
-                for (let i = 0; i < disappointmentCenters.length; i++) {
-                    let center = disappointmentCenters[i];
-                    
-                    if (timePosition > center.startTime) {
-                        let d = dist(mouseX, mouseY, center.x, center.y);
+                for (let element of nearbyElements) {
+                    if (element.type === 'center') {
+                        const i = element.index;
+                        const center = disappointmentCenters[i];
                         
-                        if (d < center.size / 2) {
-                            // Toggle disappointment center activation
-                            center.activated = !center.activated;
+                        if (timePosition > center.startTime) {
+                            let d = dist(mouseX, mouseY, center.x, center.y);
                             
-                            if (center.activated) {
-                                // Set as active disappointment center
-                                activeDisappointmentCenter = i;
-                                centerActivated = true;
+                            if (d < center.size / 2) {
+                                // Toggle disappointment center activation
+                                center.activated = !center.activated;
                                 
-                                // Show disappointment resonance
-                                showDisappointmentResonance(center.resonance, center.x, center.y);
-                                
-                                // Activate associated elements
-                                for (let element of center.elements) {
-                                    if (element.type === 'framework') {
-                                        frameworkElements[element.index].activated = true;
-                                        frameworkElements[element.index].activatedTime = millis();
-                                        frameworkElements[element.index].tension = frameworkElements[element.index].maxTension * 0.7;
-                                    } else if (element.type === 'disruption') {
-                                        disruptionElements[element.index].activated = true;
-                                        disruptionElements[element.index].activatedTime = millis();
-                                        disruptionElements[element.index].intensity = disruptionElements[element.index].maxIntensity * 0.8;
-                                    } else {
-                                        highlightElements[element.index].activated = true;
-                                        highlightElements[element.index].activatedTime = millis();
-                                        highlightElements[element.index].energy = highlightElements[element.index].maxEnergy * 0.75;
+                                if (center.activated) {
+                                    // Set as active disappointment center
+                                    activeDisappointmentCenter = i;
+                                    centerActivated = true;
+                                    
+                                    // Show disappointment resonance
+                                    showDisappointmentResonance(center.resonance, center.x, center.y);
+                                    
+                                    // Activate associated elements
+                                    for (let element of center.elements) {
+                                        if (element.type === 'framework') {
+                                            frameworkElements[element.index].activated = true;
+                                            frameworkElements[element.index].activatedTime = millis();
+                                            frameworkElements[element.index].tension = frameworkElements[element.index].maxTension * 0.7;
+                                        } else if (element.type === 'disruption') {
+                                            disruptionElements[element.index].activated = true;
+                                            disruptionElements[element.index].activatedTime = millis();
+                                            disruptionElements[element.index].intensity = disruptionElements[element.index].maxIntensity * 0.8;
+                                        } else {
+                                            highlightElements[element.index].activated = true;
+                                            highlightElements[element.index].activatedTime = millis();
+                                            highlightElements[element.index].energy = highlightElements[element.index].maxEnergy * 0.75;
+                                        }
                                     }
-                                }
-                                
-                                // Play special sound if enabled
-                                if (soundEnabled && disappointmentSound) {
-                                    // Could add special sound effect here
-                                }
-                            } else {
-                                // Deactivate
-                                activeDisappointmentCenter = null;
-                                centerActivated = false;
-                            }
-                            
-                            return false;
-                        }
-                    }
-                }
-                
-                // Check for interactions with framework elements
-                for (let i = 0; i < frameworkElements.length; i++) {
-                    let framework = frameworkElements[i];
-                    
-                    if (framework.visible && framework.interactive) {
-                        let hitTest = false;
-                        
-                        if (framework.type === 'line') {
-                            // Check if click is near line
-                            let lineStart = createVector(framework.x, framework.y);
-                            let lineEnd = createVector(
-                                framework.x + cos(framework.angle) * framework.length,
-                                framework.y + sin(framework.angle) * framework.length
-                            );
-                            
-                            let mousePt = createVector(mouseX, mouseY);
-                            let projection = projectionPointOnLine(mousePt, lineStart, lineEnd);
-                            
-                            let d = dist(mouseX, mouseY, projection.x, projection.y);
-                            
-                            // Check if projection is on the line segment
-                            let dStart = dist(projection.x, projection.y, lineStart.x, lineStart.y);
-                            let dEnd = dist(projection.x, projection.y, lineEnd.x, lineEnd.y);
-                            let lineLength = dist(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y);
-                            
-                            hitTest = (d < framework.width + 8) && (dStart + dEnd <= lineLength + 0.1);
-                        } else if (framework.type === 'dots') {
-                            // For dots, use distance to center
-                            let d = dist(mouseX, mouseY, framework.x, framework.y);
-                            hitTest = (d < framework.size / 2);
-                        } else if (framework.type === 'container') {
-                            // For containers, check if inside
-                            if (framework.shape === 'rect') {
-                                hitTest = (mouseX > framework.x - framework.width/2 &&
-                                          mouseX < framework.x + framework.width/2 &&
-                                          mouseY > framework.y - framework.height/2 &&
-                                          mouseY < framework.y + framework.height/2);
-                            } else {
-                                // For ellipse containers
-                                let d = dist(mouseX, mouseY, framework.x, framework.y);
-                                hitTest = (d < framework.width/2);
-                            }
-                        }
-                        
-                        if (hitTest) {
-                            // Toggle activation
-                            framework.activated = !framework.activated;
-                            framework.activatedTime = millis();
-                            
-                            if (framework.activated) {
-                                // Set tension level
-                                framework.tension = framework.maxTension * 0.7;
-                                
-                                // Show disappointment resonance
-                                showDisappointmentResonance(getRandomResonance(), 
-                                    framework.type === 'line' ? 
-                                    framework.x + cos(framework.angle) * framework.length/2 : 
-                                    framework.x, 
-                                    framework.type === 'line' ? 
-                                    framework.y + sin(framework.angle) * framework.length/2 : 
-                                    framework.y);
-                            }
-                            
-                            return false;
-                        }
-                    }
-                }
-                
-                // Check for interactions with disruption elements
-                for (let i = 0; i < disruptionElements.length; i++) {
-                    let disruption = disruptionElements[i];
-                    
-                    if (disruption.visible && disruption.interactive) {
-                        let hitTest = false;
-                        
-                        if (disruption.type === 'triangle') {
-                            // Calculate triangle bounds
-                            let d = dist(mouseX, mouseY, disruption.x, disruption.y);
-                            hitTest = (d < disruption.size * 0.7); // Approximate for triangle
-                        } else if (disruption.type === 'block') {
-                            // Check if inside block
-                            let rotatedX = cos(-disruption.rotation) * (mouseX - disruption.x) - 
-                                          sin(-disruption.rotation) * (mouseY - disruption.y) + disruption.x;
-                            let rotatedY = sin(-disruption.rotation) * (mouseX - disruption.x) + 
-                                          cos(-disruption.rotation) * (mouseY - disruption.y) + disruption.y;
-                                          
-                            hitTest = (rotatedX > disruption.x - disruption.width/2 &&
-                                      rotatedX < disruption.x + disruption.width/2 &&
-                                      rotatedY > disruption.y - disruption.height/2 &&
-                                      rotatedY < disruption.y + disruption.height/2);
-                        } else if (disruption.type === 'alert') {
-                            // For alert symbols, check if inside circle
-                            let d = dist(mouseX, mouseY, disruption.x, disruption.y);
-                            hitTest = (d < disruption.size/2);
-                        }
-                        
-                        if (hitTest) {
-                            // Toggle activation
-                            disruption.activated = !disruption.activated;
-                            disruption.activatedTime = millis();
-                            
-                            if (disruption.activated) {
-                                // Set intensity level
-                                disruption.intensity = disruption.maxIntensity * 0.8;
-                                
-                                // Show disappointment resonance
-                                showDisappointmentResonance(getRandomResonance(), disruption.x, disruption.y);
-                            }
-                            
-                            return false;
-                        }
-                    }
-                }
-                
-                // Check for interactions with highlight elements
-                for (let i = 0; i < highlightElements.length; i++) {
-                    let highlight = highlightElements[i];
-                    
-                    if (highlight.visible && highlight.interactive) {
-                        let hitTest = false;
-                        
-                        if (highlight.type === 'platform') {
-                            // Check if click is inside platform
-                            hitTest = (mouseX > highlight.x - highlight.width/2 &&
-                                      mouseX < highlight.x + highlight.width/2 &&
-                                      mouseY > highlight.y - highlight.height/2 &&
-                                      mouseY < highlight.y + highlight.height/2);
-                        } else if (highlight.type === 'organic') {
-                            // For organic shapes, approximate with circle
-                            let d = dist(mouseX, mouseY, highlight.x, highlight.y);
-                            hitTest = (d < highlight.size/2);
-                        } else if (highlight.type === 'path') {
-                            // Check if click is near path
-                            if (highlight.points.length === 4) { // Bezier curve
-                                let p = highlight.points;
-                                let hitTestPoints = 10;
-                                
-                                // Check multiple points along the curve
-                                for (let j = 0; j < hitTestPoints; j++) {
-                                    let t = j / (hitTestPoints - 1);
                                     
-                                    let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
-                                    let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
-                                    
-                                    let d = dist(mouseX, mouseY, x, y);
-                                    
-                                    if (d < highlight.width + 10) {
-                                        hitTest = true;
-                                        break;
+                                    // Play special sound if enabled
+                                    if (soundEnabled && soundLoaded && disappointmentSound) {
+                                        // Could add special sound effect here
                                     }
-                                }
-                            }
-                        }
-                        
-                        if (hitTest) {
-                            // Toggle activation
-                            highlight.activated = !highlight.activated;
-                            highlight.activatedTime = millis();
-                            
-                            if (highlight.activated) {
-                                // Set energy level
-                                highlight.energy = highlight.maxEnergy * 0.75;
-                                
-                                // Show disappointment resonance
-                                if (highlight.type === 'path') {
-                                    let p = highlight.points;
-                                    showDisappointmentResonance(getRandomResonance(), 
-                                        (p[0].x + p[3].x)/2, 
-                                        (p[0].y + p[3].y)/2);
                                 } else {
-                                    showDisappointmentResonance(getRandomResonance(), highlight.x, highlight.y);
+                                    // Deactivate
+                                    activeDisappointmentCenter = null;
+                                    centerActivated = false;
                                 }
+                                
+                                return false;
                             }
-                            
-                            return false;
                         }
                     }
                 }
+                
+                // Check for interactions with elements
+                let clickedElement = false;
+                
+                // Check framework elements
+                for (let element of nearbyElements) {
+                    if (element.type === 'framework') {
+                        const i = element.index;
+                        const framework = frameworkElements[i];
+                        
+                        if (framework.visible && framework.interactive) {
+                            let hitTest = false;
+                            
+                            // Quick reject based on distance
+                            let maxSize = framework.type === 'line' ? framework.length/2 : 
+                                      (framework.type === 'container' ? max(framework.width, framework.height)/2 : framework.size/2);
+                            let d = dist(mouseX, mouseY, framework.x, framework.y);
+                            
+                            if (d > maxSize + 20) continue; // Skip detailed testing if far away
+                            
+                            if (framework.type === 'line') {
+                                // Check if click is near line
+                                let lineStart = createVector(framework.x, framework.y);
+                                let lineEnd = createVector(
+                                    framework.x + cos(framework.angle) * framework.length,
+                                    framework.y + sin(framework.angle) * framework.length
+                                );
+                                
+                                let mousePt = createVector(mouseX, mouseY);
+                                let projection = projectionPointOnLine(mousePt, lineStart, lineEnd);
+                                
+                                let d = dist(mouseX, mouseY, projection.x, projection.y);
+                                
+                                // Check if projection is on the line segment
+                                let dStart = dist(projection.x, projection.y, lineStart.x, lineStart.y);
+                                let dEnd = dist(projection.x, projection.y, lineEnd.x, lineEnd.y);
+                                let lineLength = dist(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y);
+                                
+                                hitTest = (d < framework.width + 8) && (dStart + dEnd <= lineLength + 0.1);
+                            } else if (framework.type === 'dots') {
+                                // For dots, use distance to center
+                                hitTest = (d < framework.size / 2);
+                            } else if (framework.type === 'container') {
+                                // For containers, check if inside
+                                if (framework.shape === 'rect') {
+                                    hitTest = (mouseX > framework.x - framework.width/2 &&
+                                              mouseX < framework.x + framework.width/2 &&
+                                              mouseY > framework.y - framework.height/2 &&
+                                              mouseY < framework.y + framework.height/2);
+                                } else {
+                                    // For ellipse containers
+                                    hitTest = (d < framework.width/2);
+                                }
+                            }
+                            
+                            if (hitTest) {
+                                // Toggle activation
+                                framework.activated = !framework.activated;
+                                framework.activatedTime = millis();
+                                
+                                if (framework.activated) {
+                                    // Set tension level
+                                    framework.tension = framework.maxTension * 0.7;
+                                    
+                                    // Show disappointment resonance
+                                    showDisappointmentResonance(getRandomResonance(), 
+                                        framework.type === 'line' ? 
+                                        framework.x + cos(framework.angle) * framework.length/2 : 
+                                        framework.x, 
+                                        framework.type === 'line' ? 
+                                        framework.y + sin(framework.angle) * framework.length/2 : 
+                                        framework.y);
+                                }
+                                
+                                clickedElement = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (clickedElement) return false;
+                
+                // Check disruption elements
+                for (let element of nearbyElements) {
+                    if (element.type === 'disruption') {
+                        const i = element.index;
+                        const disruption = disruptionElements[i];
+                        
+                        if (disruption.visible && disruption.interactive) {
+                            let hitTest = false;
+                            
+                            // Quick rejection test
+                            let d = dist(mouseX, mouseY, disruption.x, disruption.y);
+                            let radius = disruption.size ? disruption.size/2 : max(disruption.width || 0, disruption.height || 0)/2;
+                            
+                            if (d > radius + 15) continue; // Skip detailed testing
+                            
+                            if (disruption.type === 'triangle') {
+                                // Calculate triangle bounds
+                                hitTest = (d < disruption.size * 0.7); // Approximate for triangle
+                            } else if (disruption.type === 'block') {
+                                // Check if inside block
+                                let rotatedX = cos(-disruption.rotation) * (mouseX - disruption.x) - 
+                                              sin(-disruption.rotation) * (mouseY - disruption.y) + disruption.x;
+                                let rotatedY = sin(-disruption.rotation) * (mouseX - disruption.x) + 
+                                              cos(-disruption.rotation) * (mouseY - disruption.y) + disruption.y;
+                                              
+                                hitTest = (rotatedX > disruption.x - disruption.width/2 &&
+                                          rotatedX < disruption.x + disruption.width/2 &&
+                                          rotatedY > disruption.y - disruption.height/2 &&
+                                          rotatedY < disruption.y + disruption.height/2);
+                            } else if (disruption.type === 'alert') {
+                                // For alert symbols, check if inside circle
+                                hitTest = (d < disruption.size/2);
+                            }
+                            
+                            if (hitTest) {
+                                // Toggle activation
+                                disruption.activated = !disruption.activated;
+                                disruption.activatedTime = millis();
+                                
+                                if (disruption.activated) {
+                                    // Set intensity level
+                                    disruption.intensity = disruption.maxIntensity * 0.8;
+                                    
+                                    // Show disappointment resonance
+                                    showDisappointmentResonance(getRandomResonance(), disruption.x, disruption.y);
+                                }
+                                
+                                clickedElement = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (clickedElement) return false;
+                
+                // Check highlight elements
+                for (let element of nearbyElements) {
+                    if (element.type === 'highlight') {
+                        const i = element.index;
+                        const highlight = highlightElements[i];
+                        
+                        if (highlight.visible && highlight.interactive) {
+                            let hitTest = false;
+                            
+                            if (highlight.type === 'platform') {
+                                // Check if click is inside platform
+                                hitTest = (mouseX > highlight.x - highlight.width/2 &&
+                                          mouseX < highlight.x + highlight.width/2 &&
+                                          mouseY > highlight.y - highlight.height/2 &&
+                                          mouseY < highlight.y + highlight.height/2);
+                            } else if (highlight.type === 'organic') {
+                                // For organic shapes, approximate with circle
+                                let d = dist(mouseX, mouseY, highlight.x, highlight.y);
+                                hitTest = (d < highlight.size/2);
+                            } else if (highlight.type === 'path') {
+                                // Check if click is near path
+                                if (highlight.points.length === 4) { // Bezier curve
+                                    let p = highlight.points;
+                                    let hitTestPoints = 10;
+                                    
+                                    // Check multiple points along the curve
+                                    for (let j = 0; j < hitTestPoints; j++) {
+                                        let t = j / (hitTestPoints - 1);
+                                        
+                                        let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
+                                        let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
+                                        
+                                        let d = dist(mouseX, mouseY, x, y);
+                                        
+                                        if (d < highlight.width + 10) {
+                                            hitTest = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (hitTest) {
+                                // Toggle activation
+                                highlight.activated = !highlight.activated;
+                                highlight.activatedTime = millis();
+                                
+                                if (highlight.activated) {
+                                    // Set energy level
+                                    highlight.energy = highlight.maxEnergy * 0.75;
+                                    
+                                    // Show disappointment resonance
+                                    if (highlight.type === 'path') {
+                                        let p = highlight.points;
+                                        showDisappointmentResonance(getRandomResonance(), 
+                                            (p[0].x + p[3].x)/2, 
+                                            (p[0].y + p[3].y)/2);
+                                    } else {
+                                        showDisappointmentResonance(getRandomResonance(), highlight.x, highlight.y);
+                                    }
+                                }
+                                
+                                clickedElement = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (clickedElement) return false;
                 
                 // If no element was clicked, toggle animation
                 isAnimating = !isAnimating;
                 
                 // Update sound based on animation state
-                if (!soundEnabled && soundLoaded && disappointmentSound.isPlaying()) {
+                if (!isAnimating && soundEnabled && soundLoaded && disappointmentSound && disappointmentSound.isPlaying()) {
                     disappointmentSound.setVolume(0.3, 1.5); // Slower for disappointment
-                } else if (isAnimating && soundEnabled && soundLoaded) {
+                } else if (isAnimating && soundEnabled && soundLoaded && disappointmentSound) {
+                    if (!disappointmentSound.isPlaying()) {
+                        disappointmentSound.loop();
+                    }
                     disappointmentSound.setVolume(0.6, 1.5);
                 }
             }

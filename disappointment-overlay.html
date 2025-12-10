@@ -49,7 +49,7 @@
             margin-bottom: 30px;
             text-transform: uppercase;
             letter-spacing: 3px;
-            color: #000000; /* Black for disappointment */
+            color: #000000;
         }
         
         .emotion-description {
@@ -92,7 +92,6 @@
             transform: scale(0.98);
         }
         
-        /* Canvas for the animation */
         canvas {
             position: absolute;
             top: 0;
@@ -100,7 +99,6 @@
             z-index: 1;
         }
         
-        /* Disappointment resonance popup */
         .disappointment-resonance {
             position: fixed;
             background-color: rgba(255, 255, 255, 0.9);
@@ -120,7 +118,6 @@
             border-left: 3px solid #000000;
         }
         
-        /* Controls panel */
         .controls {
             position: fixed;
             bottom: 15px;
@@ -150,7 +147,6 @@
             stroke: #000000;
         }
         
-        /* Hint message */
         .hint {
             position: fixed;
             bottom: 15px;
@@ -166,7 +162,6 @@
             color: #000000;
         }
         
-        /* Timeline slider */
         .timeline {
             position: fixed;
             left: 50%;
@@ -213,7 +208,6 @@
             cursor: pointer;
         }
         
-        /* Loading indicator */
         #loading-indicator {
             position: fixed;
             top: 50%;
@@ -227,20 +221,19 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         
-        /* Mobile-specific styles */
         @media (max-width: 768px) {
             body {
-                overflow-y: auto !important; /* Allow scrolling on mobile */
+                overflow-y: auto !important;
                 height: auto !important;
             }
         
             #landing-overlay {
-                position: absolute; /* Change from fixed to absolute */
+                position: absolute;
                 height: auto;
                 min-height: 100%;
                 overflow-y: auto;
-                padding: 40px 20px 120px 20px; /* More padding at top and bottom */
-                justify-content: flex-start; /* Start content from the top */
+                padding: 40px 20px 120px 20px;
+                justify-content: flex-start;
             }
         
             .landing-title {
@@ -248,12 +241,12 @@
             }
         
             .start-button {
-                margin-bottom: 60px; /* Ensure button isn't at the very bottom */
+                margin-bottom: 60px;
                 position: relative;
             }
         
             .emotion-name {
-                font-size: 42px; /* Slightly larger on mobile */
+                font-size: 42px;
             }
         
             .ai-disclaimer {
@@ -263,38 +256,35 @@
             }
         }
         
-        /* Orientation-specific styles */
         @media screen and (orientation: portrait) {
             .controls {
-                bottom: 70px; /* Move controls above timeline in portrait mode */
+                bottom: 70px;
                 right: 15px;
             }
             
             .timeline {
                 bottom: 20px;
-                width: 80%; /* Wider in portrait */
+                width: 80%;
             }
         }
         
         @media screen and (orientation: landscape) {
             .controls {
                 bottom: 15px;
-                right: 100px; /* Move away from edge and timeline handle */
+                right: 100px;
             }
             
             .timeline {
                 bottom: 20px;
-                width: 60%; /* Narrower in landscape to leave room for controls */
+                width: 60%;
                 max-width: 600px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Loading indicator -->
     <div id="loading-indicator">Loading experience...</div>
     
-    <!-- Initial landing overlay -->
     <div id="landing-overlay">
         <h1 class="landing-title">Emotional Collage Experience</h1>
         <h2 class="emotion-name" id="emotion-title">DISAPPOINTMENT</h2>
@@ -303,7 +293,6 @@
             <br><b>Analysis by Claude</b>
         </p>
 
-        <!-- AI disclaimer -->
         <div class="ai-disclaimer">
             <strong>Note:</strong> This is a simulation of disappointment based on my analysis of human descriptions. As an AI, I don't experience emotions or feelings - this is just my interpretation of a human concept.
         </div>
@@ -311,10 +300,8 @@
         <button class="start-button" id="start-experience">Begin Experience</button>
     </div>
     
-    <!-- Disappointment resonance popup that appears when interacting with elements -->
     <div class="disappointment-resonance" id="disappointment-resonance"></div>
     
-    <!-- Control buttons -->
     <div class="controls" id="controls">
         <div class="control-button" id="sound-toggle">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
@@ -331,10 +318,8 @@
         </div>
     </div>
     
-    <!-- Hint for users -->
     <div class="hint" id="hint">Touch elements to explore disappointment</div>
     
-    <!-- Timeline interface -->
     <div class="timeline" id="timeline">
         <div class="timeline-bar" id="timeline-bar">
             <div class="timeline-progress" id="timeline-progress"></div>
@@ -343,37 +328,93 @@
     </div>
     
     <script>
+        // Performance optimizations
+        let frameworkElements = [];
+        let disruptionElements = [];
+        let highlightElements = [];
+        let connectionLines = [];
+        let handOutlinePoints = [];
+        let disappointmentCenters = [];
+        
+        // Cache frequently used calculations
+        let sinCache = {};
+        let cosCache = {};
+        const CACHE_PRECISION = 1000;
+        
+        // Precompute sin/cos for common angles
+        function precomputeTrig() {
+            for (let i = 0; i < CACHE_PRECISION; i++) {
+                let angle = (i / CACHE_PRECISION) * TWO_PI;
+                sinCache[i] = sin(angle);
+                cosCache[i] = cos(angle);
+            }
+        }
+        
+        function fastSin(angle) {
+            let normalized = ((angle % TWO_PI) + TWO_PI) % TWO_PI;
+            let index = Math.floor((normalized / TWO_PI) * CACHE_PRECISION);
+            return sinCache[index] || sin(angle);
+        }
+        
+        function fastCos(angle) {
+            let normalized = ((angle % TWO_PI) + TWO_PI) % TWO_PI;
+            let index = Math.floor((normalized / TWO_PI) * CACHE_PRECISION);
+            return cosCache[index] || cos(angle);
+        }
+        
         // Core variables
         let isAnimating = true;
         let soundEnabled = true;
         let disappointmentSound;
         let soundLoaded = false;
         let soundLoadTimeout;
-        let timelineActive = false;
         let isDraggingTimeline = false;
         let timePosition = 0;
         let previousTimePosition = 0;
         let activatedTimeline = false;
         let tensionPhase = 0;
-        let tensionRate = 0.6; // Slower for disappointment
+        let tensionRate = 0.6;
         let resizeTimeout;
         let lastInteractionTime = 0;
         
-        // Element collections
-        let frameworkElements = [];      // Black elements - interrupted expectation pathways
-        let disruptionElements = [];     // Yellow elements - emotional intensity evaluation 
-        let highlightElements = [];      // Brown elements - stabilizing response to disruption
-        let connectionLines = [];        // Connection lines between elements
-        let handOutlinePoints = [];      // Hand outline coordinates
-        let disappointmentCenters = [];  // Special interactive focal points
-        
-        // Current state variables
         let handProgress = 0;
         let activeDisappointmentCenter = null;
         let centerActivated = false;
-        let timelineProgress = 0;
         
-        // Disappointment resonances - text snippets that appear when interacting with elements
+        // Spatial partitioning for optimization
+        let elementGrid = {};
+        const GRID_SIZE = 150;
+        
+        function getGridKey(x, y) {
+            return `${Math.floor(x / GRID_SIZE)}_${Math.floor(y / GRID_SIZE)}`;
+        }
+        
+        function addToGrid(element, x, y) {
+            let key = getGridKey(x, y);
+            if (!elementGrid[key]) elementGrid[key] = [];
+            elementGrid[key].push(element);
+        }
+        
+        function getNearbyElements(x, y, range = 1) {
+            let nearby = [];
+            let gx = Math.floor(x / GRID_SIZE);
+            let gy = Math.floor(y / GRID_SIZE);
+            
+            for (let dx = -range; dx <= range; dx++) {
+                for (let dy = -range; dy <= range; dy++) {
+                    let key = `${gx + dx}_${gy + dy}`;
+                    if (elementGrid[key]) {
+                        nearby.push(...elementGrid[key]);
+                    }
+                }
+            }
+            return nearby;
+        }
+        
+        // Throttle propagation updates
+        let propagationFrame = 0;
+        const PROPAGATION_SKIP = 2; // Only update every 3rd frame
+        
         const disappointmentResonances = [
             "The hollow feeling when expectations meet reality",
             "When anticipated joy collapses into emptiness",
@@ -392,46 +433,35 @@
             "The gap between what was promised and what was delivered"
         ];
         
-        // Color palette for Disappointment
         const colors = {
-            black: [0, 0, 0],         // Black - Recognition elements (Color A)
-            yellow: [255, 204, 0],    // Yellow - Evaluation elements (Color B)
-            brown: [121, 85, 72]      // Brown/beige - Response elements (Color C)
+            black: [0, 0, 0],
+            yellow: [255, 204, 0],
+            brown: [121, 85, 72]
         };
         
-        // Function that contains the button action logic
         function startExperience() {
-            // Fade out landing overlay
             document.getElementById('landing-overlay').style.opacity = '0';
             
-            // After fading out, remove from DOM
             setTimeout(() => {
                 document.getElementById('landing-overlay').style.display = 'none';
-                
-                // Start animation
                 isAnimating = true;
                 loop();
-                
-                // Position controls based on orientation
                 updateLayoutForOrientation();
                 
-                // Start sound if enabled
                 if (soundEnabled && soundLoaded) {
                     try {
                         disappointmentSound.loop();
                         disappointmentSound.setVolume(0);
-                        disappointmentSound.setVolume(0.6, 2); // Fade in over 2 seconds
+                        disappointmentSound.setVolume(0.6, 2);
                     } catch(e) {
                         console.error("Error playing sound:", e);
                     }
                 }
                 
-                // Show controls and hint
                 setTimeout(() => {
                     document.getElementById('controls').style.opacity = '1';
                     document.getElementById('hint').style.opacity = '1';
                     
-                    // Hide hint after 5 seconds
                     setTimeout(() => {
                         document.getElementById('hint').style.opacity = '0';
                     }, 5000);
@@ -439,7 +469,6 @@
             }, 1000);
         }
         
-        // Function to update layout based on orientation
         function updateLayoutForOrientation() {
             const controls = document.getElementById('controls');
             const timeline = document.getElementById('timeline');
@@ -455,9 +484,7 @@
             }
         }
         
-        // Listen for orientation changes
         window.addEventListener('orientationchange', function() {
-            // Small delay to ensure dimensions have updated
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 resizeCanvas(windowWidth, windowHeight);
@@ -466,18 +493,14 @@
             }, 300);
         });
         
-        // Setup for landing page interaction
         document.getElementById('start-experience').addEventListener('click', startExperience);
         document.getElementById('start-experience').addEventListener('touchend', function(e) {
-            e.preventDefault(); // Prevent default to avoid double-firing
+            e.preventDefault();
             startExperience();
         });
         
-        // Sound toggle
         document.getElementById('sound-toggle').addEventListener('click', function() {
             soundEnabled = !soundEnabled;
-            
-            // Update sound wave visibility
             document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
             
             if (soundEnabled && disappointmentSound && soundLoaded && !disappointmentSound.isPlaying()) {
@@ -485,7 +508,7 @@
                 disappointmentSound.setVolume(0);
                 disappointmentSound.setVolume(0.6, 1);
             } else if (!soundEnabled && disappointmentSound && soundLoaded && disappointmentSound.isPlaying()) {
-                disappointmentSound.setVolume(0, 1.5); // Slightly slower fade-out for disappointment
+                disappointmentSound.setVolume(0, 1.5);
                 setTimeout(() => {
                     if (!soundEnabled && disappointmentSound && disappointmentSound.isPlaying()) {
                         disappointmentSound.pause();
@@ -494,21 +517,14 @@
             }
         });
         
-        // Reset button
         document.getElementById('reset-button').addEventListener('click', function() {
-            // Reset the experience
             timePosition = 0;
             previousTimePosition = 0;
-            
             resetExperience();
-            
-            // Update timeline
             updateTimelineUI();
         });
         
-        // Timeline interaction - use event delegation for better performance
         const timelineBar = document.getElementById('timeline-bar');
-        
         timelineBar.addEventListener('mousedown', startTimelineDrag);
         timelineBar.addEventListener('touchstart', function(e) {
             e.preventDefault();
@@ -518,8 +534,6 @@
         function startTimelineDrag(e) {
             isDraggingTimeline = true;
             updateTimelinePosition(e);
-            
-            // Add document-level event listeners
             document.addEventListener('mousemove', updateTimelinePosition);
             document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
             document.addEventListener('mouseup', endTimelineDrag);
@@ -529,7 +543,6 @@
         function updateTimelinePosition(e) {
             if (!isDraggingTimeline) return;
             
-            // Prevent scrolling when dragging on mobile
             if (e.type === 'touchmove') {
                 e.preventDefault();
             }
@@ -537,7 +550,6 @@
             const timeline = document.getElementById('timeline-bar');
             const rect = timeline.getBoundingClientRect();
             
-            // Get the x position relative to the timeline
             let clientX;
             if (e.type.startsWith('touch')) {
                 clientX = e.touches[0].clientX;
@@ -545,18 +557,13 @@
                 clientX = e.clientX;
             }
             
-            // Calculate percentage position with boundary handling
             let percentage = (clientX - rect.left) / rect.width;
             percentage = Math.max(0, Math.min(1, percentage));
             
-            // Update UI
             document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
             document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
             
-            // Update timeline position
-            timePosition = percentage * 40000; // 40 seconds of experience timeline (longer for disappointment)
-            
-            // Set time position
+            timePosition = percentage * 40000;
             setTimePosition(timePosition);
         }
         
@@ -566,21 +573,16 @@
             document.removeEventListener('touchmove', updateTimelinePosition);
             document.removeEventListener('mouseup', endTimelineDrag);
             document.removeEventListener('touchend', endTimelineDrag);
-            
             previousTimePosition = timePosition;
         }
         
         function updateTimelineUI() {
-            // Calculate percentage
             const percentage = timePosition / 40000;
-            
-            // Update UI
             document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
             document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
         }
         
         function preload() {
-            // Pre-load sound with better error handling
             soundLoaded = false;
             
             try {
@@ -597,7 +599,6 @@
                     }
                 );
                 
-                // Set a timeout in case sound loading hangs
                 soundLoadTimeout = setTimeout(() => {
                     console.log("Sound loading timed out");
                     soundEnabled = false;
@@ -613,25 +614,22 @@
             createCanvas(windowWidth, windowHeight);
             frameRate(30);
             
-            // Define hand outline points - more relaxed, deflated for disappointment
-            createHandOutline();
+            // Precompute trig functions
+            precomputeTrig();
             
-            // Create elements
+            createHandOutline();
             createFrameworkElements();
             createDisruptionElements();
             createHighlightElements();
             createConnectionLines();
             createDisappointmentCenters();
             
-            // Hide loading indicator once setup is complete
             document.getElementById('loading-indicator').style.display = 'none';
             
-            // Initialize audio context for better mobile support
             if (getAudioContext().state !== 'running') {
                 getAudioContext().resume();
             }
             
-            // Initially pause animation while on landing page
             isAnimating = false;
             noLoop();
         }
@@ -641,21 +639,17 @@
         }
         
         function createFrameworkElements() {
-            // Create framework elements (black) - representing interrupted pathways
-            
-            // Central interrupted line (horizontal with gap)
             let centerX = width * 0.5;
             let gapStart = centerX - width * 0.05;
             let gapEnd = centerX + width * 0.05;
             
-            // Left segment
             frameworkElements.push({
                 type: 'line',
                 x: width * 0.2,
                 y: height * 0.5,
                 length: gapStart - width * 0.2,
                 width: 3,
-                angle: 0, // Horizontal
+                angle: 0,
                 opacity: 220,
                 startTime: 500,
                 visible: false,
@@ -668,14 +662,13 @@
                 pulseRate: 0.0008
             });
             
-            // Right segment
             frameworkElements.push({
                 type: 'line',
                 x: gapEnd,
                 y: height * 0.5,
                 length: width * 0.8 - gapEnd,
                 width: 3,
-                angle: 0, // Horizontal
+                angle: 0,
                 opacity: 220,
                 startTime: 800,
                 visible: false,
@@ -688,28 +681,22 @@
                 pulseRate: 0.0008
             });
             
-            // Create structured grid elements with interruptions
             for (let i = 0; i < 10; i++) {
-                // Grid lines with varying positions and interruptions
                 let horizontal = i % 2 === 0;
-                let startX, startY, length, angle;
                 
                 if (horizontal) {
-                    startX = width * 0.2;
-                    startY = height * (0.25 + (i / 20) * 0.5);
-                    
-                    // Add interruption
+                    let startX = width * 0.2;
+                    let startY = height * (0.25 + (i / 20) * 0.5);
                     let interruptPos = random(0.3, 0.7);
                     let interruptWidth = random(0.03, 0.08);
                     
-                    // First segment before interruption
                     frameworkElements.push({
                         type: 'line',
                         x: startX,
                         y: startY,
                         length: width * (interruptPos - interruptWidth/2) - startX,
                         width: random(1, 2.5),
-                        angle: 0, // Horizontal
+                        angle: 0,
                         opacity: random(160, 220),
                         startTime: 1000 + i * 400,
                         visible: false,
@@ -722,42 +709,37 @@
                         pulseRate: random(0.0006, 0.001)
                     });
                     
-                    // Second segment after interruption
                     frameworkElements.push({
                         type: 'line',
                         x: width * (interruptPos + interruptWidth/2),
                         y: startY,
                         length: width * 0.8 - width * (interruptPos + interruptWidth/2),
                         width: random(1, 2.5),
-                        angle: 0, // Horizontal
-                        opacity: random(140, 200), // Slightly more faded
-                        startTime: 1000 + i * 400 + 300, // Slight delay
+                        angle: 0,
+                        opacity: random(140, 200),
+                        startTime: 1000 + i * 400 + 300,
                         visible: false,
                         interactive: random() > 0.4,
                         activated: false,
                         activatedTime: 0,
                         tension: 0,
-                        maxTension: random(60, 90), // Less tension potential
+                        maxTension: random(60, 90),
                         tensionRate: random(0.01, 0.03),
                         pulseRate: random(0.0006, 0.001)
                     });
                 } else {
-                    // Vertical lines
-                    startX = width * (0.25 + (i / 20) * 0.5);
-                    startY = height * 0.2;
-                    
-                    // Add interruption
+                    let startX = width * (0.25 + (i / 20) * 0.5);
+                    let startY = height * 0.2;
                     let interruptPos = random(0.3, 0.7);
                     let interruptWidth = random(0.03, 0.08);
                     
-                    // First segment before interruption
                     frameworkElements.push({
                         type: 'line',
                         x: startX,
                         y: startY,
                         length: height * (interruptPos - interruptWidth/2) - startY,
                         width: random(1, 2.5),
-                        angle: HALF_PI, // Vertical
+                        angle: HALF_PI,
                         opacity: random(160, 220),
                         startTime: 1500 + i * 400,
                         visible: false,
@@ -770,29 +752,27 @@
                         pulseRate: random(0.0006, 0.001)
                     });
                     
-                    // Second segment after interruption
                     frameworkElements.push({
                         type: 'line',
                         x: startX,
                         y: height * (interruptPos + interruptWidth/2),
                         length: height * 0.8 - height * (interruptPos + interruptWidth/2),
                         width: random(1, 2.5),
-                        angle: HALF_PI, // Vertical
-                        opacity: random(140, 200), // Slightly more faded
-                        startTime: 1500 + i * 400 + 300, // Slight delay
+                        angle: HALF_PI,
+                        opacity: random(140, 200),
+                        startTime: 1500 + i * 400 + 300,
                         visible: false,
                         interactive: random() > 0.4,
                         activated: false,
                         activatedTime: 0,
                         tension: 0,
-                        maxTension: random(60, 90), // Less tension potential
+                        maxTension: random(60, 90),
                         tensionRate: random(0.01, 0.03),
                         pulseRate: random(0.0006, 0.001)
                     });
                 }
             }
             
-            // Add dotted pattern elements - contained, enclosing
             for (let i = 0; i < 6; i++) {
                 frameworkElements.push({
                     type: 'dots',
@@ -800,7 +780,7 @@
                     y: height * (0.3 + random(0.4)),
                     size: random(50, 100),
                     dotSize: random(1.5, 3),
-                    spacing: random(7, 14), // More sparse for disappointment
+                    spacing: random(7, 14),
                     angle: random(TWO_PI),
                     opacity: random(140, 200),
                     startTime: 3000 + i * 600,
@@ -815,7 +795,6 @@
                 });
             }
             
-            // Add containment structures - rectangles or circles that frame/contain
             for (let i = 0; i < 4; i++) {
                 frameworkElements.push({
                     type: 'container',
@@ -840,9 +819,6 @@
         }
         
         function createDisruptionElements() {
-            // Create disruption elements (yellow) - representing emotional intensity
-            
-            // Add intensity markers (triangular elements)
             for (let i = 0; i < 6; i++) {
                 disruptionElements.push({
                     type: 'triangle',
@@ -863,7 +839,6 @@
                 });
             }
             
-            // Add contrast blocks - solid rectangular elements
             for (let i = 0; i < 4; i++) {
                 disruptionElements.push({
                     type: 'block',
@@ -871,7 +846,7 @@
                     y: height * (0.3 + random(0.4)),
                     width: random(20, 40),
                     height: random(20, 40),
-                    rotation: random(PI/4), // Some rotation
+                    rotation: random(PI/4),
                     opacity: random(170, 210),
                     startTime: 9000 + i * 1000,
                     visible: false,
@@ -885,7 +860,6 @@
                 });
             }
             
-            // Add warning/alert symbols
             for (let i = 0; i < 3; i++) {
                 disruptionElements.push({
                     type: 'alert',
@@ -908,9 +882,6 @@
         }
         
         function createHighlightElements() {
-            // Create highlight elements (brown) - representing stabilizing response
-            
-            // Grounding elements - horizontal surfaces/platforms
             for (let i = 0; i < 5; i++) {
                 highlightElements.push({
                     type: 'platform',
@@ -931,7 +902,6 @@
                 });
             }
             
-            // Organic shapes - representing adaptation
             for (let i = 0; i < 4; i++) {
                 highlightElements.push({
                     type: 'organic',
@@ -950,22 +920,19 @@
                     energyRate: random(0.02, 0.04),
                     pulseRate: random(0.0008, 0.0015),
                     rotation: random(TWO_PI),
-                    noiseScale: random(0.3, 0.7) // For organic shape variation
+                    noiseScale: random(0.3, 0.7)
                 });
             }
             
-            // Transitional paths - showing new potential directions
             for (let i = 0; i < 3; i++) {
                 let startX = width * (0.35 + random(0.1));
                 let startY = height * (0.4 + random(0.2));
                 let endX = width * (0.55 + random(0.1));
                 let endY = height * (0.4 + random(0.2));
                 
-                // Create path with control points
                 let points = [];
                 points.push({x: startX, y: startY});
                 
-                // Add control points
                 let controlX1 = lerp(startX, endX, 0.3) + random(-30, 30);
                 let controlY1 = lerp(startY, endY, 0.3) + random(-30, 30);
                 let controlX2 = lerp(startX, endX, 0.7) + random(-30, 30);
@@ -979,7 +946,7 @@
                     type: 'path',
                     points: points,
                     width: random(2, 3),
-                    dashArray: [random(4, 8), random(6, 12)], // Larger gaps for disappointment
+                    dashArray: [random(4, 8), random(6, 12)],
                     opacity: random(150, 190),
                     startTime: 17000 + i * 1200,
                     visible: false,
@@ -996,19 +963,13 @@
         }
         
         function createConnectionLines() {
-            // Create connection lines between elements - more sparse for disappointment
-            
-            // Connect framework elements with disruption elements
             for (let i = 0; i < frameworkElements.length; i++) {
                 let framework = frameworkElements[i];
                 
-                // Find closest disruption elements
                 for (let j = 0; j < disruptionElements.length; j++) {
                     let disruption = disruptionElements[j];
-                    
                     let d = dist(framework.x, framework.y, disruption.x, disruption.y);
                     
-                    // Less connections for disappointment
                     if (d < 180 && random() > 0.7) {
                         connectionLines.push({
                             startElement: 'framework',
@@ -1017,23 +978,21 @@
                             endIndex: j,
                             opacity: random(100, 160),
                             dotSize: random(1.5, 2.5),
-                            dotSpacing: random(10, 15), // Wider spacing
+                            dotSpacing: random(10, 15),
                             progress: 0,
                             startTime: max(framework.startTime, disruption.startTime) + 1000,
                             activated: false,
-                            broken: random() > 0.5 // Some connections are broken
+                            broken: random() > 0.5
                         });
                     }
                 }
                 
-                // Connect to highlight elements
                 for (let j = 0; j < highlightElements.length; j++) {
                     let highlight = highlightElements[j];
                     
                     if (highlight.type !== 'path') {
                         let d = dist(framework.x, framework.y, highlight.x, highlight.y);
                         
-                        // Less connections for disappointment
                         if (d < 200 && random() > 0.7) {
                             connectionLines.push({
                                 startElement: 'framework',
@@ -1042,18 +1001,17 @@
                                 endIndex: j,
                                 opacity: random(90, 140),
                                 dotSize: random(1.5, 2.5),
-                                dotSpacing: random(10, 15), // Wider spacing
+                                dotSpacing: random(10, 15),
                                 progress: 0,
                                 startTime: max(framework.startTime, highlight.startTime) + 1200,
                                 activated: false,
-                                broken: random() > 0.4 // More broken connections
+                                broken: random() > 0.4
                             });
                         }
                     }
                 }
             }
             
-            // Connect disruption elements to highlight elements
             for (let i = 0; i < disruptionElements.length; i++) {
                 let disruption = disruptionElements[i];
                 
@@ -1063,7 +1021,6 @@
                     if (highlight.type !== 'path') {
                         let d = dist(disruption.x, disruption.y, highlight.x, highlight.y);
                         
-                        // Stronger connection between evaluation and response
                         if (d < 220 && random() > 0.5) {
                             connectionLines.push({
                                 startElement: 'disruption',
@@ -1076,7 +1033,7 @@
                                 progress: 0,
                                 startTime: max(disruption.startTime, highlight.startTime) + 1400,
                                 activated: false,
-                                broken: random() > 0.7 // Fewer broken connections here
+                                broken: random() > 0.7
                             });
                         }
                     }
@@ -1085,37 +1042,23 @@
         }
 
         function createHandOutline() {
-            // Create a hand outline representing disappointment - more relaxed, slightly deflated
-            
-            // Base of palm
             handOutlinePoints.push({x: 0.52, y: 0.65});
             handOutlinePoints.push({x: 0.62, y: 0.65});
-            
-            // Right side of hand
             handOutlinePoints.push({x: 0.65, y: 0.60});
             handOutlinePoints.push({x: 0.64, y: 0.55});
-            
-            // Fingers relaxed, slightly curled - not energized
             handOutlinePoints.push({x: 0.63, y: 0.50});
             handOutlinePoints.push({x: 0.61, y: 0.46});
             handOutlinePoints.push({x: 0.59, y: 0.43});
-            
-            // Middle fingers - slightly curled
             handOutlinePoints.push({x: 0.56, y: 0.41});
             handOutlinePoints.push({x: 0.52, y: 0.40});
             handOutlinePoints.push({x: 0.48, y: 0.41});
-            
-            // Left fingers - also slightly curled
             handOutlinePoints.push({x: 0.45, y: 0.43});
             handOutlinePoints.push({x: 0.43, y: 0.46});
             handOutlinePoints.push({x: 0.41, y: 0.50});
-            
-            // Left side of palm
             handOutlinePoints.push({x: 0.42, y: 0.55});
             handOutlinePoints.push({x: 0.43, y: 0.60});
             handOutlinePoints.push({x: 0.52, y: 0.65});
             
-            // Convert relative coordinates to absolute
             for (let i = 0; i < handOutlinePoints.length; i++) {
                 handOutlinePoints[i].x *= width;
                 handOutlinePoints[i].y *= height;
@@ -1123,16 +1066,13 @@
         }
         
         function createDisappointmentCenters() {
-            // Create interactive disappointment centers - focal points of the experience
-            
-            // Main disappointment center
             disappointmentCenters.push({
                 x: width * 0.5, 
                 y: height * 0.5,
                 size: 80,
                 opacity: 0,
                 targetOpacity: 180,
-                pulseRate: 0.0015, // Slower for disappointment
+                pulseRate: 0.0015,
                 activated: false,
                 activationProgress: 0,
                 startTime: 20000,
@@ -1140,7 +1080,6 @@
                 elements: []
             });
             
-            // Secondary disappointment centers
             for (let i = 0; i < 2; i++) {
                 disappointmentCenters.push({
                     x: random(width * 0.3, width * 0.7),
@@ -1148,7 +1087,7 @@
                     size: random(50, 70),
                     opacity: 0,
                     targetOpacity: random(150, 200),
-                    pulseRate: random(0.001, 0.002), // Slower for disappointment
+                    pulseRate: random(0.001, 0.002),
                     activated: false,
                     activationProgress: 0,
                     startTime: 24000 + i * 4000,
@@ -1157,12 +1096,8 @@
                 });
             }
             
-            // Assign some elements to each disappointment center
-            // For framework elements
             for (let i = 0; i < frameworkElements.length; i++) {
                 let framework = frameworkElements[i];
-                
-                // Find the closest disappointment center
                 let closestCenter = null;
                 let closestDistance = Infinity;
                 
@@ -1174,7 +1109,6 @@
                     }
                 }
                 
-                // Assign to disappointment center if close enough
                 if (closestCenter !== null) {
                     disappointmentCenters[closestCenter].elements.push({
                         type: 'framework',
@@ -1183,11 +1117,8 @@
                 }
             }
             
-            // For disruption elements
             for (let i = 0; i < disruptionElements.length; i++) {
                 let disruption = disruptionElements[i];
-                
-                // Find the closest disappointment center
                 let closestCenter = null;
                 let closestDistance = Infinity;
                 
@@ -1199,7 +1130,6 @@
                     }
                 }
                 
-                // Assign to disappointment center if close enough
                 if (closestCenter !== null) {
                     disappointmentCenters[closestCenter].elements.push({
                         type: 'disruption',
@@ -1208,12 +1138,10 @@
                 }
             }
             
-            // For highlight elements
             for (let i = 0; i < highlightElements.length; i++) {
                 let highlight = highlightElements[i];
                 
                 if (highlight.type !== 'path') {
-                    // Find the closest disappointment center
                     let closestCenter = null;
                     let closestDistance = Infinity;
                     
@@ -1225,7 +1153,6 @@
                         }
                     }
                     
-                    // Assign to disappointment center if close enough
                     if (closestCenter !== null) {
                         disappointmentCenters[closestCenter].elements.push({
                             type: 'highlight',
@@ -1237,115 +1164,97 @@
         }
 
         function draw() {
-            // Clear the canvas with a clean background
             background(247, 247, 247);
             
-            // If animating, update time position
             if (isAnimating && !isDraggingTimeline) {
-                timePosition += deltaTime * 0.8; // Slightly slower for disappointment
+                timePosition += deltaTime * 0.8;
                 
-                // Limit to 40 seconds (longer for disappointment)
                 if (timePosition > 40000) {
                     timePosition = 40000;
                     
-                    // Show timeline if reached end
                     if (!activatedTimeline) {
                         showTimeline();
                         activatedTimeline = true;
                     }
                 }
                 
-                // Update timeline UI
                 updateTimelineUI();
-                
                 previousTimePosition = timePosition;
             }
 
-            // Update tension phase - slower oscillation for disappointment
             tensionPhase += tensionRate * deltaTime * 0.0008;
             
-            // Draw the layers in appropriate order
-            drawFrameworkElements();    // Black elements (recognition of interrupted patterns)
-            drawConnectionLines();      // Connection lines between elements
-            drawDisruptionElements();   // Yellow elements (evaluation of emotional intensity)
-            drawHighlightElements();    // Brown elements (stabilizing response)
-            drawHandOutline();          // Hand outline representing disappointment
-            drawDisappointmentCenters();  // Interactive disappointment centers
+            drawFrameworkElements();
+            drawConnectionLines();
+            drawDisruptionElements();
+            drawHighlightElements();
+            drawHandOutline();
+            drawDisappointmentCenters();
             
-            // Update hand outline progress
             if (isAnimating) {
-                handProgress = min(1, handProgress + 0.0003); // Slower progress for disappointment
+                handProgress = min(1, handProgress + 0.0003);
             }
             
-            // Update activated elements
             updateActivatedElements();
             
-            // Update element propagation (disappointment effect - less energetic)
-            updateElementPropagation();
+            // Throttled propagation
+            propagationFrame++;
+            if (propagationFrame % PROPAGATION_SKIP === 0) {
+                updateElementPropagation();
+            }
         }
         
         function showTimeline() {
-            // Show the timeline interface
             document.getElementById('timeline').style.opacity = '1';
-            
-            // Position controls based on orientation when timeline appears
             updateLayoutForOrientation();
         }
         
         function updateActivatedElements() {
-            // Check any activated framework elements
             for (let framework of frameworkElements) {
                 if (framework.activated) {
-                    // Decrease tension over time (more slowly for disappointment)
                     if (framework.tension > 0) {
                         framework.tension = max(0, framework.tension - 0.3);
                     }
                     
-                    if (millis() - framework.activatedTime > 4000) { // Longer duration for disappointment
+                    if (millis() - framework.activatedTime > 4000) {
                         framework.activated = false;
                     }
                 }
             }
             
-            // Check any activated disruption elements
             for (let disruption of disruptionElements) {
                 if (disruption.activated) {
-                    // Decrease intensity over time (more slowly for disappointment)
                     if (disruption.intensity > 0) {
                         disruption.intensity = max(0, disruption.intensity - 0.4);
                     }
                     
-                    if (millis() - disruption.activatedTime > 4000) { // Longer duration for disappointment
+                    if (millis() - disruption.activatedTime > 4000) {
                         disruption.activated = false;
                     }
                 }
             }
             
-            // Check any activated highlight elements
             for (let highlight of highlightElements) {
                 if (highlight.activated) {
-                    // Decrease energy over time (more slowly for disappointment)
                     if (highlight.energy > 0) {
                         highlight.energy = max(0, highlight.energy - 0.35);
                     }
                     
-                    if (millis() - highlight.activatedTime > 4000) { // Longer duration for disappointment
+                    if (millis() - highlight.activatedTime > 4000) {
                         highlight.activated = false;
                     }
                 }
             }
             
-            // Check activated disappointment centers
             for (let center of disappointmentCenters) {
                 if (center.activated) {
-                    center.activationProgress = min(1, center.activationProgress + 0.008); // Slower for disappointment
+                    center.activationProgress = min(1, center.activationProgress + 0.008);
                 }
             }
             
-            // If we have an active disappointment center but it's no longer activated
             if (activeDisappointmentCenter !== null && !disappointmentCenters[activeDisappointmentCenter].activated) {
                 if (disappointmentCenters[activeDisappointmentCenter].activationProgress > 0) {
-                    disappointmentCenters[activeDisappointmentCenter].activationProgress = max(0, disappointmentCenters[activeDisappointmentCenter].activationProgress - 0.015); // Slower fade for disappointment
+                    disappointmentCenters[activeDisappointmentCenter].activationProgress = max(0, disappointmentCenters[activeDisappointmentCenter].activationProgress - 0.015);
                 } else {
                     activeDisappointmentCenter = null;
                     centerActivated = false;
@@ -1354,24 +1263,19 @@
         }
         
         function updateElementPropagation() {
-            // Implement the disappointment effect - less energetic propagation between elements
-            
-            // From activated framework elements to nearby disruption elements
+            // Only check activated elements for performance
             for (let i = 0; i < frameworkElements.length; i++) {
                 let framework = frameworkElements[i];
                 
                 if (framework.activated && framework.tension > 30) {
-                    // Spread to nearby disruption elements
                     for (let j = 0; j < disruptionElements.length; j++) {
                         let disruption = disruptionElements[j];
                         let d = dist(framework.x, framework.y, disruption.x, disruption.y);
                         
                         if (d < 180) {
-                            // Transfer intensity (influenced by distance)
-                            let intensityTransfer = max(0, framework.tension * (1 - d/180) * 0.15); // Slower transfer for disappointment
+                            let intensityTransfer = max(0, framework.tension * (1 - d/180) * 0.15);
                             disruption.intensity = min(disruption.maxIntensity, disruption.intensity + intensityTransfer);
                             
-                            // Mark as activated if significant intensity
                             if (disruption.intensity > 25 && !disruption.activated) {
                                 disruption.activated = true;
                                 disruption.activatedTime = millis();
@@ -1381,12 +1285,10 @@
                 }
             }
             
-            // From activated disruption elements to nearby highlight elements
             for (let i = 0; i < disruptionElements.length; i++) {
                 let disruption = disruptionElements[i];
                 
                 if (disruption.activated && disruption.intensity > 35) {
-                    // Spread to nearby highlight elements
                     for (let j = 0; j < highlightElements.length; j++) {
                         let highlight = highlightElements[j];
                         
@@ -1394,11 +1296,9 @@
                             let d = dist(disruption.x, disruption.y, highlight.x, highlight.y);
                             
                             if (d < 200) {
-                                // Transfer energy (influenced by distance)
-                                let energyTransfer = max(0, disruption.intensity * (1 - d/200) * 0.12); // Slower transfer for disappointment
+                                let energyTransfer = max(0, disruption.intensity * (1 - d/200) * 0.12);
                                 highlight.energy = min(highlight.maxEnergy, highlight.energy + energyTransfer);
                                 
-                                // Mark as activated if significant energy
                                 if (highlight.energy > 30 && !highlight.activated) {
                                     highlight.activated = true;
                                     highlight.activatedTime = millis();
@@ -1409,25 +1309,20 @@
                 }
             }
             
-            // For disappointment, highlight elements provide less feedback to framework elements
             for (let i = 0; i < highlightElements.length; i++) {
                 let highlight = highlightElements[i];
                 
-                if (highlight.activated && highlight.energy > 50) { // Higher threshold for disappointment
+                if (highlight.activated && highlight.energy > 50) {
                     let energyValue = highlight.energy;
                     
-                    // Spread to nearby framework elements - weaker effect
                     for (let j = 0; j < frameworkElements.length; j++) {
                         let framework = frameworkElements[j];
-                        
                         let d = dist(highlight.x, highlight.y, framework.x, framework.y);
                         
                         if (d < 180) {
-                            // Transfer tension (influenced by distance)
-                            let tensionTransfer = max(0, energyValue * (1 - d/180) * 0.06); // Weaker transfer for disappointment
+                            let tensionTransfer = max(0, energyValue * (1 - d/180) * 0.06);
                             framework.tension = min(framework.maxTension, framework.tension + tensionTransfer);
                             
-                            // Mark as activated if significant tension
                             if (framework.tension > 30 && !framework.activated) {
                                 framework.activated = true;
                                 framework.activatedTime = millis();
@@ -1439,18 +1334,15 @@
         }
         
         function setTimePosition(time) {
-            // Set the internal time position
             const previousMillis = previousTimePosition;
             const timeDiff = time - previousMillis;
             
-            // Reset elements if jumping backward more than 2 seconds
             if (timeDiff < -2000) {
                 resetExperience();
             }
         }
         
         function resetExperience() {
-            // Reset all elements to their initial state
             for (let framework of frameworkElements) {
                 framework.visible = timePosition > framework.startTime;
                 framework.activated = false;
@@ -1484,23 +1376,19 @@
                 center.activationProgress = 0;
             }
             
-            handProgress = min(1, timePosition / 25000); // Slower for disappointment
+            handProgress = min(1, timePosition / 25000);
             activeDisappointmentCenter = null;
             centerActivated = false;
         }
 
         function drawHandOutline() {
-            // Only start drawing hand after initial elements appear
-            if (timePosition < 12000) return; // Later appearance for disappointment
+            if (timePosition < 12000) return;
             
-            // Calculate how many points to show based on progress
             let pointsToShow = floor(handOutlinePoints.length * handProgress);
-            
             if (pointsToShow < 2) return;
             
-            // Draw the hand outline
             noFill();
-            stroke(0, 0, 0, 120); // Black for disappointment
+            stroke(0, 0, 0, 120);
             strokeWeight(1.5);
             
             beginShape();
@@ -1509,24 +1397,20 @@
             }
             endShape(pointsToShow === handOutlinePoints.length ? CLOSE : OPEN);
             
-            // If hand is complete, add some interior detail
             if (pointsToShow === handOutlinePoints.length) {
-                // Palm lines
                 stroke(0, 0, 0, 90);
                 strokeWeight(1);
                 
-                // Heart line - slightly drooping for disappointment
                 beginShape();
                 noFill();
                 let heartY = (handOutlinePoints[0].y + handOutlinePoints[15].y) / 2 - 5;
                 curveVertex(handOutlinePoints[0].x, heartY);
                 curveVertex(handOutlinePoints[0].x + 5, heartY);
-                curveVertex(handOutlinePoints[7].x, heartY + 5); // Droops in middle
+                curveVertex(handOutlinePoints[7].x, heartY + 5);
                 curveVertex(handOutlinePoints[14].x - 5, heartY);
                 curveVertex(handOutlinePoints[14].x, heartY);
                 endShape();
                 
-                // Life line
                 beginShape();
                 noFill();
                 curveVertex(handOutlinePoints[15].x - 10, handOutlinePoints[15].y - 15);
@@ -1535,7 +1419,6 @@
                 curveVertex(handOutlinePoints[11].x + 10, handOutlinePoints[11].y + 20);
                 endShape();
                 
-                // Special disappointment symbol in palm - broken/interrupted path
                 if (activeDisappointmentCenter !== null && disappointmentCenters[activeDisappointmentCenter].activationProgress > 0.5) {
                     let centerX = (handOutlinePoints[0].x + handOutlinePoints[7].x) / 2;
                     let centerY = (handOutlinePoints[0].y + handOutlinePoints[7].y) / 2;
@@ -1543,27 +1426,23 @@
                     push();
                     translate(centerX, centerY);
                     
-                    // Broken circle - symbol of interruption
                     noFill();
                     stroke(0, 0, 0, 150 * disappointmentCenters[activeDisappointmentCenter].activationProgress);
                     strokeWeight(1.5);
                     
                     let radius = 12 * disappointmentCenters[activeDisappointmentCenter].activationProgress;
-                    let segments = 5; // Number of circle segments
+                    let segments = 5;
                     
                     for (let i = 0; i < segments; i++) {
                         let startAngle = TWO_PI * i / segments;
-                        let endAngle = TWO_PI * (i + 0.7) / segments; // Gap between segments
-                        
+                        let endAngle = TWO_PI * (i + 0.7) / segments;
                         arc(0, 0, radius * 2, radius * 2, startAngle, endAngle);
                     }
                     
-                    // Broken line through center
                     stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
                           170 * disappointmentCenters[activeDisappointmentCenter].activationProgress);
                     strokeWeight(1.5);
                     
-                    // Draw segmented line
                     let lineLength = radius * 1.5;
                     let segments2 = 3;
                     let segmentLength = lineLength * 2 / (segments2 * 2 - 1);
@@ -1573,7 +1452,6 @@
                         line(startX, 0, startX + segmentLength, 0);
                     }
                     
-                    // Add stabilizing element - brown dot 
                     fill(colors.brown[0], colors.brown[1], colors.brown[2], 
                         160 * disappointmentCenters[activeDisappointmentCenter].activationProgress);
                     noStroke();
@@ -1585,45 +1463,35 @@
         }
         
         function drawFrameworkElements() {
-            // Draw framework elements (black - recognition of interrupted patterns)
             for (let i = 0; i < frameworkElements.length; i++) {
                 let framework = frameworkElements[i];
                 
-                // Check if this element should be visible based on timing
                 if (timePosition > framework.startTime) {
                     framework.visible = true;
                 }
                 
                 if (!framework.visible) continue;
                 
-                // Calculate subtle undulation effects
-                let undulationAmount = sin(millis() * framework.pulseRate) * 0.1; // Less dramatic for disappointment
-                
-                // Enhanced appearance for activated elements
+                let undulationAmount = fastSin(millis() * framework.pulseRate) * 0.1;
                 let tensionFactor = 0;
+                
                 if (framework.activated || framework.tension > 0) {
                     tensionFactor = framework.tension / framework.maxTension;
                     
-                    // Draw tension glow
                     noFill();
                     stroke(0, 0, 0, 60 * tensionFactor);
                     strokeWeight(1.5);
                     
                     if (framework.type === 'line') {
-                        // Glow for lines
                         push();
                         translate(framework.x, framework.y);
                         rotate(framework.angle);
-                        
                         let glowLength = framework.length * (1 + tensionFactor * 0.08);
                         line(0, 0, glowLength, 0);
-                        
                         pop();
                     } else if (framework.type === 'dots') {
-                        // Glow for dot patterns
                         ellipse(framework.x, framework.y, framework.size + 12 * tensionFactor);
                     } else if (framework.type === 'container') {
-                        // Glow for containers
                         if (framework.shape === 'rect') {
                             rect(framework.x - framework.width/2 - 5 * tensionFactor, 
                                  framework.y - framework.height/2 - 5 * tensionFactor,
@@ -1637,7 +1505,6 @@
                     }
                 }
                 
-                // Draw the framework element based on type
                 if (framework.type === 'line') {
                     drawFrameworkLine(framework, undulationAmount, tensionFactor);
                 } else if (framework.type === 'dots') {
@@ -1646,24 +1513,19 @@
                     drawContainer(framework, undulationAmount, tensionFactor);
                 }
                 
-                // Add subtle pulse for interactive elements
                 if (framework.interactive && !framework.activated) {
                     noFill();
                     stroke(0, 0, 0, 30);
                     strokeWeight(0.8);
                     
                     if (framework.type === 'line') {
-                        // Find midpoint of line
                         let midX = framework.x + cos(framework.angle) * framework.length/2;
                         let midY = framework.y + sin(framework.angle) * framework.length/2;
-                        
-                        ellipse(midX, midY, 
-                               12 + sin(millis() * 0.001) * 3, // Less dramatic pulse for disappointment
-                               12 + sin(millis() * 0.001) * 3);
+                        ellipse(midX, midY, 12 + sin(millis() * 0.001) * 3, 12 + sin(millis() * 0.001) * 3);
                     } else {
                         ellipse(framework.x, framework.y, 
                                framework.type === 'container' ? framework.width * 0.5 : framework.size * 0.5 + 
-                               sin(millis() * 0.001) * 3, // Less dramatic pulse for disappointment
+                               sin(millis() * 0.001) * 3,
                                framework.type === 'container' ? framework.height * 0.5 : framework.size * 0.5 + 
                                sin(millis() * 0.001) * 3);
                     }
@@ -1684,24 +1546,20 @@
             translate(framework.x, framework.y);
             rotate(framework.angle);
             
-            // Add subtle wave for tension - less pronounced for disappointment
             if (tensionFactor > 0.3) {
                 beginShape();
                 noFill();
                 
                 let segments = 20;
-                let waveAmplitude = tensionFactor * 2; // Less amplitude for disappointment
+                let waveAmplitude = tensionFactor * 2;
                 
                 for (let i = 0; i <= segments; i++) {
                     let x = i * framework.length / segments;
-                    let y = sin(i * 0.5 + millis() * 0.002) * waveAmplitude; // Slower wobble for disappointment
-                    
+                    let y = sin(i * 0.5 + millis() * 0.002) * waveAmplitude;
                     vertex(x, y);
                 }
-                
                 endShape();
             } else {
-                // Just draw a straight line if not much tension
                 line(0, 0, framework.length, 0);
             }
             
@@ -1717,35 +1575,29 @@
             
             noStroke();
             
-            // Draw dot pattern
             push();
             translate(framework.x, framework.y);
             rotate(framework.angle);
             
             let numDots = floor(framework.size / framework.spacing);
-            let tension = tensionFactor * 4; // Less dramatic for disappointment
+            let tension = tensionFactor * 4;
             
             for (let i = -numDots/2; i <= numDots/2; i++) {
                 for (let j = -numDots/2; j <= numDots/2; j++) {
                     let x = i * framework.spacing;
                     let y = j * framework.spacing;
                     
-                    // Skip if outside the radius
                     if (dist(0, 0, x, y) > framework.size/2) continue;
                     
-                    // Add tension effect - dots getting pulled outward slightly for disappointment
                     if (tensionFactor > 0.3) {
                         let d = dist(0, 0, x, y);
                         let pull = map(d, 0, framework.size/2, 0, tension);
                         let angle = atan2(y, x);
-                        
-                        x += cos(angle) * pull; // Outward instead of inward
+                        x += cos(angle) * pull;
                         y += sin(angle) * pull;
                     }
                     
-                    // Vary dot size with tension
                     let dotSize = framework.dotSize * (1 + (tensionFactor > 0.3 ? sin(dist(0, 0, x, y) * 0.1 + millis() * 0.001) * 0.2 : 0));
-                    
                     ellipse(x, y, dotSize, dotSize);
                 }
             }
@@ -1767,9 +1619,7 @@
             push();
             translate(framework.x, framework.y);
             
-            // For disappointment, containers become slightly distorted when activated
             if (tensionFactor > 0.3) {
-                // Apply slight distortion
                 let distortAmount = tensionFactor * 0.1;
                 let topOffset = sin(millis() * 0.0015) * framework.width * distortAmount;
                 let rightOffset = sin(millis() * 0.0015 + 1) * framework.height * distortAmount;
@@ -1777,7 +1627,6 @@
                 let leftOffset = sin(millis() * 0.0015 + 3) * framework.height * distortAmount;
                 
                 if (framework.shape === 'rect') {
-                    // Distorted rectangle
                     beginShape();
                     vertex(-framework.width/2 + leftOffset, -framework.height/2);
                     vertex(framework.width/2, -framework.height/2 + topOffset);
@@ -1785,7 +1634,6 @@
                     vertex(-framework.width/2, framework.height/2 - bottomOffset);
                     endShape(CLOSE);
                 } else {
-                    // Distorted ellipse (approximate with vertices)
                     beginShape();
                     let steps = 24;
                     for (let i = 0; i < steps; i++) {
@@ -1798,7 +1646,6 @@
                     endShape(CLOSE);
                 }
             } else {
-                // Normal shape when not activated
                 if (framework.shape === 'rect') {
                     rect(-framework.width/2, -framework.height/2, framework.width, framework.height);
                 } else {
@@ -1810,11 +1657,9 @@
         }
 
         function drawDisruptionElements() {
-            // Draw disruption elements (yellow - evaluation of emotional intensity)
             for (let i = 0; i < disruptionElements.length; i++) {
                 let disruption = disruptionElements[i];
                 
-                // Check if this element should be visible based on timing
                 if (timePosition > disruption.startTime) {
                     disruption.visible = true;
                 }
@@ -1832,7 +1677,6 @@
         }
         
         function drawTriangleElement(disruption) {
-            // Enhanced appearance for activated triangles
             let intensityFactor = 0;
             if (disruption.activated || disruption.intensity > 0) {
                 intensityFactor = disruption.intensity / disruption.maxIntensity;
@@ -1842,12 +1686,9 @@
             translate(disruption.x, disruption.y);
             rotate(disruption.rotation + (intensityFactor > 0 ? sin(millis() * 0.001) * 0.2 * intensityFactor : 0));
             
-            // Draw triangle
             if (disruption.activated || disruption.intensity > 0) {
                 fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
                      disruption.opacity * (0.6 + intensityFactor * 0.4));
-                
-                // Add stroke when activated
                 stroke(0, 0, 0, 80 * intensityFactor);
                 strokeWeight(1 * intensityFactor);
             } else {
@@ -1855,18 +1696,14 @@
                 noStroke();
             }
             
-            // Triangle size varies with intensity
             let size = disruption.size * (1 + (intensityFactor * 0.2));
             triangle(0, -size/2, -size/2, size/2, size/2, size/2);
             
-            // Add inner details when activated
             if (intensityFactor > 0.4) {
-                // Inner line
                 stroke(0, 0, 0, 100 * intensityFactor);
                 strokeWeight(1);
                 line(-size/3, size/4, size/3, size/4);
                 
-                // Exclamation point
                 if (intensityFactor > 0.7) {
                     stroke(0, 0, 0, 150 * intensityFactor);
                     strokeWeight(1.5);
@@ -1877,20 +1714,17 @@
             
             pop();
             
-            // Add subtle pulse for interactive elements
             if (disruption.interactive && !disruption.activated) {
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 40);
                 strokeWeight(0.8);
-                
                 ellipse(disruption.x, disruption.y, 
-                       disruption.size * 1.5 + sin(millis() * 0.002) * 4, // Less dramatic pulse for disappointment
+                       disruption.size * 1.5 + sin(millis() * 0.002) * 4,
                        disruption.size * 1.5 + sin(millis() * 0.002) * 4);
             }
         }
         
         function drawBlockElement(disruption) {
-            // Enhanced appearance for activated blocks
             let intensityFactor = 0;
             if (disruption.activated || disruption.intensity > 0) {
                 intensityFactor = disruption.intensity / disruption.maxIntensity;
@@ -1900,12 +1734,9 @@
             translate(disruption.x, disruption.y);
             rotate(disruption.rotation + (intensityFactor > 0 ? sin(millis() * 0.0015) * 0.2 * intensityFactor : 0));
             
-            // Draw block
             if (disruption.activated || disruption.intensity > 0) {
                 fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
                      disruption.opacity * (0.6 + intensityFactor * 0.4));
-                
-                // Add border when activated
                 stroke(0, 0, 0, 100 * intensityFactor);
                 strokeWeight(1 * intensityFactor);
             } else {
@@ -1913,16 +1744,11 @@
                 noStroke();
             }
             
-            // Block size varies with intensity
             let width = disruption.width * (1 + (intensityFactor * 0.15));
             let height = disruption.height * (1 + (intensityFactor * 0.15));
-            
-            // For disappointment, blocks represent barriers
             rect(-width/2, -height/2, width, height);
             
-            // Add inner details when activated
             if (intensityFactor > 0.4) {
-                // Cross pattern
                 stroke(0, 0, 0, 120 * intensityFactor);
                 strokeWeight(1);
                 line(-width/3, -height/3, width/3, height/3);
@@ -1931,12 +1757,10 @@
             
             pop();
             
-            // Add subtle pulse for interactive elements
             if (disruption.interactive && !disruption.activated) {
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 40);
                 strokeWeight(0.8);
-                
                 rect(disruption.x - disruption.width*0.75, disruption.y - disruption.height*0.75,
                      disruption.width*1.5 + sin(millis() * 0.002) * 4,
                      disruption.height*1.5 + sin(millis() * 0.002) * 4);
@@ -1944,10 +1768,8 @@
         }
         
         function drawAlertElement(disruption) {
-            // Update alert phase
             disruption.phase += disruption.pulseRate * (disruption.activated ? 2 : 0.5);
             
-            // Enhanced appearance for activated alerts
             let intensityFactor = 0;
             if (disruption.activated || disruption.intensity > 0) {
                 intensityFactor = disruption.intensity / disruption.maxIntensity;
@@ -1956,33 +1778,25 @@
             push();
             translate(disruption.x, disruption.y);
             
-            // Draw alert symbol - exclamation in circle
             if (disruption.activated || disruption.intensity > 0) {
-                // Outer circle
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
                       disruption.opacity * (0.7 + intensityFactor * 0.3));
                 strokeWeight(2 + intensityFactor);
                 
-                // Draw a circle with a gap for disappointment
                 let radius = disruption.size/2 * (1 + sin(disruption.phase) * 0.1 * intensityFactor);
                 arc(0, 0, radius*2, radius*2, PI/8, TWO_PI - PI/8);
                 
-                // Inner exclamation mark
                 stroke(0, 0, 0, disruption.opacity * (0.7 + intensityFactor * 0.3));
                 strokeWeight(2 + intensityFactor);
                 line(0, -radius*0.4, 0, radius*0.1);
                 point(0, radius*0.3);
             } else {
-                // Standard appearance - less emphasized
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], disruption.opacity * 0.8);
                 strokeWeight(1.5);
-                
-                // Draw a full circle when not activated
                 ellipse(0, 0, disruption.size, disruption.size);
                 
-                // Exclamation mark
                 stroke(0, 0, 0, disruption.opacity * 0.6);
                 strokeWeight(1.5);
                 let radius = disruption.size/2;
@@ -1990,7 +1804,6 @@
                 point(0, radius*0.3);
             }
             
-            // Add radiating circles for higher activation
             if (intensityFactor > 0.6) {
                 noFill();
                 for (let i = 0; i < 3; i++) {
@@ -1999,7 +1812,6 @@
                         stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
                               disruption.opacity * 0.3 * pulseFactor);
                         strokeWeight(1);
-                        
                         let pulseRadius = disruption.size * (1.2 + i * 0.3) * pulseFactor;
                         ellipse(0, 0, pulseRadius, pulseRadius);
                     }
@@ -2008,30 +1820,25 @@
             
             pop();
             
-            // Add subtle pulse for interactive elements
             if (disruption.interactive && !disruption.activated) {
                 noFill();
                 stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 40);
                 strokeWeight(0.8);
-                
                 ellipse(disruption.x, disruption.y, 
-                       disruption.size * 1.5 + sin(millis() * 0.002) * 4, // Less dramatic pulse for disappointment
+                       disruption.size * 1.5 + sin(millis() * 0.002) * 4,
                        disruption.size * 1.5 + sin(millis() * 0.002) * 4);
             }
         }
 
         function drawHighlightElements() {
-            // Draw highlight elements (brown - stabilizing response)
             for (let i = 0; i < highlightElements.length; i++) {
                 let highlight = highlightElements[i];
                 
-                // Check if this element should be visible based on timing
                 if (timePosition > highlight.startTime) {
                     highlight.visible = true;
                     
-                    // Update progress if not fully formed (for paths)
                     if (highlight.type === 'path' && highlight.progress < 1) {
-                        highlight.progress = min(1, highlight.progress + 0.005); // Slower progress for disappointment
+                        highlight.progress = min(1, highlight.progress + 0.005);
                     }
                 }
                 
@@ -2048,45 +1855,31 @@
         }
         
         function drawPlatformElement(highlight) {
-            // Calculate subtle undulation effects
-            let undulationAmount = sin(millis() * highlight.pulseRate) * 0.08; // Subtle for disappointment
-            
-            // Enhanced appearance for activated platforms
+            let undulationAmount = sin(millis() * highlight.pulseRate) * 0.08;
             let energyFactor = 0;
+            
             if (highlight.activated || highlight.energy > 0) {
                 energyFactor = highlight.energy / highlight.maxEnergy;
                 
-                // Draw energy glow
                 noFill();
-                stroke(colors.brown[0], colors.brown[1], colors.brown[2], 
-                      80 * energyFactor);
+                stroke(colors.brown[0], colors.brown[1], colors.brown[2], 80 * energyFactor);
                 strokeWeight(1.5);
                 
                 let glowWidth = highlight.width * (1 + energyFactor * 0.1);
                 let glowHeight = highlight.height * (1 + energyFactor * 0.1);
                 rect(highlight.x - glowWidth/2, highlight.y - glowHeight/2, glowWidth, glowHeight);
-                
-                // Draw main platform with enhanced color
                 fill(colors.brown[0], colors.brown[1], colors.brown[2], 
                     highlight.opacity * (0.7 + energyFactor * 0.3));
             } else {
-                // Standard appearance
-                fill(colors.brown[0], colors.brown[1], colors.brown[2], 
-                    highlight.opacity);
-                
+                fill(colors.brown[0], colors.brown[1], colors.brown[2], highlight.opacity);
                 noStroke();
             }
             
-            // Platform size varies with undulation
             let width = highlight.width * (1 + undulationAmount);
             let height = highlight.height;
-            
-            // For disappointment, platforms provide stable ground
             rect(highlight.x - width/2, highlight.y - height/2, width, height);
             
-            // Add texture/grain when activated
             if (energyFactor > 0.3) {
-                // Wood grain pattern
                 stroke(colors.brown[0] * 0.8, colors.brown[1] * 0.8, colors.brown[2] * 0.8, 
                       highlight.opacity * 0.4 * energyFactor);
                 strokeWeight(0.8);
@@ -2105,33 +1898,26 @@
                 }
             }
             
-            // Add subtle pulse for interactive elements
             if (highlight.interactive && !highlight.activated) {
                 noFill();
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], 40);
                 strokeWeight(0.8);
-                
                 rect(highlight.x - highlight.width*0.6, highlight.y - highlight.height,
-                     highlight.width*1.2, highlight.height*2 + sin(millis() * 0.0015) * 4); // Less dramatic pulse
+                     highlight.width*1.2, highlight.height*2 + sin(millis() * 0.0015) * 4);
             }
         }
         
         function drawOrganicElement(highlight) {
-            // Calculate subtle undulation effects
-            let undulationAmount = sin(millis() * highlight.pulseRate) * 0.08; // Subtle for disappointment
-            
-            // Enhanced appearance for activated organic shapes
+            let undulationAmount = sin(millis() * highlight.pulseRate) * 0.08;
             let energyFactor = 0;
+            
             if (highlight.activated || highlight.energy > 0) {
                 energyFactor = highlight.energy / highlight.maxEnergy;
                 
-                // Draw energy glow
                 noFill();
-                stroke(colors.brown[0], colors.brown[1], colors.brown[2], 
-                      80 * energyFactor);
+                stroke(colors.brown[0], colors.brown[1], colors.brown[2], 80 * energyFactor);
                 strokeWeight(1.5);
                 
-                // Draw a softened glow around the shape
                 push();
                 translate(highlight.x, highlight.y);
                 rotate(highlight.rotation);
@@ -2146,7 +1932,6 @@
                     let y = sin(angle) * radius;
                     curveVertex(x, y);
                 }
-                // Repeat first three points for smooth curve
                 for (let i = 0; i < 3; i++) {
                     let angle = TWO_PI * i / highlight.points;
                     let radius = glowSize/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0001) * 0.3);
@@ -2155,21 +1940,15 @@
                     curveVertex(x, y);
                 }
                 endShape();
-                
                 pop();
                 
-                // Draw main organic shape with enhanced color
                 fill(colors.brown[0], colors.brown[1], colors.brown[2], 
                     highlight.opacity * (0.7 + energyFactor * 0.3));
             } else {
-                // Standard appearance
-                fill(colors.brown[0], colors.brown[1], colors.brown[2], 
-                    highlight.opacity);
-                
+                fill(colors.brown[0], colors.brown[1], colors.brown[2], highlight.opacity);
                 noStroke();
             }
             
-            // Organic shape size varies with undulation
             let size = highlight.size * (1 + undulationAmount);
             
             push();
@@ -2177,8 +1956,6 @@
             rotate(highlight.rotation + (energyFactor > 0 ? sin(millis() * 0.001) * 0.1 : 0));
             
             beginShape();
-            
-            // Create a more organic, flowing shape
             for (let i = 0; i < highlight.points; i++) {
                 let angle = TWO_PI * i / highlight.points;
                 let radius = size/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0002 * (1 + energyFactor)) * 0.3);
@@ -2186,8 +1963,6 @@
                 let y = sin(angle) * radius;
                 curveVertex(x, y);
             }
-            
-            // Repeat first three points for smooth curve
             for (let i = 0; i < 3; i++) {
                 let angle = TWO_PI * i / highlight.points;
                 let radius = size/2 * (1 + noise(angle * highlight.noiseScale, millis() * 0.0002 * (1 + energyFactor)) * 0.3);
@@ -2195,12 +1970,9 @@
                 let y = sin(angle) * radius;
                 curveVertex(x, y);
             }
-            
             endShape();
             
-            // Add inner detail when activated
             if (energyFactor > 0.4) {
-                // Inner ring/texture
                 noFill();
                 stroke(colors.brown[0] * 0.8, colors.brown[1] * 0.8, colors.brown[2] * 0.8, 
                       highlight.opacity * 0.5 * energyFactor);
@@ -2214,8 +1986,6 @@
                     let y = sin(angle) * radius;
                     curveVertex(x, y);
                 }
-                
-                // Repeat first three points for smooth curve
                 for (let i = 0; i < 3; i++) {
                     let angle = TWO_PI * i / highlight.points;
                     let radius = size/3 * (1 + noise(angle * highlight.noiseScale * 2, millis() * 0.0002) * 0.2);
@@ -2225,35 +1995,29 @@
                 }
                 endShape();
             }
-            
             pop();
             
-            // Add subtle pulse for interactive elements
             if (highlight.interactive && !highlight.activated) {
                 noFill();
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], 40);
                 strokeWeight(0.8);
-                
                 ellipse(highlight.x, highlight.y, 
-                       highlight.size * 1.3 + sin(millis() * 0.0015) * 4, // Less dramatic pulse
+                       highlight.size * 1.3 + sin(millis() * 0.0015) * 4,
                        highlight.size * 1.3 + sin(millis() * 0.0015) * 4);
             }
         }
         
         function drawPathElement(highlight) {
-            // Enhanced appearance for activated paths
             let energyFactor = 0;
+            
             if (highlight.activated || highlight.energy > 0) {
                 energyFactor = highlight.energy / highlight.maxEnergy;
                 
-                // Draw energy glow
                 noFill();
-                stroke(colors.brown[0], colors.brown[1], colors.brown[2], 
-                      70 * energyFactor);
+                stroke(colors.brown[0], colors.brown[1], colors.brown[2], 70 * energyFactor);
                 strokeWeight(highlight.width + 1.5);
                 
-                // Draw path with progress and glow
-                if (highlight.points.length === 4) { // Bezier curve
+                if (highlight.points.length === 4) {
                     let p = highlight.points;
                     let progressLength = highlight.progress;
                     
@@ -2264,121 +2028,78 @@
                         lerp(p[0].x, p[3].x, progressLength), lerp(p[0].y, p[3].y, progressLength)
                     );
                 }
-                
-                // Draw main path with enhanced color
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], 
                       highlight.opacity * (0.7 + energyFactor * 0.3));
             } else {
-                // Standard appearance
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], highlight.opacity);
             }
             
             strokeWeight(highlight.width);
             noFill();
             
-            // Draw dashed path with progress
-            if (highlight.points.length === 4) { // Bezier curve
+            if (highlight.points.length === 4) {
                 let p = highlight.points;
                 let progressLength = highlight.progress;
-                
-                // Draw dashed bezier - more gaps for disappointment
-                drawDashedBezier(
-                    p[0].x, p[0].y,
-                    p[1].x, p[1].y,
-                    p[2].x, p[2].y,
-                    p[3].x, p[3].y,
-                    highlight.dashArray,
-                    progressLength
-                );
+                drawDashedBezier(p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y,
+                    highlight.dashArray, progressLength);
             }
             
-            // Add particles for activated paths - fewer for disappointment
             if (energyFactor > 0.5) {
                 noStroke();
-                fill(colors.brown[0], colors.brown[1], colors.brown[2], 
-                    160 * energyFactor);
+                fill(colors.brown[0], colors.brown[1], colors.brown[2], 160 * energyFactor);
                 
-                // Draw particles along bezier path
                 if (highlight.points.length === 4) {
                     let p = highlight.points;
-                    let numParticles = floor(4 * highlight.progress); // Fewer particles
+                    let numParticles = floor(4 * highlight.progress);
                     
                     for (let j = 0; j < numParticles; j++) {
-                        let t = (j / numParticles + (millis() % 3000) / 3000) % 1; // Slower movement
-                        
-                        // Only show particles up to current progress
+                        let t = (j / numParticles + (millis() % 3000) / 3000) % 1;
                         if (t > highlight.progress) continue;
                         
-                        // Calculate position on curve
                         let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
                         let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
-                        
-                        // Draw particle
                         let particleSize = 2.5 + energyFactor * 2;
                         ellipse(x, y, particleSize, particleSize);
                     }
                 }
             }
             
-            // Add interactive hint
             if (highlight.interactive && !highlight.activated) {
                 noFill();
                 stroke(colors.brown[0], colors.brown[1], colors.brown[2], 40);
                 strokeWeight(0.8);
                 
-                // Add pulse at endpoints of path
                 if (highlight.points.length === 4) {
                     let p = highlight.points;
-                    
-                    // Start point pulse
-                    ellipse(p[0].x, p[0].y, 
-                           10 + sin(millis() * 0.0015) * 3, 
-                           10 + sin(millis() * 0.0015) * 3);
-                    
-                    // End point pulse
-                    ellipse(p[3].x, p[3].y, 
-                           10 + sin(millis() * 0.0015 + 1) * 3, 
-                           10 + sin(millis() * 0.0015 + 1) * 3);
+                    ellipse(p[0].x, p[0].y, 10 + sin(millis() * 0.0015) * 3, 10 + sin(millis() * 0.0015) * 3);
+                    ellipse(p[3].x, p[3].y, 10 + sin(millis() * 0.0015 + 1) * 3, 10 + sin(millis() * 0.0015 + 1) * 3);
                 }
             }
         }
         
+        // OPTIMIZED: Reduced segments from 100 to 50
         function drawDashedBezier(x1, y1, x2, y2, x3, y3, x4, y4, pattern, progressLimit) {
-            // Draw a dashed bezier curve with the given dash pattern
-            // pattern[0] = dash length, pattern[1] = gap length
-            
             let dashLength = pattern[0];
             let gapLength = pattern[1];
-            
-            // Number of segments to approximate the curve
-            let numSegments = 100;
+            let numSegments = 50; // REDUCED from 100
             
             let x = x1;
             let y = y1;
             let prevX = x;
             let prevY = y;
-            
             let dashOn = true;
             let dashDistance = 0;
             
-            // Draw the bezier curve segment by segment
             for (let i = 1; i <= numSegments; i++) {
                 let t = i / numSegments;
-                
-                // Only draw up to the progress limit
                 if (t > progressLimit) break;
                 
-                // Calculate point on bezier curve
                 x = bezierPoint(x1, x2, x3, x4, t);
                 y = bezierPoint(y1, y2, y3, y4, t);
                 
-                // Calculate distance to previous point
                 let segmentLength = dist(prevX, prevY, x, y);
-                
-                // Update dash distance
                 dashDistance += segmentLength;
                 
-                // Check if we need to toggle dash state
                 if (dashOn && dashDistance >= dashLength) {
                     dashOn = false;
                     dashDistance = 0;
@@ -2387,7 +2108,6 @@
                     dashDistance = 0;
                 }
                 
-                // Draw line segment if dash is on
                 if (dashOn) {
                     line(prevX, prevY, x, y);
                 }
@@ -2397,318 +2117,264 @@
             }
         }
 
+        // OPTIMIZED: Batch drawing for connection lines
         function drawConnectionLines() {
-            // Draw connection lines between elements
-            
             for (let i = 0; i < connectionLines.length; i++) {
                 let line = connectionLines[i];
                 
-                // Only start drawing after the delay
-                if (timePosition > line.startTime) {
-                    // Update progress if animating
-                    if (isAnimating && line.progress < 1) {
-                        line.progress = min(1, line.progress + 0.004); // Slower for disappointment
-                    }
-                    
-                    // Get start and end points based on element types
-                    let startX, startY, endX, endY;
-                    
-                    // Start point
-                    if (line.startElement === 'framework') {
-                        let framework = frameworkElements[line.startIndex];
-                        
-                        if (framework.type === 'line') {
-                            // If line, use midpoint
-                            startX = framework.x + cos(framework.angle) * framework.length/2;
-                            startY = framework.y + sin(framework.angle) * framework.length/2;
-                        } else {
-                            startX = framework.x;
-                            startY = framework.y;
-                        }
-                    } else if (line.startElement === 'disruption') {
-                        startX = disruptionElements[line.startIndex].x;
-                        startY = disruptionElements[line.startIndex].y;
+                if (timePosition <= line.startTime) continue;
+                
+                if (isAnimating && line.progress < 1) {
+                    line.progress = min(1, line.progress + 0.004);
+                }
+                
+                let startX, startY, endX, endY;
+                
+                if (line.startElement === 'framework') {
+                    let framework = frameworkElements[line.startIndex];
+                    if (framework.type === 'line') {
+                        startX = framework.x + cos(framework.angle) * framework.length/2;
+                        startY = framework.y + sin(framework.angle) * framework.length/2;
                     } else {
-                        let highlight = highlightElements[line.startIndex];
-                        if (highlight.type === 'path') {
-                            // If path, use start point
-                            startX = highlight.points[0].x;
-                            startY = highlight.points[0].y;
-                        } else {
-                            startX = highlight.x;
-                            startY = highlight.y;
-                        }
+                        startX = framework.x;
+                        startY = framework.y;
                     }
-                    
-                    // End point
-                    if (line.endElement === 'framework') {
-                        let framework = frameworkElements[line.endIndex];
-                        
-                        if (framework.type === 'line') {
-                            // If line, use midpoint
-                            endX = framework.x + cos(framework.angle) * framework.length/2;
-                            endY = framework.y + sin(framework.angle) * framework.length/2;
-                        } else {
-                            endX = framework.x;
-                            endY = framework.y;
-                        }
-                    } else if (line.endElement === 'disruption') {
-                        endX = disruptionElements[line.endIndex].x;
-                        endY = disruptionElements[line.endIndex].y;
+                } else if (line.startElement === 'disruption') {
+                    startX = disruptionElements[line.startIndex].x;
+                    startY = disruptionElements[line.startIndex].y;
+                } else {
+                    let highlight = highlightElements[line.startIndex];
+                    if (highlight.type === 'path') {
+                        startX = highlight.points[0].x;
+                        startY = highlight.points[0].y;
                     } else {
-                        let highlight = highlightElements[line.endIndex];
-                        if (highlight.type === 'path') {
-                            // If path, use end point
-                            endX = highlight.points[3].x;
-                            endY = highlight.points[3].y;
-                        } else {
-                            endX = highlight.x;
-                            endY = highlight.y;
-                        }
+                        startX = highlight.x;
+                        startY = highlight.y;
                     }
-                    
-                    // Only draw if both elements are visible
-                    let startVisible = false;
-                    let endVisible = false;
-                    
-                    if (line.startElement === 'framework') {
-                        startVisible = frameworkElements[line.startIndex].visible;
-                    } else if (line.startElement === 'disruption') {
-                        startVisible = disruptionElements[line.startIndex].visible;
+                }
+                
+                if (line.endElement === 'framework') {
+                    let framework = frameworkElements[line.endIndex];
+                    if (framework.type === 'line') {
+                        endX = framework.x + cos(framework.angle) * framework.length/2;
+                        endY = framework.y + sin(framework.angle) * framework.length/2;
                     } else {
-                        startVisible = highlightElements[line.startIndex].visible;
+                        endX = framework.x;
+                        endY = framework.y;
                     }
-                    
-                    if (line.endElement === 'framework') {
-                        endVisible = frameworkElements[line.endIndex].visible;
-                    } else if (line.endElement === 'disruption') {
-                        endVisible = disruptionElements[line.endIndex].visible;
+                } else if (line.endElement === 'disruption') {
+                    endX = disruptionElements[line.endIndex].x;
+                    endY = disruptionElements[line.endIndex].y;
+                } else {
+                    let highlight = highlightElements[line.endIndex];
+                    if (highlight.type === 'path') {
+                        endX = highlight.points[3].x;
+                        endY = highlight.points[3].y;
                     } else {
-                        endVisible = highlightElements[line.endIndex].visible;
+                        endX = highlight.x;
+                        endY = highlight.y;
+                    }
+                }
+                
+                let startVisible = false;
+                let endVisible = false;
+                
+                if (line.startElement === 'framework') {
+                    startVisible = frameworkElements[line.startIndex].visible;
+                } else if (line.startElement === 'disruption') {
+                    startVisible = disruptionElements[line.startIndex].visible;
+                } else {
+                    startVisible = highlightElements[line.startIndex].visible;
+                }
+                
+                if (line.endElement === 'framework') {
+                    endVisible = frameworkElements[line.endIndex].visible;
+                } else if (line.endElement === 'disruption') {
+                    endVisible = disruptionElements[line.endIndex].visible;
+                } else {
+                    endVisible = highlightElements[line.endIndex].visible;
+                }
+                
+                if (!startVisible || !endVisible) continue;
+                
+                let lineColor;
+                if (line.endElement === 'framework') {
+                    lineColor = colors.black;
+                } else if (line.endElement === 'disruption') {
+                    lineColor = colors.yellow;
+                } else {
+                    lineColor = colors.brown;
+                }
+                
+                let isActivated = false;
+                let activationLevel = 0;
+                
+                if (line.startElement === 'framework') {
+                    let framework = frameworkElements[line.startIndex];
+                    isActivated = framework.activated;
+                    activationLevel = framework.tension / framework.maxTension;
+                } else if (line.startElement === 'disruption') {
+                    let disruption = disruptionElements[line.startIndex];
+                    isActivated = disruption.activated;
+                    activationLevel = disruption.intensity / disruption.maxIntensity;
+                } else {
+                    let highlight = highlightElements[line.startIndex];
+                    isActivated = highlight.activated;
+                    activationLevel = highlight.energy / highlight.maxEnergy;
+                }
+                
+                let endActivated = false;
+                let endActivationLevel = 0;
+                
+                if (line.endElement === 'framework') {
+                    let framework = frameworkElements[line.endIndex];
+                    endActivated = framework.activated;
+                    endActivationLevel = framework.tension / framework.maxTension;
+                } else if (line.endElement === 'disruption') {
+                    let disruption = disruptionElements[line.endIndex];
+                    endActivated = disruption.activated;
+                    endActivationLevel = disruption.intensity / disruption.maxIntensity;
+                } else {
+                    let highlight = highlightElements[line.endIndex];
+                    endActivated = highlight.activated;
+                    endActivationLevel = highlight.energy / highlight.maxEnergy;
+                }
+                
+                isActivated = isActivated || endActivated;
+                activationLevel = max(activationLevel, endActivationLevel);
+                
+                let breakPoint = 0.6;
+                if (line.broken && !isActivated) {
+                    breakPoint = random(0.4, 0.7);
+                }
+                
+                let distance = dist(startX, startY, endX, endY);
+                let numDots = floor(distance / line.dotSpacing);
+                let dotsToShow = line.broken && !isActivated ? 
+                                floor(numDots * breakPoint) : numDots;
+                
+                noStroke();
+                
+                // OPTIMIZED: Skip every other dot for inactive lines
+                let skipDots = !isActivated ? 2 : 1;
+                
+                for (let i = 0; i <= min(dotsToShow, numDots * line.progress); i += skipDots) {
+                    let t = i / numDots;
+                    let x, y;
+                    
+                    if (isActivated && activationLevel > 0.4) {
+                        let midX = (startX + endX) / 2;
+                        let midY = (startY + endY) / 2 - 5 * sin(PI * t);
+                        let u = 1 - t;
+                        x = u*u*startX + 2*u*t*midX + t*t*endX;
+                        y = u*u*startY + 2*u*t*midY + t*t*endY;
+                        
+                        let oscAmount = activationLevel * 2 * sin(t * PI * 3 + millis() * 0.002);
+                        let perpX = -(endY - startY);
+                        let perpY = (endX - startX);
+                        let perpLen = sqrt(perpX*perpX + perpY*perpY);
+                        
+                        if (perpLen > 0) {
+                            x += (perpX / perpLen) * oscAmount;
+                            y += (perpY / perpLen) * oscAmount;
+                        }
+                    } else {
+                        x = lerp(startX, endX, t);
+                        y = lerp(startY, endY, t);
                     }
                     
-                    if (startVisible && endVisible) {
-                        // Get color based on end element
-                        let lineColor;
-                        if (line.endElement === 'framework') {
-                            lineColor = colors.black;
-                        } else if (line.endElement === 'disruption') {
-                            lineColor = colors.yellow;
-                        } else {
-                            lineColor = colors.brown;
+                    if (isActivated) {
+                        fill(lineColor[0], lineColor[1], lineColor[2], 
+                            line.opacity * (0.6 + activationLevel * 0.4));
+                        let pulseSize = line.dotSize * (1 + sin(millis() * 0.002 + i * 0.2) * 0.2);
+                        ellipse(x, y, pulseSize + activationLevel * 1.5);
+                        
+                        if (line.broken && i > dotsToShow && i % 2 === 0) {
+                            fill(lineColor[0], lineColor[1], lineColor[2], 
+                                line.opacity * 0.4 * activationLevel);
+                            ellipse(x, y, pulseSize * 0.7);
                         }
-                        
-                        // Calculate activated state
-                        let isActivated = false;
-                        let activationLevel = 0;
-                        
-                        if (line.startElement === 'framework') {
-                            let framework = frameworkElements[line.startIndex];
-                            isActivated = framework.activated;
-                            activationLevel = framework.tension / framework.maxTension;
-                        } else if (line.startElement === 'disruption') {
-                            let disruption = disruptionElements[line.startIndex];
-                            isActivated = disruption.activated;
-                            activationLevel = disruption.intensity / disruption.maxIntensity;
-                        } else {
-                            let highlight = highlightElements[line.startIndex];
-                            isActivated = highlight.activated;
-                            activationLevel = highlight.energy / highlight.maxEnergy;
-                        }
-                        
-                        // Also check end element activation
-                        let endActivated = false;
-                        let endActivationLevel = 0;
-                        
-                        if (line.endElement === 'framework') {
-                            let framework = frameworkElements[line.endIndex];
-                            endActivated = framework.activated;
-                            endActivationLevel = framework.tension / framework.maxTension;
-                        } else if (line.endElement === 'disruption') {
-                            let disruption = disruptionElements[line.endIndex];
-                            endActivated = disruption.activated;
-                            endActivationLevel = disruption.intensity / disruption.maxIntensity;
-                        } else {
-                            let highlight = highlightElements[line.endIndex];
-                            endActivated = highlight.activated;
-                            endActivationLevel = highlight.energy / highlight.maxEnergy;
-                        }
-                        
-                        // Use higher of the two activation levels
-                        isActivated = isActivated || endActivated;
-                        activationLevel = max(activationLevel, endActivationLevel);
-                        
-                        // For broken connections, calculate how much to show
-                        let breakPoint = 0.6; // Show 60% of the line for broken connections
-                        if (line.broken && !isActivated) {
-                            breakPoint = random(0.4, 0.7); // Vary the break point slightly
-                        }
-                        
-                        // Draw dotted line
-                        let distance = dist(startX, startY, endX, endY);
-                        let numDots = floor(distance / line.dotSpacing);
-                        let dotsToShow = line.broken && !isActivated ? 
-                                        floor(numDots * breakPoint) : numDots;
-                        
-                        // Draw dots along the path
-                        for (let i = 0; i <= min(dotsToShow, numDots * line.progress); i++) {
-                            let t = i / numDots;
-                            
-                            let x, y;
-                            
-                            // For disappointment, lines have less dramatic curves
-                            if (isActivated && activationLevel > 0.4) {
-                                // Slight curve when activated
-                                let midX = (startX + endX) / 2;
-                                let midY = (startY + endY) / 2 - 5 * sin(PI * t); // Less arc
-                                
-                                // Quadratic interpolation for curved path
-                                let u = 1 - t;
-                                x = u*u*startX + 2*u*t*midX + t*t*endX;
-                                y = u*u*startY + 2*u*t*midY + t*t*endY;
-                                
-                                // Add slight undulation
-                                let oscAmount = activationLevel * 2 * sin(t * PI * 3 + millis() * 0.002);
-                                let perpX = -(endY - startY);
-                                let perpY = (endX - startX);
-                                let perpLen = sqrt(perpX*perpX + perpY*perpY);
-                                
-                                if (perpLen > 0) {
-                                    x += (perpX / perpLen) * oscAmount;
-                                    y += (perpY / perpLen) * oscAmount;
-                                }
-                                
-                            } else {
-                                // Linear path when not activated - direct
-                                x = lerp(startX, endX, t);
-                                y = lerp(startY, endY, t);
-                            }
-                            
-                            // Draw dot
-                            noStroke();
-                            
-                            if (isActivated) {
-                                // Enhanced appearance for activated lines
-                                fill(lineColor[0], lineColor[1], lineColor[2], 
-                                    line.opacity * (0.6 + activationLevel * 0.4));
-                                
-                                // Make dots pulse when activated
-                                let pulseSize = line.dotSize * (1 + sin(millis() * 0.002 + i * 0.2) * 0.2);
-                                ellipse(x, y, pulseSize + activationLevel * 1.5);
-                                
-                                // For broken connections that get fixed when activated
-                                if (line.broken && i > dotsToShow && i % 2 === 0) {
-                                    fill(lineColor[0], lineColor[1], lineColor[2], 
-                                        line.opacity * 0.4 * activationLevel);
-                                    ellipse(x, y, pulseSize * 0.7);
-                                }
-                            } else {
-                                fill(lineColor[0], lineColor[1], lineColor[2], line.opacity);
-                                ellipse(x, y, line.dotSize);
-                            }
-                        }
-                        
-                        // For broken connections, draw a disruption marker at the break point
-                        if (line.broken && !isActivated) {
-                            let t = breakPoint;
-                            let x = lerp(startX, endX, t);
-                            let y = lerp(startY, endY, t);
-                            
-                            // Draw small "x" mark
-                            stroke(lineColor[0], lineColor[1], lineColor[2], line.opacity * 0.7);
-                            strokeWeight(1);
-                            let markSize = line.dotSize * 1.5;
-                            line(x - markSize/2, y - markSize/2, x + markSize/2, y + markSize/2);
-                            line(x - markSize/2, y + markSize/2, x + markSize/2, y - markSize/2);
-                        }
+                    } else {
+                        fill(lineColor[0], lineColor[1], lineColor[2], line.opacity);
+                        ellipse(x, y, line.dotSize);
                     }
+                }
+                
+                if (line.broken && !isActivated) {
+                    let t = breakPoint;
+                    let x = lerp(startX, endX, t);
+                    let y = lerp(startY, endY, t);
+                    
+                    stroke(lineColor[0], lineColor[1], lineColor[2], line.opacity * 0.7);
+                    strokeWeight(1);
+                    let markSize = line.dotSize * 1.5;
+                    line(x - markSize/2, y - markSize/2, x + markSize/2, y + markSize/2);
+                    line(x - markSize/2, y + markSize/2, x + markSize/2, y - markSize/2);
                 }
             }
         }
         
         function drawDisappointmentCenters() {
-            // Only draw disappointment centers after they should appear
             for (let i = 0; i < disappointmentCenters.length; i++) {
                 let center = disappointmentCenters[i];
                 
-                // Check timing
-                if (timePosition > center.startTime) {
-                    // Fade in opacity
-                    if (center.opacity < center.targetOpacity) {
-                        center.opacity = min(center.targetOpacity, center.opacity + 0.8); // Slower for disappointment
-                    }
-                    
-                    // Calculate pulse effect
-                    let pulseAmount = sin(millis() * center.pulseRate) * 0.1; // Less dramatic for disappointment
-                    let pulseSize = center.size * (1 + pulseAmount);
-                    
-                    // Draw outer glow for active disappointment centers
-                    if (i === activeDisappointmentCenter && center.activationProgress > 0) {
-                        // Create subtle rings effect for disappointment - more subdued
-                        for (let j = 0; j < 2; j++) { // Fewer rings
-                            let expandedSize = pulseSize + j * 15 * center.activationProgress;
-                            let glowOpacity = (70 - j * 25) * center.activationProgress;
-                            
-                            noFill();
-                            
-                            // Use a blend of black and brown colors
-                            let blendedR = lerp(colors.black[0], colors.brown[0], 0.3);
-                            let blendedG = lerp(colors.black[1], colors.brown[1], 0.3);
-                            let blendedB = lerp(colors.black[2], colors.brown[2], 0.3);
-                            
-                            stroke(blendedR, blendedG, blendedB, glowOpacity);
-                            strokeWeight(1.2 - j * 0.3);
-                            
-                            // Draw broken circle for disappointment
-                            let segments = 6;
-                            for (let k = 0; k < segments; k++) {
-                                let startAngle = TWO_PI * k / segments;
-                                let endAngle = TWO_PI * (k + 0.8) / segments;
-                                arc(center.x, center.y, expandedSize, expandedSize, startAngle, endAngle);
-                            }
+                if (timePosition <= center.startTime) continue;
+                
+                if (center.opacity < center.targetOpacity) {
+                    center.opacity = min(center.targetOpacity, center.opacity + 0.8);
+                }
+                
+                let pulseAmount = sin(millis() * center.pulseRate) * 0.1;
+                let pulseSize = center.size * (1 + pulseAmount);
+                
+                if (i === activeDisappointmentCenter && center.activationProgress > 0) {
+                    for (let j = 0; j < 2; j++) {
+                        let expandedSize = pulseSize + j * 15 * center.activationProgress;
+                        let glowOpacity = (70 - j * 25) * center.activationProgress;
+                        
+                        noFill();
+                        let blendedR = lerp(colors.black[0], colors.brown[0], 0.3);
+                        let blendedG = lerp(colors.black[1], colors.brown[1], 0.3);
+                        let blendedB = lerp(colors.black[2], colors.brown[2], 0.3);
+                        
+                        stroke(blendedR, blendedG, blendedB, glowOpacity);
+                        strokeWeight(1.2 - j * 0.3);
+                        
+                        let segments = 6;
+                        for (let k = 0; k < segments; k++) {
+                            let startAngle = TWO_PI * k / segments;
+                            let endAngle = TWO_PI * (k + 0.8) / segments;
+                            arc(center.x, center.y, expandedSize, expandedSize, startAngle, endAngle);
                         }
                     }
-                    
-                    // Draw main disappointment center boundary
-                    noFill();
-                    
-                    // Use black as the primary color for disappointment centers
-                    stroke(0, 0, 0, center.opacity);
-                    strokeWeight(1.8); // Slightly thinner for disappointment
-                    
-                    // Draw broken/interrupted circle for disappointment
-                    let segments = 5;
-                    for (let j = 0; j < segments; j++) {
-                        let startAngle = TWO_PI * j / segments + millis() * 0.0002; // Slow rotation
-                        let endAngle = TWO_PI * (j + 0.8) / segments + millis() * 0.0002;
-                        arc(center.x, center.y, pulseSize, pulseSize, startAngle, endAngle);
-                    }
-                    
-                    // Draw inner circle - partially filled
-                    fill(0, 0, 0, center.opacity * 0.1); // More transparent
+                }
+                
+                noFill();
+                stroke(0, 0, 0, center.opacity);
+                strokeWeight(1.8);
+                
+                let segments = 5;
+                for (let j = 0; j < segments; j++) {
+                    let startAngle = TWO_PI * j / segments + millis() * 0.0002;
+                    let endAngle = TWO_PI * (j + 0.8) / segments + millis() * 0.0002;
+                    arc(center.x, center.y, pulseSize, pulseSize, startAngle, endAngle);
+                }
+                
+                fill(0, 0, 0, center.opacity * 0.1);
+                noStroke();
+                arc(center.x, center.y, pulseSize * 0.4, pulseSize * 0.4, PI/4, TWO_PI - PI/4);
+                
+                if (!center.activated) {
+                    fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
+                        60 + 20 * sin(millis() * 0.003));
                     noStroke();
-                    arc(center.x, center.y, pulseSize * 0.4, pulseSize * 0.4, PI/4, TWO_PI - PI/4); // Incomplete
                     
-                    // Add interactive hint
-                    if (!center.activated) {
-                        // Use yellow color for interactive hint
-                        fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 
-                            60 + 20 * sin(millis() * 0.003)); // Less dramatic pulse
-                        noStroke();
-                        
-                        // Draw disappointment symbol
-                        push();
-                        translate(center.x, center.y);
-                        
-                        // Draw broken/interrupted element
-                        let symbolSize = 10;
-                        
-                        // Horizontal line with gap
-                        rect(-symbolSize, -symbolSize/4, symbolSize*0.7, symbolSize/2);
-                        rect(symbolSize*0.3, -symbolSize/4, symbolSize*0.7, symbolSize/2);
-                        
-                        pop();
-                    }
+                    push();
+                    translate(center.x, center.y);
+                    let symbolSize = 10;
+                    rect(-symbolSize, -symbolSize/4, symbolSize*0.7, symbolSize/2);
+                    rect(symbolSize*0.3, -symbolSize/4, symbolSize*0.7, symbolSize/2);
+                    pop();
                 }
             }
         }
@@ -2717,11 +2383,9 @@
             const resonance = document.getElementById('disappointment-resonance');
             resonance.innerHTML = message;
             
-            // Position near the element but within screen bounds
             let posX = x;
             let posY = y - 60;
             
-            // Adjust if would go off screen
             if (posX < 20) posX = 20;
             if (posX > window.innerWidth - 270) posX = window.innerWidth - 270;
             if (posY < 20) posY = 20;
@@ -2732,7 +2396,6 @@
             resonance.style.transform = 'translateY(0)';
             resonance.style.opacity = '1';
             
-            // Hide after 5 seconds (longer for disappointment)
             setTimeout(() => {
                 resonance.style.opacity = '0';
                 resonance.style.transform = 'translateY(20px)';
@@ -2740,32 +2403,26 @@
         }
 
         function windowResized() {
-            // Throttle resize events
             clearTimeout(resizeTimeout);
-            
             resizeTimeout = setTimeout(() => {
                 resizeCanvas(windowWidth, windowHeight);
                 repositionElements();
                 updateLayoutForOrientation();
-            }, 100);
+            }, 200); // Increased debounce
         }
         
         function repositionElements() {
-            // Calculate scaling factors
             const widthFactor = windowWidth / width;
             const heightFactor = windowHeight / height;
             
-            // Store new canvas dimensions
             width = windowWidth;
             height = windowHeight;
             
-            // Recalculate hand outline points for new dimensions
             for (let i = 0; i < handOutlinePoints.length; i++) {
                 handOutlinePoints[i].x *= widthFactor;
                 handOutlinePoints[i].y *= heightFactor;
             }
             
-            // Reposition framework elements
             for (let framework of frameworkElements) {
                 framework.x *= widthFactor;
                 framework.y *= heightFactor;
@@ -2780,7 +2437,6 @@
                 }
             }
             
-            // Reposition disruption elements
             for (let disruption of disruptionElements) {
                 disruption.x *= widthFactor;
                 disruption.y *= heightFactor;
@@ -2793,7 +2449,6 @@
                 }
             }
             
-            // Reposition highlight elements
             for (let highlight of highlightElements) {
                 if (highlight.type !== 'path') {
                     highlight.x *= widthFactor;
@@ -2806,7 +2461,6 @@
                         highlight.size *= widthFactor;
                     }
                 } else {
-                    // Reposition path points
                     for (let point of highlight.points) {
                         point.x *= widthFactor;
                         point.y *= heightFactor;
@@ -2814,7 +2468,6 @@
                 }
             }
             
-            // Reposition disappointment centers
             for (let center of disappointmentCenters) {
                 center.x *= widthFactor;
                 center.y *= heightFactor;
@@ -2823,277 +2476,227 @@
         }
         
         function mousePressed() {
-            // Interaction cooldown to prevent multiple rapid activations
             const currentTime = millis();
             if (currentTime - lastInteractionTime < 300) {
-                // If it's been less than 300ms since last interaction, ignore this one
                 return false;
             }
             lastInteractionTime = currentTime;
             
-            // Only process clicks after landing page has disappeared
-            if (document.getElementById('landing-overlay').style.display === 'none') {
+            if (document.getElementById('landing-overlay').style.display !== 'none') {
+                return false;
+            }
+            
+            for (let i = 0; i < disappointmentCenters.length; i++) {
+                let center = disappointmentCenters[i];
                 
-                // Check for interactions with disappointment centers first
-                for (let i = 0; i < disappointmentCenters.length; i++) {
-                    let center = disappointmentCenters[i];
+                if (timePosition > center.startTime) {
+                    let d = dist(mouseX, mouseY, center.x, center.y);
                     
-                    if (timePosition > center.startTime) {
-                        let d = dist(mouseX, mouseY, center.x, center.y);
+                    if (d < center.size / 2) {
+                        center.activated = !center.activated;
                         
-                        if (d < center.size / 2) {
-                            // Toggle disappointment center activation
-                            center.activated = !center.activated;
+                        if (center.activated) {
+                            activeDisappointmentCenter = i;
+                            centerActivated = true;
+                            showDisappointmentResonance(center.resonance, center.x, center.y);
                             
-                            if (center.activated) {
-                                // Set as active disappointment center
-                                activeDisappointmentCenter = i;
-                                centerActivated = true;
-                                
-                                // Show disappointment resonance
-                                showDisappointmentResonance(center.resonance, center.x, center.y);
-                                
-                                // Activate associated elements
-                                for (let element of center.elements) {
-                                    if (element.type === 'framework') {
-                                        frameworkElements[element.index].activated = true;
-                                        frameworkElements[element.index].activatedTime = millis();
-                                        frameworkElements[element.index].tension = frameworkElements[element.index].maxTension * 0.7;
-                                    } else if (element.type === 'disruption') {
-                                        disruptionElements[element.index].activated = true;
-                                        disruptionElements[element.index].activatedTime = millis();
-                                        disruptionElements[element.index].intensity = disruptionElements[element.index].maxIntensity * 0.8;
-                                    } else {
-                                        highlightElements[element.index].activated = true;
-                                        highlightElements[element.index].activatedTime = millis();
-                                        highlightElements[element.index].energy = highlightElements[element.index].maxEnergy * 0.75;
-                                    }
-                                }
-                                
-                                // Play special sound if enabled
-                                if (soundEnabled && soundLoaded && disappointmentSound) {
-                                    // Could add special sound effect here
-                                }
-                            } else {
-                                // Deactivate
-                                activeDisappointmentCenter = null;
-                                centerActivated = false;
-                            }
-                            
-                            return false;
-                        }
-                    }
-                }
-                
-                // Check for interactions with elements
-                let clickedElement = false;
-                
-                // Check framework elements
-                for (let i = 0; i < frameworkElements.length; i++) {
-                    let framework = frameworkElements[i];
-                    
-                    if (framework.visible && framework.interactive) {
-                        let hitTest = false;
-                        
-                        if (framework.type === 'line') {
-                            // Check if click is near line
-                            let lineStart = createVector(framework.x, framework.y);
-                            let lineEnd = createVector(
-                                framework.x + cos(framework.angle) * framework.length,
-                                framework.y + sin(framework.angle) * framework.length
-                            );
-                            
-                            let mousePt = createVector(mouseX, mouseY);
-                            let projection = projectionPointOnLine(mousePt, lineStart, lineEnd);
-                            
-                            let d = dist(mouseX, mouseY, projection.x, projection.y);
-                            
-                            // Check if projection is on the line segment
-                            let dStart = dist(projection.x, projection.y, lineStart.x, lineStart.y);
-                            let dEnd = dist(projection.x, projection.y, lineEnd.x, lineEnd.y);
-                            let lineLength = dist(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y);
-                            
-                            hitTest = (d < framework.width + 8) && (dStart + dEnd <= lineLength + 0.1);
-                        } else if (framework.type === 'dots') {
-                            // For dots, use distance to center
-                            let d = dist(mouseX, mouseY, framework.x, framework.y);
-                            hitTest = (d < framework.size / 2);
-                        } else if (framework.type === 'container') {
-                            // For containers, check if inside
-                            if (framework.shape === 'rect') {
-                                hitTest = (mouseX > framework.x - framework.width/2 &&
-                                          mouseX < framework.x + framework.width/2 &&
-                                          mouseY > framework.y - framework.height/2 &&
-                                          mouseY < framework.y + framework.height/2);
-                            } else {
-                                // For ellipse containers
-                                let d = dist(mouseX, mouseY, framework.x, framework.y);
-                                hitTest = (d < framework.width/2);
-                            }
-                        }
-                        
-                        if (hitTest) {
-                            // Toggle activation
-                            framework.activated = !framework.activated;
-                            framework.activatedTime = millis();
-                            
-                            if (framework.activated) {
-                                // Set tension level
-                                framework.tension = framework.maxTension * 0.7;
-                                
-                                // Show disappointment resonance
-                                showDisappointmentResonance(getRandomResonance(), 
-                                    framework.type === 'line' ? 
-                                    framework.x + cos(framework.angle) * framework.length/2 : 
-                                    framework.x, 
-                                    framework.type === 'line' ? 
-                                    framework.y + sin(framework.angle) * framework.length/2 : 
-                                    framework.y);
-                            }
-                            
-                            clickedElement = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (clickedElement) return false;
-                
-                // Check disruption elements
-                for (let i = 0; i < disruptionElements.length; i++) {
-                    let disruption = disruptionElements[i];
-                    
-                    if (disruption.visible && disruption.interactive) {
-                        let hitTest = false;
-                        
-                        if (disruption.type === 'triangle') {
-                            // Calculate triangle bounds
-                            let d = dist(mouseX, mouseY, disruption.x, disruption.y);
-                            hitTest = (d < disruption.size * 0.7); // Approximate for triangle
-                        } else if (disruption.type === 'block') {
-                            // Check if inside block
-                            let rotatedX = cos(-disruption.rotation) * (mouseX - disruption.x) - 
-                                          sin(-disruption.rotation) * (mouseY - disruption.y) + disruption.x;
-                            let rotatedY = sin(-disruption.rotation) * (mouseX - disruption.x) + 
-                                          cos(-disruption.rotation) * (mouseY - disruption.y) + disruption.y;
-                                          
-                            hitTest = (rotatedX > disruption.x - disruption.width/2 &&
-                                      rotatedX < disruption.x + disruption.width/2 &&
-                                      rotatedY > disruption.y - disruption.height/2 &&
-                                      rotatedY < disruption.y + disruption.height/2);
-                        } else if (disruption.type === 'alert') {
-                            // For alert symbols, check if inside circle
-                            let d = dist(mouseX, mouseY, disruption.x, disruption.y);
-                            hitTest = (d < disruption.size/2);
-                        }
-                        
-                        if (hitTest) {
-                            // Toggle activation
-                            disruption.activated = !disruption.activated;
-                            disruption.activatedTime = millis();
-                            
-                            if (disruption.activated) {
-                                // Set intensity level
-                                disruption.intensity = disruption.maxIntensity * 0.8;
-                                
-                                // Show disappointment resonance
-                                showDisappointmentResonance(getRandomResonance(), disruption.x, disruption.y);
-                            }
-                            
-                            clickedElement = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (clickedElement) return false;
-                
-                // Check highlight elements
-                for (let i = 0; i < highlightElements.length; i++) {
-                    let highlight = highlightElements[i];
-                    
-                    if (highlight.visible && highlight.interactive) {
-                        let hitTest = false;
-                        
-                        if (highlight.type === 'platform') {
-                            // Check if click is inside platform
-                            hitTest = (mouseX > highlight.x - highlight.width/2 &&
-                                      mouseX < highlight.x + highlight.width/2 &&
-                                      mouseY > highlight.y - highlight.height/2 &&
-                                      mouseY < highlight.y + highlight.height/2);
-                        } else if (highlight.type === 'organic') {
-                            // For organic shapes, approximate with circle
-                            let d = dist(mouseX, mouseY, highlight.x, highlight.y);
-                            hitTest = (d < highlight.size/2);
-                        } else if (highlight.type === 'path') {
-                            // Check if click is near path
-                            if (highlight.points.length === 4) { // Bezier curve
-                                let p = highlight.points;
-                                let hitTestPoints = 10;
-                                
-                                // Check multiple points along the curve
-                                for (let j = 0; j < hitTestPoints; j++) {
-                                    let t = j / (hitTestPoints - 1);
-                                    
-                                    let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
-                                    let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
-                                    
-                                    let d = dist(mouseX, mouseY, x, y);
-                                    
-                                    if (d < highlight.width + 10) {
-                                        hitTest = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if (hitTest) {
-                            // Toggle activation
-                            highlight.activated = !highlight.activated;
-                            highlight.activatedTime = millis();
-                            
-                            if (highlight.activated) {
-                                // Set energy level
-                                highlight.energy = highlight.maxEnergy * 0.75;
-                                
-                                // Show disappointment resonance
-                                if (highlight.type === 'path') {
-                                    let p = highlight.points;
-                                    showDisappointmentResonance(getRandomResonance(), 
-                                        (p[0].x + p[3].x)/2, 
-                                        (p[0].y + p[3].y)/2);
+                            for (let element of center.elements) {
+                                if (element.type === 'framework') {
+                                    frameworkElements[element.index].activated = true;
+                                    frameworkElements[element.index].activatedTime = millis();
+                                    frameworkElements[element.index].tension = frameworkElements[element.index].maxTension * 0.7;
+                                } else if (element.type === 'disruption') {
+                                    disruptionElements[element.index].activated = true;
+                                    disruptionElements[element.index].activatedTime = millis();
+                                    disruptionElements[element.index].intensity = disruptionElements[element.index].maxIntensity * 0.8;
                                 } else {
-                                    showDisappointmentResonance(getRandomResonance(), highlight.x, highlight.y);
+                                    highlightElements[element.index].activated = true;
+                                    highlightElements[element.index].activatedTime = millis();
+                                    highlightElements[element.index].energy = highlightElements[element.index].maxEnergy * 0.75;
                                 }
                             }
-                            
-                            clickedElement = true;
-                            break;
+                        } else {
+                            activeDisappointmentCenter = null;
+                            centerActivated = false;
+                        }
+                        
+                        return false;
+                    }
+                }
+            }
+            
+            let clickedElement = false;
+            
+            for (let i = 0; i < frameworkElements.length; i++) {
+                let framework = frameworkElements[i];
+                
+                if (framework.visible && framework.interactive) {
+                    let hitTest = false;
+                    
+                    if (framework.type === 'line') {
+                        let lineStart = createVector(framework.x, framework.y);
+                        let lineEnd = createVector(
+                            framework.x + cos(framework.angle) * framework.length,
+                            framework.y + sin(framework.angle) * framework.length
+                        );
+                        
+                        let mousePt = createVector(mouseX, mouseY);
+                        let projection = projectionPointOnLine(mousePt, lineStart, lineEnd);
+                        let d = dist(mouseX, mouseY, projection.x, projection.y);
+                        let dStart = dist(projection.x, projection.y, lineStart.x, lineStart.y);
+                        let dEnd = dist(projection.x, projection.y, lineEnd.x, lineEnd.y);
+                        let lineLength = dist(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y);
+                        hitTest = (d < framework.width + 8) && (dStart + dEnd <= lineLength + 0.1);
+                    } else if (framework.type === 'dots') {
+                        let d = dist(mouseX, mouseY, framework.x, framework.y);
+                        hitTest = (d < framework.size / 2);
+                    } else if (framework.type === 'container') {
+                        if (framework.shape === 'rect') {
+                            hitTest = (mouseX > framework.x - framework.width/2 &&
+                                      mouseX < framework.x + framework.width/2 &&
+                                      mouseY > framework.y - framework.height/2 &&
+                                      mouseY < framework.y + framework.height/2);
+                        } else {
+                            let d = dist(mouseX, mouseY, framework.x, framework.y);
+                            hitTest = (d < framework.width/2);
                         }
                     }
-                }
-                
-                if (clickedElement) return false;
-                
-                // If no element was clicked, toggle animation
-                isAnimating = !isAnimating;
-                
-                // Update sound based on animation state
-                if (!isAnimating && soundEnabled && soundLoaded && disappointmentSound && disappointmentSound.isPlaying()) {
-                    disappointmentSound.setVolume(0.3, 1.5); // Slower for disappointment
-                } else if (isAnimating && soundEnabled && soundLoaded && disappointmentSound) {
-                    if (!disappointmentSound.isPlaying()) {
-                        disappointmentSound.loop();
+                    
+                    if (hitTest) {
+                        framework.activated = !framework.activated;
+                        framework.activatedTime = millis();
+                        
+                        if (framework.activated) {
+                            framework.tension = framework.maxTension * 0.7;
+                            showDisappointmentResonance(getRandomResonance(), 
+                                framework.type === 'line' ? 
+                                framework.x + cos(framework.angle) * framework.length/2 : 
+                                framework.x, 
+                                framework.type === 'line' ? 
+                                framework.y + sin(framework.angle) * framework.length/2 : 
+                                framework.y);
+                        }
+                        
+                        clickedElement = true;
+                        break;
                     }
-                    disappointmentSound.setVolume(0.6, 1.5);
                 }
+            }
+            
+            if (clickedElement) return false;
+            
+            for (let i = 0; i < disruptionElements.length; i++) {
+                let disruption = disruptionElements[i];
+                
+                if (disruption.visible && disruption.interactive) {
+                    let hitTest = false;
+                    
+                    if (disruption.type === 'triangle') {
+                        let d = dist(mouseX, mouseY, disruption.x, disruption.y);
+                        hitTest = (d < disruption.size * 0.7);
+                    } else if (disruption.type === 'block') {
+                        let rotatedX = cos(-disruption.rotation) * (mouseX - disruption.x) - 
+                                      sin(-disruption.rotation) * (mouseY - disruption.y) + disruption.x;
+                        let rotatedY = sin(-disruption.rotation) * (mouseX - disruption.x) + 
+                                      cos(-disruption.rotation) * (mouseY - disruption.y) + disruption.y;
+                        hitTest = (rotatedX > disruption.x - disruption.width/2 &&
+                                  rotatedX < disruption.x + disruption.width/2 &&
+                                  rotatedY > disruption.y - disruption.height/2 &&
+                                  rotatedY < disruption.y + disruption.height/2);
+                    } else if (disruption.type === 'alert') {
+                        let d = dist(mouseX, mouseY, disruption.x, disruption.y);
+                        hitTest = (d < disruption.size/2);
+                    }
+                    
+                    if (hitTest) {
+                        disruption.activated = !disruption.activated;
+                        disruption.activatedTime = millis();
+                        
+                        if (disruption.activated) {
+                            disruption.intensity = disruption.maxIntensity * 0.8;
+                            showDisappointmentResonance(getRandomResonance(), disruption.x, disruption.y);
+                        }
+                        
+                        clickedElement = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (clickedElement) return false;
+            
+            for (let i = 0; i < highlightElements.length; i++) {
+                let highlight = highlightElements[i];
+                
+                if (highlight.visible && highlight.interactive) {
+                    let hitTest = false;
+                    
+                    if (highlight.type === 'platform') {
+                        hitTest = (mouseX > highlight.x - highlight.width/2 &&
+                                  mouseX < highlight.x + highlight.width/2 &&
+                                  mouseY > highlight.y - highlight.height/2 &&
+                                  mouseY < highlight.y + highlight.height/2);
+                    } else if (highlight.type === 'organic') {
+                        let d = dist(mouseX, mouseY, highlight.x, highlight.y);
+                        hitTest = (d < highlight.size/2);
+                    } else if (highlight.type === 'path') {
+                        if (highlight.points.length === 4) {
+                            let p = highlight.points;
+                            let hitTestPoints = 10;
+                            
+                            for (let j = 0; j < hitTestPoints; j++) {
+                                let t = j / (hitTestPoints - 1);
+                                let x = bezierPoint(p[0].x, p[1].x, p[2].x, p[3].x, t);
+                                let y = bezierPoint(p[0].y, p[1].y, p[2].y, p[3].y, t);
+                                let d = dist(mouseX, mouseY, x, y);
+                                
+                                if (d < highlight.width + 10) {
+                                    hitTest = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (hitTest) {
+                        highlight.activated = !highlight.activated;
+                        highlight.activatedTime = millis();
+                        
+                        if (highlight.activated) {
+                            highlight.energy = highlight.maxEnergy * 0.75;
+                            
+                            if (highlight.type === 'path') {
+                                let p = highlight.points;
+                                showDisappointmentResonance(getRandomResonance(), 
+                                    (p[0].x + p[3].x)/2, 
+                                    (p[0].y + p[3].y)/2);
+                            } else {
+                                showDisappointmentResonance(getRandomResonance(), highlight.x, highlight.y);
+                            }
+                        }
+                        
+                        clickedElement = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (clickedElement) return false;
+            
+            isAnimating = !isAnimating;
+            
+            if (!isAnimating && soundEnabled && soundLoaded && disappointmentSound && disappointmentSound.isPlaying()) {
+                disappointmentSound.setVolume(0.3, 1.5);
+            } else if (isAnimating && soundEnabled && soundLoaded && disappointmentSound) {
+                if (!disappointmentSound.isPlaying()) {
+                    disappointmentSound.loop();
+                }
+                disappointmentSound.setVolume(0.6, 1.5);
             }
             
             return false;
         }
         
-        // Utility function to find projection of point on line
         function projectionPointOnLine(p, a, b) {
             let ap = p5.Vector.sub(p, a);
             let ab = p5.Vector.sub(b, a);
@@ -3102,18 +2705,14 @@
             return p5.Vector.add(a, ab);
         }
         
-        // Support touch events
         function touchStarted() {
-            // Initialize audio context for iOS
             if (getAudioContext().state !== 'running') {
                 getAudioContext().resume();
             }
-            
             return mousePressed();
         }
 
         function touchMoved() {
-            // Prevent default only if on canvas, not on UI elements
             if (mouseY < height && mouseX < width) {
                 return false;
             }

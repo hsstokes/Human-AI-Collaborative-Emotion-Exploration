@@ -440,34 +440,60 @@
         };
         
         function startExperience() {
-            document.getElementById('landing-overlay').style.opacity = '0';
+    console.log("Starting experience - Sound state:", soundEnabled, soundLoaded);
+    
+    // Force audio context to resume first
+    if (getAudioContext().state !== 'running') {
+        try {
+            getAudioContext().resume();
+            console.log("Audio context resumed");
+        } catch(e) {
+            console.error("Audio context resume error:", e);
+        }
+    }
+    
+    document.getElementById('landing-overlay').style.opacity = '0';
+    
+    setTimeout(() => {
+        document.getElementById('landing-overlay').style.display = 'none';
+        isAnimating = true;
+        loop();
+        updateLayoutForOrientation();
+        
+        // Handle sound with more robust error handling
+        if (soundEnabled && soundLoaded) {
+            try {
+                // Add a slight delay before playing sound
+                setTimeout(() => {
+                    if (!disappointmentSound.isPlaying()) {
+                        try {
+                            disappointmentSound.loop();
+                            disappointmentSound.setVolume(0);
+                            disappointmentSound.setVolume(0.6, 2);
+                            console.log("Sound playback started successfully");
+                        } catch(e) {
+                            console.error("Delayed sound start error:", e);
+                        }
+                    }
+                }, 500);
+            } catch(e) {
+                console.error("Error preparing sound:", e);
+                // Continue with visualization even if sound fails
+            }
+        } else {
+            console.log("Sound not available or not enabled");
+        }
+        
+        setTimeout(() => {
+            document.getElementById('controls').style.opacity = '1';
+            document.getElementById('hint').style.opacity = '1';
             
             setTimeout(() => {
-                document.getElementById('landing-overlay').style.display = 'none';
-                isAnimating = true;
-                loop();
-                updateLayoutForOrientation();
-                
-                if (soundEnabled && soundLoaded) {
-                    try {
-                        disappointmentSound.loop();
-                        disappointmentSound.setVolume(0);
-                        disappointmentSound.setVolume(0.6, 2);
-                    } catch(e) {
-                        console.error("Error playing sound:", e);
-                    }
-                }
-                
-                setTimeout(() => {
-                    document.getElementById('controls').style.opacity = '1';
-                    document.getElementById('hint').style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        document.getElementById('hint').style.opacity = '0';
-                    }, 5000);
-                }, 2000);
-            }, 1000);
-        }
+                document.getElementById('hint').style.opacity = '0';
+            }, 5000);
+        }, 2000);
+    }, 1000);
+}
         
         function updateLayoutForOrientation() {
             const controls = document.getElementById('controls');
@@ -583,32 +609,34 @@
         }
         
         function preload() {
-            soundLoaded = false;
-            
-            try {
-                disappointmentSound = loadSound('disappointment_soundscape.mp3', 
-                    function() {
-                        console.log("Sound loaded successfully");
-                        soundLoaded = true;
-                        clearTimeout(soundLoadTimeout);
-                    },
-                    function(err) {
-                        console.error("Error loading sound:", err);
-                        soundEnabled = false;
-                        clearTimeout(soundLoadTimeout);
-                    }
-                );
-                
-                soundLoadTimeout = setTimeout(() => {
-                    console.log("Sound loading timed out");
-                    soundEnabled = false;
-                    soundLoaded = false;
-                }, 10000);
-            } catch(e) {
-                console.error("Could not load sound:", e);
-                soundEnabled = false;
+    soundLoaded = false;
+    
+    try {
+        disappointmentSound = loadSound('disappointment_soundscape.mp3', 
+            function() {
+                console.log("Sound loaded successfully");
+                soundLoaded = true;
+                clearTimeout(soundLoadTimeout);
+            },
+            function(err) {
+                console.error("Error loading sound:", err);
+                // Don't automatically disable sound, just mark as not loaded
+                soundLoaded = false;
+                clearTimeout(soundLoadTimeout);
             }
-        }
+        );
+        
+        // Increase timeout and make it non-blocking
+        soundLoadTimeout = setTimeout(() => {
+            console.log("Sound loading timed out, continuing without sound");
+            soundLoaded = false;
+            // No longer disabling sound completely - user can still toggle
+        }, 15000);
+    } catch(e) {
+        console.error("Could not load sound:", e);
+        soundLoaded = false;
+    }
+}
 
         function setup() {
             createCanvas(windowWidth, windowHeight);
@@ -2706,11 +2734,47 @@
         }
         
         function touchStarted() {
-            if (getAudioContext().state !== 'running') {
-                getAudioContext().resume();
+    // More robust audio context handling
+    if (getAudioContext().state !== 'running') {
+        getAudioContext().resume().then(() => {
+            console.log("Audio context resumed on touch");
+            
+            // Try to play sound if it was supposed to be playing
+            if (soundEnabled && soundLoaded && disappointmentSound && !disappointmentSound.isPlaying() && isAnimating) {
+                try {
+                    disappointmentSound.loop();
+                    disappointmentSound.setVolume(0.6);
+                    console.log("Sound started on touch");
+                } catch(e) {
+                    console.error("Error starting sound on touch:", e);
+                }
             }
-            return mousePressed();
+        }).catch(err => {
+            console.error("Failed to resume audio context:", err);
+        });
+    }
+    return mousePressed();
+}
+        // Add this new function
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && soundEnabled && soundLoaded && disappointmentSound && isAnimating) {
+        console.log("Tab became visible, checking sound state");
+        if (!disappointmentSound.isPlaying()) {
+            try {
+                disappointmentSound.loop();
+                disappointmentSound.setVolume(0.6, 1);
+                console.log("Sound restarted after visibility change");
+            } catch(e) {
+                console.error("Error restarting sound:", e);
+            }
         }
+        
+        // Also ensure audio context is running
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+    }
+});
 
         function touchMoved() {
             if (mouseY < height && mouseX < width) {

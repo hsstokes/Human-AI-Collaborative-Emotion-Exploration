@@ -530,8 +530,8 @@
         function preload() {
             soundLoaded = false;
             try {
-                // Use a relative path instead of an absolute URL
-                sadnessSound = loadSound('sadness_soundscape.mp3', 
+                // Use a direct URL to the sound file
+                sadnessSound = loadSound('https://assets.codepen.io/6566924/sadness_ambient.mp3', 
                     function() {
                         console.log("Sound loaded successfully");
                         soundLoaded = true;

@@ -319,16 +319,19 @@
         let timePosition = 0;
         let previousTimePosition = 0;
         let activatedTimeline = false;
+        let sketchbookImage;
+        let graphPaperTexture;
         
         // Color palette for Sadness
         const colors = {
             greyBlack: [50, 50, 50],      // Grey to black - Recognition of boundaries
-            ochraYellow: [190, 150, 80], // Light browns to ochra yellows - Evaluation of temporal markers
+            ochraYellow: [190, 150, 80],  // Light browns to ochra yellows - Evaluation of temporal markers
             purpleBlue: [100, 100, 200]   // Hints of purple blues - Response that honors distance
         };
         
         // Hand outline elements
         let handOutlinePoints = [];
+        let palmLines = [];
         let handProgress = 0;
         
         // Fragmented elements
@@ -340,11 +343,14 @@
         // Circle elements
         let circleElements = [];
         
-        // Memory trace elements
-        let memoryTraces = [];
+        // Dotted line elements
+        let dottedLineElements = [];
         
-        // Isolated particles
-        let isolationParticles = [];
+        // Paperclip elements
+        let paperclipElements = [];
+        
+        // Photo/collage elements
+        let collageElements = [];
         
         // Adjust for mobile viewport
         function adjustForMobileViewport() {
@@ -527,43 +533,66 @@
             document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
         }
         
-    function preload() {
-    // Pre-load sound
-    soundLoaded = false;
-    sadnessSound = loadSound('sadness_soundscape.mp3',
-        function() {
-            console.log("Sound loaded successfully");
-            soundLoaded = true;
-        },
-        function(err) {
-            console.error("Error loading sound:", err);
-            soundEnabled = false;
+        function preload() {
+            // Pre-load sound
+            soundLoaded = false;
+            sadnessSound = loadSound('sadness_soundscape.mp3',
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+            
+            // Load sketchbook image
+            sketchbookImage = loadImage('sadness-sketchbook.jpg');
+            
+            // Create graph paper texture
+            graphPaperTexture = createGraphics(200, 200);
+            graphPaperTexture.background(248, 248, 252);
+            graphPaperTexture.stroke(220, 220, 230);
+            graphPaperTexture.strokeWeight(1);
+            
+            // Draw small grid lines
+            for (let i = 0; i < 200; i += 10) {
+                graphPaperTexture.line(i, 0, i, 200);
+                graphPaperTexture.line(0, i, 200, i);
+            }
+            
+            // Draw darker grid lines every 50 pixels
+            graphPaperTexture.stroke(200, 200, 210);
+            graphPaperTexture.strokeWeight(1.5);
+            for (let i = 0; i < 200; i += 50) {
+                graphPaperTexture.line(i, 0, i, 200);
+                graphPaperTexture.line(0, i, 200, i);
+            }
         }
-    );
-}
 
         function setup() {
             // Create canvas with explicit dimensions
             let canvas = createCanvas(windowWidth, windowHeight);
             canvas.style('display', 'block'); // Ensure the canvas displays properly
             
-            // Define hand outline points - partial, tentative hand
-            createHandOutline();
+            // Create detailed hand outline based on the collage image
+            createDetailedHandOutline();
             
-            // Create circular isolation elements
+            // Create circular elements based on the collage
             createCircleElements();
             
-            // Create grid/structure elements
+            // Create grid elements
             createGridElements();
             
-            // Create fragmented paper elements
-            createFragmentElements();
+            // Create paperclip elements
+            createPaperclipElements();
             
-            // Create memory trace elements
-            createMemoryTraces();
+            // Create dotted line elements
+            createDottedLineElements();
             
-            // Create isolation particles
-            createIsolationParticles();
+            // Create collage elements from the sketchbook image
+            createCollageElements();
             
             // Initialize audio context for better mobile support
             if (getAudioContext().state !== 'running') {
@@ -575,171 +604,246 @@
             noLoop();
         }
         
-        function createHandOutline() {
-            // Create a hand outline - incomplete, vulnerable
-            handOutlinePoints.push({x: 0.52, y: 0.35});
-            handOutlinePoints.push({x: 0.58, y: 0.35});
-            handOutlinePoints.push({x: 0.62, y: 0.38});
-            handOutlinePoints.push({x: 0.64, y: 0.43});
-            handOutlinePoints.push({x: 0.62, y: 0.48});
-            handOutlinePoints.push({x: 0.58, y: 0.52});
-            // Skip some points to create gaps in outline
-            handOutlinePoints.push({x: 0.52, y: 0.48});
-            handOutlinePoints.push({x: 0.48, y: 0.43});
-            handOutlinePoints.push({x: 0.49, y: 0.38});
+        function createDetailedHandOutline() {
+            // Create a detailed hand outline matching the one in the collage
+            handOutlinePoints = [];
+            
+            // Main hand outline points - matching the sketch in the collage
+            handOutlinePoints.push({x: 0.49, y: 0.35, type: "outline"});
+            handOutlinePoints.push({x: 0.53, y: 0.33, type: "outline"});
+            handOutlinePoints.push({x: 0.57, y: 0.33, type: "outline"});
+            handOutlinePoints.push({x: 0.61, y: 0.36, type: "outline"});
+            handOutlinePoints.push({x: 0.63, y: 0.40, type: "outline"});
+            handOutlinePoints.push({x: 0.64, y: 0.45, type: "outline"});
+            handOutlinePoints.push({x: 0.61, y: 0.50, type: "outline"});
+            handOutlinePoints.push({x: 0.56, y: 0.52, type: "outline"});
+            handOutlinePoints.push({x: 0.51, y: 0.51, type: "outline"});
+            handOutlinePoints.push({x: 0.47, y: 0.47, type: "outline"});
+            handOutlinePoints.push({x: 0.45, y: 0.43, type: "outline"});
+            handOutlinePoints.push({x: 0.46, y: 0.38, type: "outline"});
+            handOutlinePoints.push({x: 0.49, y: 0.35, type: "outline"}); // Close the shape
+            
+            // Add palm lines based on the collage
+            palmLines = [];
+            
+            // Life line
+            palmLines.push([
+                {x: 0.50, y: 0.36},
+                {x: 0.48, y: 0.41},
+                {x: 0.47, y: 0.45}
+            ]);
+            
+            // Heart line
+            palmLines.push([
+                {x: 0.48, y: 0.38},
+                {x: 0.53, y: 0.37},
+                {x: 0.58, y: 0.38}
+            ]);
             
             // Convert relative coordinates to absolute
             for (let i = 0; i < handOutlinePoints.length; i++) {
                 handOutlinePoints[i].x *= width;
                 handOutlinePoints[i].y *= height;
             }
-        }
-        
-        function createCircleElements() {
-            // Create circular elements that create distance and isolation
-            circleElements.push({
-                x: width * 0.5,
-                y: height * 0.42,
-                radius: 120,
-                thickness: 1,
-                opacity: 0,
-                targetOpacity: 180,
-                startTime: 500,
-                phase: 0,
-                pulseRate: 0.0003
-            });
             
-            // Secondary circles
-            for (let i = 0; i < 3; i++) {
-                circleElements.push({
-                    x: width * (0.35 + i * 0.15),
-                    y: height * (0.35 + random(-0.1, 0.1)),
-                    radius: random(30, 70),
-                    thickness: random(0.5, 1.5),
-                    opacity: 0,
-                    targetOpacity: random(100, 160),
-                    startTime: 1500 + i * 800,
-                    phase: random(0, TWO_PI),
-                    pulseRate: random(0.0002, 0.0005)
-                });
-            }
-        }
-        
-        function createGridElements() {
-            // Create grid pattern elements - structure attempting to contain emotion
-            let gridSize = 20;
-            let gridStartX = width * 0.3;
-            let gridStartY = height * 0.3;
-            let gridWidth = width * 0.4;
-            let gridHeight = height * 0.4;
-            
-            for (let x = 0; x <= gridWidth; x += gridSize) {
-                gridElements.push({
-                    x1: gridStartX + x,
-                    y1: gridStartY,
-                    x2: gridStartX + x,
-                    y2: gridStartY + gridHeight,
-                    thickness: 0.8,
-                    opacity: 0,
-                    targetOpacity: x % (gridSize * 3) === 0 ? 100 : 60,
-                    startTime: 2000 + x * 5,
-                    phase: random(0, TWO_PI)
-                });
-            }
-            
-            for (let y = 0; y <= gridHeight; y += gridSize) {
-                gridElements.push({
-                    x1: gridStartX,
-                    y1: gridStartY + y,
-                    x2: gridStartX + gridWidth,
-                    y2: gridStartY + y,
-                    thickness: 0.8,
-                    opacity: 0,
-                    targetOpacity: y % (gridSize * 3) === 0 ? 100 : 60,
-                    startTime: 2000 + y * 5,
-                    phase: random(0, TWO_PI)
-                });
-            }
-        }
-        
-        function createFragmentElements() {
-            // Create torn paper fragment elements
-            for (let i = 0; i < 12; i++) {
-                let x = width * (0.3 + random(0, 0.4));
-                let y = height * (0.3 + random(0, 0.4));
-                
-                fragmentElements.push({
-                    x: x,
-                    y: y,
-                    width: random(30, 80),
-                    height: random(20, 60),
-                    rotation: random(-0.3, 0.3),
-                    opacity: 0,
-                    targetOpacity: random(180, 220),
-                    color: i % 3 === 0 ? 'ochraYellow' : (i % 3 === 1 ? 'greyBlack' : 'purpleBlue'),
-                    startTime: 4000 + i * 600,
-                    phase: random(0, TWO_PI),
-                    vertices: []
-                });
-                
-                // Create irregular vertices for torn paper effect
-                let fragment = fragmentElements[fragmentElements.length - 1];
-                let numVertices = floor(random(6, 10));
-                
-                for (let j = 0; j < numVertices; j++) {
-                    let angle = TWO_PI * j / numVertices;
-                    let radius = (j % 2 === 0) ? 
-                        random(0.8, 1) * (fragment.width < fragment.height ? fragment.width/2 : fragment.height/2) :
-                        random(0.6, 0.9) * (fragment.width < fragment.height ? fragment.width/2 : fragment.height/2);
-                    
-                    fragment.vertices.push({
-                        x: cos(angle) * radius * (fragment.width / fragment.height),
-                        y: sin(angle) * radius
-                    });
+            for (let i = 0; i < palmLines.length; i++) {
+                for (let j = 0; j < palmLines[i].length; j++) {
+                    palmLines[i][j].x *= width;
+                    palmLines[i][j].y *= height;
                 }
             }
         }
         
-        function createMemoryTraces() {
-            // Create memory trace elements - fragmented patterns
-            for (let i = 0; i < 15; i++) {
-                let x = width * (0.2 + random(0, 0.6));
-                let y = height * (0.2 + random(0, 0.6));
-                
-                memoryTraces.push({
-                    x: x,
-                    y: y,
-                    length: random(10, 30),
-                    angle: random(0, TWO_PI),
+        function createCircleElements() {
+            // Create circular elements based on the collage
+            circleElements = [];
+            
+            // Main large circle containing the hand
+            circleElements.push({
+                x: width * 0.53,
+                y: height * 0.42,
+                radius: min(width, height) * 0.15,
+                thickness: 1.5,
+                opacity: 0,
+                targetOpacity: 240,
+                startTime: 500,
+                type: "container"
+            });
+            
+            // Secondary circles
+            circleElements.push({
+                x: width * 0.35,
+                y: height * 0.28,
+                radius: min(width, height) * 0.05,
+                thickness: 1,
+                opacity: 0,
+                targetOpacity: 180,
+                startTime: 1200,
+                type: "secondary"
+            });
+            
+            circleElements.push({
+                x: width * 0.65,
+                y: height * 0.30,
+                radius: min(width, height) * 0.08,
+                thickness: 1,
+                opacity: 0,
+                targetOpacity: 200,
+                startTime: 1800,
+                type: "secondary"
+            });
+        }
+        
+        function createGridElements() {
+            // Create grid elements based on the graph paper in the collage
+            gridElements = [];
+            
+            let gridStartX = width * 0.35;
+            let gridStartY = height * 0.3;
+            let gridWidth = width * 0.35;
+            let gridHeight = height * 0.35;
+            let cellSize = min(width, height) * 0.02;
+            
+            // Create a grid pattern similar to the graph paper in the image
+            for (let i = 0; i <= gridWidth; i += cellSize) {
+                gridElements.push({
+                    x1: gridStartX + i,
+                    y1: gridStartY,
+                    x2: gridStartX + i,
+                    y2: gridStartY + gridHeight,
+                    thickness: i % (cellSize * 5) === 0 ? 1.5 : 0.8,
                     opacity: 0,
-                    targetOpacity: random(100, 180),
-                    type: floor(random(0, 3)), // 0: dot, 1: short line, 2: small arc
-                    startTime: 6000 + i * 400,
-                    fadeRate: random(0.0002, 0.0005)
+                    targetOpacity: i % (cellSize * 5) === 0 ? 120 : 80,
+                    startTime: 2000 + i * 2
+                });
+            }
+            
+            for (let j = 0; j <= gridHeight; j += cellSize) {
+                gridElements.push({
+                    x1: gridStartX,
+                    y1: gridStartY + j,
+                    x2: gridStartX + gridWidth,
+                    y2: gridStartY + j,
+                    thickness: j % (cellSize * 5) === 0 ? 1.5 : 0.8,
+                    opacity: 0,
+                    targetOpacity: j % (cellSize * 5) === 0 ? 120 : 80,
+                    startTime: 2000 + j * 2
                 });
             }
         }
         
-        function createIsolationParticles() {
-            // Create isolation particle elements - distant, floating
-            for (let i = 0; i < 40; i++) {
-                isolationParticles.push({
-                    x: random(width),
-                    y: random(height),
-                    size: random(2, 5),
-                    speed: random(0.05, 0.2),
-                    direction: random(0, TWO_PI),
+        function createPaperclipElements() {
+            // Create paperclip elements as seen in the collage
+            paperclipElements = [];
+            
+            // Add paperclips based on their position in the collage
+            paperclipElements.push({
+                x: width * 0.45,
+                y: height * 0.52,
+                rotation: -0.2,
+                width: 30,
+                height: 10,
+                opacity: 0,
+                targetOpacity: 220,
+                startTime: 5000
+            });
+            
+            paperclipElements.push({
+                x: width * 0.6,
+                y: height * 0.5,
+                rotation: 0.1,
+                width: 25,
+                height: 8,
+                opacity: 0,
+                targetOpacity: 200,
+                startTime: 5500
+            });
+        }
+        
+        function createDottedLineElements() {
+            // Create dotted line elements similar to those in the collage
+            dottedLineElements = [];
+            
+            // Curved dotted line around the main circle
+            let centerX = width * 0.53;
+            let centerY = height * 0.42;
+            let radius = min(width, height) * 0.18;
+            
+            for (let a = 0; a < TWO_PI; a += PI/15) {
+                let x = centerX + cos(a) * radius;
+                let y = centerY + sin(a) * radius;
+                
+                dottedLineElements.push({
+                    x: x,
+                    y: y,
+                    size: 2,
                     opacity: 0,
-                    targetOpacity: random(120, 220),
-                    startTime: 8000 + i * 200,
-                    phase: random(0, TWO_PI)
+                    targetOpacity: 180,
+                    startTime: 3000 + a * 300
+                });
+            }
+            
+            // Additional smaller dotted lines/patterns
+            let startX = width * 0.65;
+            let startY = height * 0.6;
+            
+            for (let i = 0; i < 12; i++) {
+                dottedLineElements.push({
+                    x: startX + i * 5,
+                    y: startY + sin(i * 0.5) * 10,
+                    size: 2.5,
+                    opacity: 0,
+                    targetOpacity: 160,
+                    startTime: 8000 + i * 150
                 });
             }
         }
+        
+        function createCollageElements() {
+            // Create collage elements that represent fragments of the sketchbook image
+            collageElements = [];
+            
+            // Create elements representing fragments of images/textures
+            collageElements.push({
+                x: width * 0.4,
+                y: height * 0.3,
+                width: 100,
+                height: 80,
+                rotation: -0.1,
+                imgSection: { x: 0, y: 0, w: 150, h: 120 },
+                opacity: 0,
+                targetOpacity: 220,
+                startTime: 3500
+            });
+            
+            collageElements.push({
+                x: width * 0.65,
+                y: height * 0.35,
+                width: 120,
+                height: 90,
+                rotation: 0.05,
+                imgSection: { x: 180, y: 0, w: 170, h: 130 },
+                opacity: 0,
+                targetOpacity: 200,
+                startTime: 4000
+            });
+            
+            collageElements.push({
+                x: width * 0.55,
+                y: height * 0.6,
+                width: 90,
+                height: 70,
+                rotation: -0.08,
+                imgSection: { x: 50, y: 150, w: 140, h: 110 },
+                opacity: 0,
+                targetOpacity: 180,
+                startTime: 4500
+            });
+        }
 
         function draw() {
-            // Clear canvas with a soft background
-            background(230, 230, 235);
+            // Clear canvas with a soft background similar to the collage
+            background(245, 245, 248);
             
             // If animating, update time position
             if (isAnimating && !isDraggingTimeline) {
@@ -758,17 +862,17 @@
                 previousTimePosition = timePosition;
             }
             
-            // Draw elements in layers
-            drawGridElements();          // Structure/containment (greyBlack)
-            drawFragmentElements();      // Torn paper fragments (all colors)
-            drawCircleElements();        // Isolation circles (purpleBlue)
-            drawHandOutline();          // Incomplete hand (greyBlack)
-            drawMemoryTraces();         // Memory trace elements (ochraYellow)
-            drawIsolationParticles();   // Distant particles (greyBlack)
+            // Draw elements in layers to match the collage appearance
+            drawGridElements();         // Graph paper grid
+            drawCollageElements();      // Photo/image fragments
+            drawCircleElements();       // Circular containers
+            drawHandOutline();          // Hand outline with palm lines
+            drawDottedLineElements();   // Dotted lines
+            drawPaperclipElements();    // Paperclips
             
             // Update hand outline progress
             if (isAnimating) {
-                handProgress = min(1, handProgress + 0.0003);
+                handProgress = min(1, timePosition / 20000);
             }
         }
         
@@ -779,263 +883,230 @@
         
         function drawHandOutline() {
             // Only start drawing hand after initial elements appear
-            if (timePosition < 10000) return;
+            if (timePosition < 6000) return;
             
             // Calculate how many points to show based on progress
             let pointsToShow = floor(handOutlinePoints.length * handProgress);
             
             if (pointsToShow < 2) return;
             
-            // Draw the hand outline - tentative, incomplete lines
+            // Draw the hand outline - matching the sketch in the collage
             noFill();
-            stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 150);
-            strokeWeight(1.2);
+            stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 200);
+            strokeWeight(1.5);
             
-            // Draw disconnected line segments with gaps
-            for (let i = 0; i < pointsToShow - 1; i++) {
-                // Skip some segments to create fragmented effect
-                if (i !== 3 && i !== 6) {
-                    line(
-                        handOutlinePoints[i].x, 
-                        handOutlinePoints[i].y,
-                        handOutlinePoints[i+1].x,
-                        handOutlinePoints[i+1].y
-                    );
+            beginShape();
+            for (let i = 0; i < pointsToShow; i++) {
+                vertex(handOutlinePoints[i].x, handOutlinePoints[i].y);
+            }
+            endShape();
+            
+            // Draw palm lines if hand is more than half complete
+            if (handProgress > 0.5) {
+                stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 150);
+                strokeWeight(1);
+                
+                // Draw each palm line
+                for (let line of palmLines) {
+                    noFill();
+                    beginShape();
+                    for (let point of line) {
+                        vertex(point.x, point.y);
+                    }
+                    endShape();
                 }
             }
             
-            // Add some interior detail if hand is mostly complete
-            if (pointsToShow > handOutlinePoints.length * 0.7) {
-                stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 80);
-                strokeWeight(0.8);
+            // Add some subtle shading to the palm area if hand is mostly complete
+            if (handProgress > 0.8) {
+                // Calculate center of palm
+                let palmCenterX = 0, palmCenterY = 0;
+                for (let pt of handOutlinePoints) {
+                    palmCenterX += pt.x;
+                    palmCenterY += pt.y;
+                }
+                palmCenterX /= handOutlinePoints.length;
+                palmCenterY /= handOutlinePoints.length;
                 
-                // Life line (broken)
-                let centerX = (handOutlinePoints[0].x + handOutlinePoints[5].x) / 2;
-                let centerY = (handOutlinePoints[0].y + handOutlinePoints[5].y) / 2;
+                // Add shaded areas with cross-hatching
+                push();
+                translate(palmCenterX, palmCenterY);
+                rotate(PI/8);
                 
-                beginShape();
-                curveVertex(centerX - 20, centerY - 15);
-                curveVertex(centerX - 10, centerY);
-                // Gap in line
-                curveVertex(centerX + 5, centerY + 20);
-                endShape();
+                stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 30);
+                strokeWeight(0.5);
                 
-                // Heart line (partial)
-                stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 70);
-                line(
-                    handOutlinePoints[0].x, 
-                    handOutlinePoints[0].y - 10,
-                    centerX - 5, 
-                    handOutlinePoints[0].y - 8
-                );
+                // Draw cross-hatched pattern
+                for (let i = -40; i <= 40; i += 8) {
+                    line(i, -50, i, 50);
+                }
+                
+                rotate(PI/2);
+                for (let i = -40; i <= 40; i += 12) {
+                    line(i, -50, i, 50);
+                }
+                pop();
             }
         }
         
         function drawCircleElements() {
-            // Draw circular elements - creating distance and isolation
+            // Draw circular elements as seen in the collage
             for (let circle of circleElements) {
                 // Check timing
                 if (timePosition > circle.startTime) {
                     // Fade in opacity
                     if (circle.opacity < circle.targetOpacity) {
-                        circle.opacity = min(circle.targetOpacity, circle.opacity + 0.3);
+                        circle.opacity = min(circle.targetOpacity, circle.opacity + 0.5);
                     }
-                    
-                    // Subtle pulse effect
-                    let pulseAmount = sin(millis() * circle.pulseRate + circle.phase) * 0.08;
                     
                     // Draw circle
                     noFill();
                     stroke(colors.purpleBlue[0], colors.purpleBlue[1], colors.purpleBlue[2], circle.opacity);
                     strokeWeight(circle.thickness);
+                    ellipse(circle.x, circle.y, circle.radius * 2);
                     
-                    ellipse(
-                        circle.x, 
-                        circle.y, 
-                        circle.radius * (1 + pulseAmount), 
-                        circle.radius * (1 + pulseAmount)
-                    );
-                    
-                    // Add translucent fill
-                    fill(colors.purpleBlue[0], colors.purpleBlue[1], colors.purpleBlue[2], circle.opacity * 0.08);
-                    noStroke();
-                    ellipse(circle.x, circle.y, circle.radius * (1 + pulseAmount));
-                    
-                    // Add some texture inside larger circles
-                    if (circle.radius > 60) {
-                        stroke(colors.purpleBlue[0], colors.purpleBlue[1], colors.purpleBlue[2], circle.opacity * 0.4);
-                        strokeWeight(0.5);
-                        noFill();
-                        
-                        // Draw few broken arcs inside
-                        for (let i = 0; i < 3; i++) {
-                            let arcRadius = circle.radius * (0.3 + i * 0.2);
-                            let startAngle = random(0, TWO_PI/2);
-                            let endAngle = startAngle + random(PI/4, PI/2);
-                            
-                            arc(
-                                circle.x, 
-                                circle.y, 
-                                arcRadius, 
-                                arcRadius, 
-                                startAngle, 
-                                endAngle
-                            );
-                        }
+                    if (circle.type === "container") {
+                        // Add subtle fill for main container circle
+                        fill(colors.purpleBlue[0], colors.purpleBlue[1], colors.purpleBlue[2], 15);
+                        noStroke();
+                        ellipse(circle.x, circle.y, circle.radius * 2);
                     }
                 }
             }
         }
         
         function drawGridElements() {
-            // Draw grid elements - structure attempting to contain emotion
+            // Draw grid elements to match the graph paper texture in the collage
+            push();
+            
+            // First draw a grid texture as a background
+            if (timePosition > 2000) {
+                let opacity = map(min(timePosition - 2000, 1000), 0, 1000, 0, 100);
+                tint(255, opacity);
+                
+                // Draw the graph paper texture in specific regions
+                let gridStartX = width * 0.35;
+                let gridStartY = height * 0.3;
+                let gridWidth = width * 0.35;
+                let gridHeight = height * 0.35;
+                
+                image(graphPaperTexture, gridStartX, gridStartY, gridWidth, gridHeight);
+                noTint();
+            }
+            
+            // Then draw grid lines on top
             for (let grid of gridElements) {
                 // Check timing
                 if (timePosition > grid.startTime) {
                     // Fade in opacity
                     if (grid.opacity < grid.targetOpacity) {
-                        grid.opacity = min(grid.targetOpacity, grid.opacity + 0.2);
+                        grid.opacity = min(grid.targetOpacity, grid.opacity + 0.3);
                     }
                     
                     // Draw grid line
                     stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], grid.opacity);
                     strokeWeight(grid.thickness);
-                    
                     line(grid.x1, grid.y1, grid.x2, grid.y2);
                 }
             }
+            pop();
         }
         
-        function drawFragmentElements() {
-            // Draw torn paper fragment elements
-            for (let fragment of fragmentElements) {
+        function drawCollageElements() {
+            // Draw collage elements as fragments of the sketchbook image
+            if (!sketchbookImage.width) return; // Skip if image not loaded
+            
+            push();
+            imageMode(CENTER);
+            
+            for (let elem of collageElements) {
                 // Check timing
-                if (timePosition > fragment.startTime) {
+                if (timePosition > elem.startTime) {
                     // Fade in opacity
-                    if (fragment.opacity < fragment.targetOpacity) {
-                        fragment.opacity = min(fragment.targetOpacity, fragment.opacity + 0.4);
+                    if (elem.opacity < elem.targetOpacity) {
+                        elem.opacity = min(elem.targetOpacity, elem.opacity + 0.5);
                     }
                     
-                    // Set color based on fragment type
-                    let fillColor = colors[fragment.color];
-                    
-                    // Draw fragment
+                    // Draw image fragment
                     push();
-                    translate(fragment.x, fragment.y);
-                    rotate(fragment.rotation);
+                    translate(elem.x, elem.y);
+                    rotate(elem.rotation);
                     
-                    fill(fillColor[0], fillColor[1], fillColor[2], fragment.opacity * 0.7);
-                    stroke(fillColor[0], fillColor[1], fillColor[2], fragment.opacity);
-                    strokeWeight(0.5);
+                    // Create irregular shape for fragment
+                    let fragWidth = elem.width;
+                    let fragHeight = elem.height;
                     
-                    beginShape();
-                    for (let vertex of fragment.vertices) {
-                        vertex(vertex.x, vertex.y);
-                    }
-                    endShape(CLOSE);
+                    // Draw image with opacity
+                    tint(255, elem.opacity);
+                    image(
+                        sketchbookImage, 
+                        0, 0, 
+                        fragWidth, fragHeight,
+                        elem.imgSection.x, elem.imgSection.y, 
+                        elem.imgSection.w, elem.imgSection.h
+                    );
+                    
+                    // Add a subtle border/edge to the fragment
+                    noFill();
+                    stroke(200, 200, 200, elem.opacity * 0.5);
+                    strokeWeight(1);
+                    rect(-fragWidth/2, -fragHeight/2, fragWidth, fragHeight);
                     
                     pop();
-                    
-                    // Add texture to larger fragments
-                    if (fragment.width > 50 || fragment.height > 50) {
-                        push();
-                        translate(fragment.x, fragment.y);
-                        rotate(fragment.rotation);
-                        
-                        stroke(fillColor[0], fillColor[1], fillColor[2], fragment.opacity * 0.6);
-                        strokeWeight(0.3);
-                        
-                        // Draw a few lines across fragment
-                        for (let i = 0; i < 3; i++) {
-                            let y = map(i, 0, 2, -fragment.height/3, fragment.height/3);
-                            line(-fragment.width/2, y, fragment.width/2, y + random(-5, 5));
-                        }
-                        
-                        pop();
-                    }
                 }
             }
+            pop();
         }
         
-        function drawMemoryTraces() {
-            // Draw memory trace elements
-            for (let trace of memoryTraces) {
+        function drawDottedLineElements() {
+            // Draw dotted line elements based on the collage
+            for (let dot of dottedLineElements) {
                 // Check timing
-                if (timePosition > trace.startTime) {
+                if (timePosition > dot.startTime) {
                     // Fade in opacity
-                    if (trace.opacity < trace.targetOpacity) {
-                        trace.opacity = min(trace.targetOpacity, trace.opacity + 0.5);
+                    if (dot.opacity < dot.targetOpacity) {
+                        dot.opacity = min(dot.targetOpacity, dot.opacity + 0.8);
                     }
                     
-                    // Calculate slow fade-in/fade-out
-                    let fadeEffect = sin(millis() * trace.fadeRate) * 0.3 + 0.7;
-                    let finalOpacity = trace.opacity * fadeEffect;
-                    
-                    // Draw trace based on type
-                    if (trace.type === 0) {
-                        // Dot
-                        fill(colors.ochraYellow[0], colors.ochraYellow[1], colors.ochraYellow[2], finalOpacity);
-                        noStroke();
-                        ellipse(trace.x, trace.y, trace.length * 0.3);
-                    } else if (trace.type === 1) {
-                        // Short line
-                        stroke(colors.ochraYellow[0], colors.ochraYellow[1], colors.ochraYellow[2], finalOpacity);
-                        strokeWeight(1);
-                        
-                        push();
-                        translate(trace.x, trace.y);
-                        rotate(trace.angle);
-                        line(0, 0, trace.length, 0);
-                        pop();
-                    } else {
-                        // Small arc
-                        noFill();
-                        stroke(colors.ochraYellow[0], colors.ochraYellow[1], colors.ochraYellow[2], finalOpacity);
-                        strokeWeight(1);
-                        
-                        push();
-                        translate(trace.x, trace.y);
-                        rotate(trace.angle);
-                        arc(0, 0, trace.length, trace.length, 0, PI * 0.7);
-                        pop();
-                    }
-                }
-            }
-        }
-        
-        function drawIsolationParticles() {
-            // Draw isolation particle elements
-            for (let particle of isolationParticles) {
-                // Check timing
-                if (timePosition > particle.startTime) {
-                    // Fade in opacity
-                    if (particle.opacity < particle.targetOpacity) {
-                        particle.opacity = min(particle.targetOpacity, particle.opacity + 0.2);
-                    }
-                    
-                    // Update position (very slow drift)
-                    if (isAnimating) {
-                        particle.x += cos(particle.direction) * particle.speed;
-                        particle.y += sin(particle.direction) * particle.speed;
-                        
-                        // Wrap around edges
-                        if (particle.x < -10) particle.x = width + 10;
-                        if (particle.x > width + 10) particle.x = -10;
-                        if (particle.y < -10) particle.y = height + 10;
-                        if (particle.y > height + 10) particle.y = -10;
-                        
-                        // Small random direction changes
-                        particle.direction += random(-0.02, 0.02);
-                    }
-                    
-                    // Calculate pulse effect
-                    let pulseAmount = sin(millis() * 0.0003 + particle.phase) * 0.3 + 0.7;
-                    
-                    // Draw particle
-                    fill(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 
-                        particle.opacity * pulseAmount);
+                    // Draw dot
+                    fill(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], dot.opacity);
                     noStroke();
-                    ellipse(particle.x, particle.y, particle.size);
+                    ellipse(dot.x, dot.y, dot.size);
+                }
+            }
+        }
+        
+        function drawPaperclipElements() {
+            // Draw paperclip elements as seen in the collage
+            for (let clip of paperclipElements) {
+                // Check timing
+                if (timePosition > clip.startTime) {
+                    // Fade in opacity
+                    if (clip.opacity < clip.targetOpacity) {
+                        clip.opacity = min(clip.targetOpacity, clip.opacity + 0.8);
+                    }
+                    
+                    push();
+                    translate(clip.x, clip.y);
+                    rotate(clip.rotation);
+                    
+                    // Draw paperclip
+                    stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], clip.opacity);
+                    strokeWeight(2);
+                    noFill();
+                    
+                    // Paperclip shape (simplified)
+                    beginShape();
+                    vertex(-clip.width/2, 0);
+                    vertex(-clip.width/2, -clip.height/2);
+                    vertex(-clip.width/2 + clip.height, -clip.height/2);
+                    vertex(-clip.width/2 + clip.height, clip.height/2);
+                    vertex(-clip.width/2, clip.height/2);
+                    vertex(-clip.width/2, 0);
+                    vertex(clip.width/2, 0);
+                    endShape();
+                    
+                    pop();
                 }
             }
         }
@@ -1059,19 +1130,19 @@
                 grid.opacity = timePosition > grid.startTime ? grid.targetOpacity : 0;
             }
             
-            for (let fragment of fragmentElements) {
-                fragment.opacity = timePosition > fragment.startTime ? fragment.targetOpacity : 0;
+            for (let elem of collageElements) {
+                elem.opacity = timePosition > elem.startTime ? elem.targetOpacity : 0;
             }
             
-            for (let trace of memoryTraces) {
-                trace.opacity = timePosition > trace.startTime ? trace.targetOpacity : 0;
+            for (let dot of dottedLineElements) {
+                dot.opacity = timePosition > dot.startTime ? dot.targetOpacity : 0;
             }
             
-            for (let particle of isolationParticles) {
-                particle.opacity = timePosition > particle.startTime ? particle.targetOpacity : 0;
+            for (let clip of paperclipElements) {
+                clip.opacity = timePosition > clip.startTime ? clip.targetOpacity : 0;
             }
             
-            handProgress = min(1, timePosition / 25000);
+            handProgress = min(1, timePosition / 20000);
         }
 
         function windowResized() {
@@ -1087,10 +1158,19 @@
                 handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
             }
             
+            // Recalculate palm lines
+            for (let i = 0; i < palmLines.length; i++) {
+                for (let j = 0; j < palmLines[i].length; j++) {
+                    palmLines[i][j].x = (palmLines[i][j].x / width) * windowWidth;
+                    palmLines[i][j].y = (palmLines[i][j].y / height) * windowHeight;
+                }
+            }
+            
             // Reposition circle elements
             for (let circle of circleElements) {
                 circle.x = (circle.x / width) * windowWidth;
                 circle.y = (circle.y / height) * windowHeight;
+                circle.radius = (circle.radius / min(width, height)) * min(windowWidth, windowHeight);
             }
             
             // Reposition grid elements
@@ -1101,22 +1181,27 @@
                 grid.y2 = (grid.y2 / height) * windowHeight;
             }
             
-            // Reposition fragment elements
-            for (let fragment of fragmentElements) {
-                fragment.x = (fragment.x / width) * windowWidth;
-                fragment.y = (fragment.y / height) * windowHeight;
+            // Reposition collage elements
+            for (let elem of collageElements) {
+                elem.x = (elem.x / width) * windowWidth;
+                elem.y = (elem.y / height) * windowHeight;
+                elem.width = (elem.width / width) * windowWidth;
+                elem.height = (elem.height / height) * windowHeight;
             }
             
-            // Reposition memory trace elements
-            for (let trace of memoryTraces) {
-                trace.x = (trace.x / width) * windowWidth;
-                trace.y = (trace.y / height) * windowHeight;
+            // Reposition dotted line elements
+            for (let dot of dottedLineElements) {
+                dot.x = (dot.x / width) * windowWidth;
+                dot.y = (dot.y / height) * windowHeight;
+                dot.size = (dot.size / min(width, height)) * min(windowWidth, windowHeight);
             }
             
-            // Reposition isolation particles
-            for (let particle of isolationParticles) {
-                particle.x = (particle.x / width) * windowWidth;
-                particle.y = (particle.y / height) * windowHeight;
+            // Reposition paperclip elements
+            for (let clip of paperclipElements) {
+                clip.x = (clip.x / width) * windowWidth;
+                clip.y = (clip.y / height) * windowHeight;
+                clip.width = (clip.width / width) * windowWidth;
+                clip.height = (clip.height / height) * windowHeight;
             }
         }
         

@@ -528,10 +528,9 @@
         }
         
         function preload() {
+            // Pre-load sound
             soundLoaded = false;
-            try {
-                // Use a direct URL to the sound file
-                sadnessSound = loadSound('https://assets.codepen.io/6566924/sadness_ambient.mp3', 
+            sadnessSound = loadSound('sadness_soundscape.mp3',
                     function() {
                         console.log("Sound loaded successfully");
                         soundLoaded = true;

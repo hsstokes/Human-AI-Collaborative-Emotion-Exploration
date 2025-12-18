@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Sadness - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f7f7f7;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        /* Landing screen that appears first */
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(240, 240, 245, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #616161; /* Grey for sadness */
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 550px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(97, 97, 97, 0.1);
+           border-radius: 8px;
+           border-left: 3px solid #616161;
+           line-height: 1.6;
+           color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: rgba(97, 97, 97, 0.2);
+            color: #616161;
+            border: 1px solid #616161;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Canvas for the animation */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        /* Controls panel */
+        .controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+            stroke: #616161;
+        }
+        
+        /* Timeline slider */
+        .timeline {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 500px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(97, 97, 97, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background-color: rgba(97, 97, 97, 0.8);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .timeline-handle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #616161;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .landing-title {
+                margin-top: 40px;
+            }
+            
+            .start-button {
+                margin-bottom: 60px;
+            }
+            
+            .emotion-name {
+                font-size: 42px;
+            }
+            
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
+        }
+        
+        /* Orientation-specific styles */
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px;
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%;
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%;
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial landing overlay -->
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">SADNESS</h2>
+        <p class="emotion-description" id="emotion-description">
+            An exploration of sadness through fragmentation, distance, and the tension between structure and emotion.
+            <br><b>Analysis by Claude</b>
+        </p>
+
+        <!-- AI disclaimer -->
+        <div class="ai-disclaimer">
+            <strong>Note:</strong> This is a visualization of sadness based on my analysis of human descriptions and visual collage elements. As an AI, I don't experience emotions or feelings - this is just my interpretation of a human concept.
+        </div>
+        
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
+    
+    <!-- Control buttons -->
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Timeline interface -->
+    <div class="timeline" id="timeline">
+        <div class="timeline-bar" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress"></div>
+            <div class="timeline-handle" id="timeline-handle"></div>
+        </div>
+    </div>
+    
+    <script>
+        let isAnimating = true;
+        let soundEnabled = true;
+        let sadnessSound;
+        let soundLoaded = false;
+        let timelineActive = false;
+        let isDraggingTimeline = false;
+        let timePosition = 0;
+        let previousTimePosition = 0;
+        let activatedTimeline = false;
+        
+        // Color palette for Sadness
+        const colors = {
+            greyBlack: [90, 90, 90],      // Grey to black - Recognition of boundaries
+            ochraYellow: [210, 180, 130], // Light browns to ochra yellows - Evaluation of temporal markers
+            purpleBlue: [140, 140, 200]   // Hints of purple blues - Response that honors distance
+        };
+        
+        // Hand outline elements
+        let handOutlinePoints = [];
+        let handProgress = 0;
+        
+        // Fragmented elements
+        let fragmentElements = [];
+        
+        // Grid elements
+        let gridElements = [];
+        
+        // Circle elements
+        let circleElements = [];
+        
+        // Memory trace elements
+        let memoryTraces = [];
+        
+        // Isolated particles
+        let isolationParticles = [];
+        
+        // Function that contains the button action logic
+        function startExperience() {
+            // Fade out landing overlay
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            // After fading out, remove from DOM
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                // Start animation
+                isAnimating = true;
+                loop();
+                
+                // Position controls based on orientation
+                updateLayoutForOrientation();
+                
+                // Start sound if enabled
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        sadnessSound.loop();
+                        sadnessSound.setVolume(0);
+                        sadnessSound.setVolume(0.6, 5); // Fade in slowly
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                // Show controls
+                setTimeout(() => {
+                    document.getElementById('controls').style.opacity = '1';
+                }, 2000);
+            }, 1000);
+        }
+        
+        // Function to update layout based on orientation
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
+        
+        // Setup for landing page interaction
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        
+        // Sound toggle
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && sadnessSound && !sadnessSound.isPlaying()) {
+                sadnessSound.loop();
+                sadnessSound.setVolume(0);
+                sadnessSound.setVolume(0.6, 3);
+            } else if (!soundEnabled && sadnessSound && sadnessSound.isPlaying()) {
+                sadnessSound.setVolume(0, 3);
+                setTimeout(() => {
+                    sadnessSound.pause();
+                }, 3000);
+            }
+        });
+        
+        // Reset button
+        document.getElementById('reset-button').addEventListener('click', function() {
+            timePosition = 0;
+            previousTimePosition = 0;
+            
+            resetExperience();
+            updateTimelineUI();
+        });
+        
+        // Timeline interaction
+        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        
+        function startTimelineDrag(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            
+            isDraggingTimeline = true;
+            updateTimelinePosition(e);
+            
+            document.addEventListener('mousemove', updateTimelinePosition);
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
+            document.addEventListener('mouseup', endTimelineDrag);
+            document.addEventListener('touchend', endTimelineDrag);
+        }
+        
+        function updateTimelinePosition(e) {
+            if (!isDraggingTimeline) return;
+            
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            
+            const timeline = document.getElementById('timeline-bar');
+            const rect = timeline.getBoundingClientRect();
+            
+            let clientX;
+            if (e.type.startsWith('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            let percentage = (clientX - rect.left) / rect.width;
+            percentage = Math.max(0, Math.min(1, percentage));
+            
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+            
+            timePosition = percentage * 40000;
+            
+            setTimePosition(timePosition);
+        }
+        
+        function endTimelineDrag() {
+            isDraggingTimeline = false;
+            document.removeEventListener('mousemove', updateTimelinePosition);
+            document.removeEventListener('touchmove', updateTimelinePosition);
+            document.removeEventListener('mouseup', endTimelineDrag);
+            document.removeEventListener('touchend', endTimelineDrag);
+            
+            previousTimePosition = timePosition;
+        }
+        
+        function updateTimelineUI() {
+            const percentage = timePosition / 40000;
+            
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+        }
+        
+        function preload() {
+            soundLoaded = false;
+            sadnessSound = loadSound('https://assets.codepen.io/6566924/sadness_ambient.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Define hand outline points - partial, tentative hand
+            createHandOutline();
+            
+            // Create circular isolation elements
+            createCircleElements();
+            
+            // Create grid/structure elements
+            createGridElements();
+            
+            // Create fragmented paper elements
+            createFragmentElements();
+            
+            // Create memory trace elements
+            createMemoryTraces();
+            
+            // Create isolation particles
+            createIsolationParticles();
+            
+            // Initialize audio context for better mobile support
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            // Initially pause animation while on landing page
+            isAnimating = false;
+            noLoop();
+        }
+        
+        function createHandOutline() {
+            // Create a hand outline - incomplete, vulnerable
+            handOutlinePoints.push({x: 0.52, y: 0.35});
+            handOutlinePoints.push({x: 0.58, y: 0.35});
+            handOutlinePoints.push({x: 0.62, y: 0.38});
+            handOutlinePoints.push({x: 0.64, y: 0.43});
+            handOutlinePoints.push({x: 0.62, y: 0.48});
+            handOutlinePoints.push({x: 0.58, y: 0.52});
+            // Skip some points to create gaps in outline
+            handOutlinePoints.push({x: 0.52, y: 0.48});
+            handOutlinePoints.push({x: 0.48, y: 0.43});
+            handOutlinePoints.push({x: 0.49, y: 0.38});
+            
+            // Convert relative coordinates to absolute
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
+        }
+        
+        function createCircleElements() {
+            // Create circular elements that create distance and isolation
+            circleElements.push({
+                x: width * 0.5,
+                y: height * 0.42,
+                radius: 120,
+                thickness: 1,
+                opacity: 0,
+                targetOpacity: 180,
+                startTime: 500,
+                phase: 0,
+                pulseRate: 0.0003
+            });
+            
+            // Secondary circles
+            for (let i = 0; i < 3; i++) {
+                circleElements.push({
+                    x: width * (0.35 + i * 0.15),
+                    y: height * (0.35 + random(-0.1, 0.1)),
+                    radius: random(30, 70),
+                    thickness: random(0.5, 1.5),
+                    opacity: 0,
+                    targetOpacity: random(100, 160),
+                    startTime: 1500 + i * 800,
+                    phase: random(0, TWO_PI),
+                    pulseRate: random(0.0002, 0.0005)
+                });
+            }
+        }
+        
+        function createGridElements() {
+            // Create grid pattern elements - structure attempting to contain emotion
+            let gridSize = 20;
+            let gridStartX = width * 0.3;
+            let gridStartY = height * 0.3;
+            let gridWidth = width * 0.4;
+            let gridHeight = height * 0.4;
+            
+            for (let x = 0; x <= gridWidth; x += gridSize) {
+                gridElements.push({
+                    x1: gridStartX + x,
+                    y1: gridStartY,
+                    x2: gridStartX + x,
+                    y2: gridStartY + gridHeight,
+                    thickness: 0.8,
+                    opacity: 0,
+                    targetOpacity: x % (gridSize * 3) === 0 ? 100 : 60,
+                    startTime: 2000 + x * 5,
+                    phase: random(0, TWO_PI)
+                });
+            }
+            
+            for (let y = 0; y <= gridHeight; y += gridSize) {
+                gridElements.push({
+                    x1: gridStartX,
+                    y1: gridStartY + y,
+                    x2: gridStartX + gridWidth,
+                    y2: gridStartY + y,
+                    thickness: 0.8,
+                    opacity: 0,
+                    targetOpacity: y % (gridSize * 3) === 0 ? 100 : 60,
+                    startTime: 2000 + y * 5,
+                    phase: random(0, TWO_PI)
+                });
+            }
+        }
+        
+        function createFragmentElements() {
+            // Create torn paper fragment elements
+            for (let i = 0; i < 12; i++) {
+                let x = width * (0.3 + random(0, 0.4));
+                let y = height * (0.3 + random(0, 0.4));
+                
+                fragmentElements.push({
+                    x: x,
+                    y: y,
+                    width: random(30, 80),
+                    height: random(20, 60),
+                    rotation: random(-0.3, 0.3),
+                    opacity: 0,
+                    targetOpacity: random(180, 220),
+                    color: i % 3 === 0 ? 'ochraYellow' : (i % 3 === 1 ? 'greyBlack' : 'purpleBlue'),
+                    startTime: 4000 + i * 600,
+                    phase: random(0, TWO_PI),
+                    vertices: []
+                });
+                
+                // Create irregular vertices for torn paper effect
+                let fragment = fragmentElements[fragmentElements.length - 1];
+                let numVertices = floor(random(6, 10));
+                
+                for (let j = 0; j < numVertices; j++) {
+                    let angle = TWO_PI * j / numVertices;
+                    let radius = (j % 2 === 0) ? 
+                        random(0.8, 1) * (fragment.width < fragment.height ? fragment.width/2 : fragment.height/2) :
+                        random(0.6, 0.9) * (fragment.width < fragment.height ? fragment.width/2 : fragment.height/2);
+                    
+                    fragment.vertices.push({
+                        x: cos(angle) * radius * (fragment.width / fragment.height),
+                        y: sin(angle) * radius
+                    });
+                }
+            }
+        }
+        
+        function createMemoryTraces() {
+            // Create memory trace elements - fragmented patterns
+            for (let i = 0; i < 15; i++) {
+                let x = width * (0.2 + random(0, 0.6));
+                let y = height * (0.2 + random(0, 0.6));
+                
+                memoryTraces.push({
+                    x: x,
+                    y: y,
+                    length: random(10, 30),
+                    angle: random(0, TWO_PI),
+                    opacity: 0,
+                    targetOpacity: random(100, 180),
+                    type: floor(random(0, 3)), // 0: dot, 1: short line, 2: small arc
+                    startTime: 6000 + i * 400,
+                    fadeRate: random(0.0002, 0.0005)
+                });
+            }
+        }
+        
+        function createIsolationParticles() {
+            // Create isolation particle elements - distant, floating
+            for (let i = 0; i < 40; i++) {
+                isolationParticles.push({
+                    x: random(width),
+                    y: random(height),
+                    size: random(1, 3),
+                    speed: random(0.05, 0.2),
+                    direction: random(0, TWO_PI),
+                    opacity: 0,
+                    targetOpacity: random(40, 100),
+                    startTime: 8000 + i * 200,
+                    phase: random(0, TWO_PI)
+                });
+            }
+        }
+
+        function draw() {
+            // Clear canvas with a soft background
+            background(240, 240, 245);
+            
+            // If animating, update time position
+            if (isAnimating && !isDraggingTimeline) {
+                timePosition += deltaTime;
+                
+                if (timePosition > 40000) {
+                    timePosition = 40000;
+                    
+                    if (!activatedTimeline) {
+                        showTimeline();
+                        activatedTimeline = true;
+                    }
+                }
+                
+                updateTimelineUI();
+                previousTimePosition = timePosition;
+            }
+            
+            // Draw elements in layers
+            drawGridElements();          // Structure/containment (greyBlack)
+            drawFragmentElements();      // Torn paper fragments (all colors)
+            drawCircleElements();        // Isolation circles (purpleBlue)
+            drawHandOutline();          // Incomplete hand (greyBlack)
+            drawMemoryTraces();         // Memory trace elements (ochraYellow)
+            drawIsolationParticles();   // Distant particles (greyBlack)
+            
+            // Update hand outline progress
+            if (isAnimating) {
+                handProgress = min(1, handProgress + 0.0003);
+            }
+        }
+        
+        function showTimeline() {
+            document.getElementById('timeline').style.opacity = '1';
+            updateLayoutForOrientation();
+        }
+        
+        function drawHandOutline() {
+            // Only start drawing hand after initial elements appear
+            if (timePosition < 10000) return;
+            
+            // Calculate how many points to show based on progress
+            let pointsToShow = floor(handOutlinePoints.length * handProgress);
+            
+            if (pointsToShow < 2) return;
+            
+            // Draw the hand outline - tentative, incomplete lines
+            noFill();
+            stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 150);
+            strokeWeight(1.2);
+            
+            // Draw disconnected line segments with gaps
+            for (let i = 0; i < pointsToShow - 1; i++) {
+                // Skip some segments to create fragmented effect
+                if (i !== 3 && i !== 6) {
+                    line(
+                        handOutlinePoints[i].x, 
+                        handOutlinePoints[i].y,
+                        handOutlinePoints[i+1].x,
+                        handOutlinePoints[i+1].y
+                    );
+                }
+            }
+            
+            // Add some interior detail if hand is mostly complete
+            if (pointsToShow > handOutlinePoints.length * 0.7) {
+                stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 80);
+                strokeWeight(0.8);
+                
+                // Life line (broken)
+                let centerX = (handOutlinePoints[0].x + handOutlinePoints[5].x) / 2;
+                let centerY = (handOutlinePoints[0].y + handOutlinePoints[5].y) / 2;
+                
+                beginShape();
+                curveVertex(centerX - 20, centerY - 15);
+                curveVertex(centerX - 10, centerY);
+                // Gap in line
+                curveVertex(centerX + 5, centerY + 20);
+                endShape();
+                
+                // Heart line (partial)
+                stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 70);
+                line(
+                    handOutlinePoints[0].x, 
+                    handOutlinePoints[0].y - 10,
+                    centerX - 5, 
+                    handOutlinePoints[0].y - 8
+                );
+            }
+        }
+        
+        function drawCircleElements() {
+            // Draw circular elements - creating distance and isolation
+            for (let circle of circleElements) {
+                // Check timing
+                if (timePosition > circle.startTime) {
+                    // Fade in opacity
+                    if (circle.opacity < circle.targetOpacity) {
+                        circle.opacity = min(circle.targetOpacity, circle.opacity + 0.3);
+                    }
+                    
+                    // Subtle pulse effect
+                    let pulseAmount = sin(millis() * circle.pulseRate + circle.phase) * 0.08;
+                    
+                    // Draw circle
+                    noFill();
+                    stroke(colors.purpleBlue[0], colors.purpleBlue[1], colors.purpleBlue[2], circle.opacity);
+                    strokeWeight(circle.thickness);
+                    
+                    ellipse(
+                        circle.x, 
+                        circle.y, 
+                        circle.radius * (1 + pulseAmount), 
+                        circle.radius * (1 + pulseAmount)
+                    );
+                    
+                    // Add translucent fill
+                    fill(colors.purpleBlue[0], colors.purpleBlue[1], colors.purpleBlue[2], circle.opacity * 0.08);
+                    noStroke();
+                    ellipse(circle.x, circle.y, circle.radius * (1 + pulseAmount));
+                    
+                    // Add some texture inside larger circles
+                    if (circle.radius > 60) {
+                        stroke(colors.purpleBlue[0], colors.purpleBlue[1], colors.purpleBlue[2], circle.opacity * 0.4);
+                        strokeWeight(0.5);
+                        noFill();
+                        
+                        // Draw few broken arcs inside
+                        for (let i = 0; i < 3; i++) {
+                            let arcRadius = circle.radius * (0.3 + i * 0.2);
+                            let startAngle = random(0, TWO_PI/2);
+                            let endAngle = startAngle + random(PI/4, PI/2);
+                            
+                            arc(
+                                circle.x, 
+                                circle.y, 
+                                arcRadius, 
+                                arcRadius, 
+                                startAngle, 
+                                endAngle
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawGridElements() {
+            // Draw grid elements - structure attempting to contain emotion
+            for (let grid of gridElements) {
+                // Check timing
+                if (timePosition > grid.startTime) {
+                    // Fade in opacity
+                    if (grid.opacity < grid.targetOpacity) {
+                        grid.opacity = min(grid.targetOpacity, grid.opacity + 0.2);
+                    }
+                    
+                    // Draw grid line
+                    stroke(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], grid.opacity);
+                    strokeWeight(grid.thickness);
+                    
+                    line(grid.x1, grid.y1, grid.x2, grid.y2);
+                }
+            }
+        }
+        
+        function drawFragmentElements() {
+            // Draw torn paper fragment elements
+            for (let fragment of fragmentElements) {
+                // Check timing
+                if (timePosition > fragment.startTime) {
+                    // Fade in opacity
+                    if (fragment.opacity < fragment.targetOpacity) {
+                        fragment.opacity = min(fragment.targetOpacity, fragment.opacity + 0.4);
+                    }
+                    
+                    // Set color based on fragment type
+                    let fillColor = colors[fragment.color];
+                    
+                    // Draw fragment
+                    push();
+                    translate(fragment.x, fragment.y);
+                    rotate(fragment.rotation);
+                    
+                    fill(fillColor[0], fillColor[1], fillColor[2], fragment.opacity * 0.7);
+                    stroke(fillColor[0], fillColor[1], fillColor[2], fragment.opacity);
+                    strokeWeight(0.5);
+                    
+                    beginShape();
+                    for (let vertex of fragment.vertices) {
+                        vertex(vertex.x, vertex.y);
+                    }
+                    endShape(CLOSE);
+                    
+                    pop();
+                    
+                    // Add texture to larger fragments
+                    if (fragment.width > 50 || fragment.height > 50) {
+                        push();
+                        translate(fragment.x, fragment.y);
+                        rotate(fragment.rotation);
+                        
+                        stroke(fillColor[0], fillColor[1], fillColor[2], fragment.opacity * 0.6);
+                        strokeWeight(0.3);
+                        
+                        // Draw a few lines across fragment
+                        for (let i = 0; i < 3; i++) {
+                            let y = map(i, 0, 2, -fragment.height/3, fragment.height/3);
+                            line(-fragment.width/2, y, fragment.width/2, y + random(-5, 5));
+                        }
+                        
+                        pop();
+                    }
+                }
+            }
+        }
+        
+        function drawMemoryTraces() {
+            // Draw memory trace elements
+            for (let trace of memoryTraces) {
+                // Check timing
+                if (timePosition > trace.startTime) {
+                    // Fade in opacity
+                    if (trace.opacity < trace.targetOpacity) {
+                        trace.opacity = min(trace.targetOpacity, trace.opacity + 0.5);
+                    }
+                    
+                    // Calculate slow fade-in/fade-out
+                    let fadeEffect = sin(millis() * trace.fadeRate) * 0.3 + 0.7;
+                    let finalOpacity = trace.opacity * fadeEffect;
+                    
+                    // Draw trace based on type
+                    if (trace.type === 0) {
+                        // Dot
+                        fill(colors.ochraYellow[0], colors.ochraYellow[1], colors.ochraYellow[2], finalOpacity);
+                        noStroke();
+                        ellipse(trace.x, trace.y, trace.length * 0.3);
+                    } else if (trace.type === 1) {
+                        // Short line
+                        stroke(colors.ochraYellow[0], colors.ochraYellow[1], colors.ochraYellow[2], finalOpacity);
+                        strokeWeight(1);
+                        
+                        push();
+                        translate(trace.x, trace.y);
+                        rotate(trace.angle);
+                        line(0, 0, trace.length, 0);
+                        pop();
+                    } else {
+                        // Small arc
+                        noFill();
+                        stroke(colors.ochraYellow[0], colors.ochraYellow[1], colors.ochraYellow[2], finalOpacity);
+                        strokeWeight(1);
+                        
+                        push();
+                        translate(trace.x, trace.y);
+                        rotate(trace.angle);
+                        arc(0, 0, trace.length, trace.length, 0, PI * 0.7);
+                        pop();
+                    }
+                }
+            }
+        }
+        
+        function drawIsolationParticles() {
+            // Draw isolation particle elements
+            for (let particle of isolationParticles) {
+                // Check timing
+                if (timePosition > particle.startTime) {
+                    // Fade in opacity
+                    if (particle.opacity < particle.targetOpacity) {
+                        particle.opacity = min(particle.targetOpacity, particle.opacity + 0.2);
+                    }
+                    
+                    // Update position (very slow drift)
+                    if (isAnimating) {
+                        particle.x += cos(particle.direction) * particle.speed;
+                        particle.y += sin(particle.direction) * particle.speed;
+                        
+                        // Wrap around edges
+                        if (particle.x < -10) particle.x = width + 10;
+                        if (particle.x > width + 10) particle.x = -10;
+                        if (particle.y < -10) particle.y = height + 10;
+                        if (particle.y > height + 10) particle.y = -10;
+                        
+                        // Small random direction changes
+                        particle.direction += random(-0.02, 0.02);
+                    }
+                    
+                    // Calculate pulse effect
+                    let pulseAmount = sin(millis() * 0.0003 + particle.phase) * 0.3 + 0.7;
+                    
+                    // Draw particle
+                    fill(colors.greyBlack[0], colors.greyBlack[1], colors.greyBlack[2], 
+                        particle.opacity * pulseAmount);
+                    noStroke();
+                    ellipse(particle.x, particle.y, particle.size);
+                }
+            }
+        }
+        
+        function setTimePosition(time) {
+            const previousMillis = previousTimePosition;
+            const timeDiff = time - previousMillis;
+            
+            if (timeDiff < -2000) {
+                resetExperience();
+            }
+        }
+        
+        function resetExperience() {
+            // Reset all elements to their initial state
+            for (let circle of circleElements) {
+                circle.opacity = timePosition > circle.startTime ? circle.targetOpacity : 0;
+            }
+            
+            for (let grid of gridElements) {
+                grid.opacity = timePosition > grid.startTime ? grid.targetOpacity : 0;
+            }
+            
+            for (let fragment of fragmentElements) {
+                fragment.opacity = timePosition > fragment.startTime ? fragment.targetOpacity : 0;
+            }
+            
+            for (let trace of memoryTraces) {
+                trace.opacity = timePosition > trace.startTime ? trace.targetOpacity : 0;
+            }
+            
+            for (let particle of isolationParticles) {
+                particle.opacity = timePosition > particle.startTime ? particle.targetOpacity : 0;
+            }
+            
+            handProgress = min(1, timePosition / 25000);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        function repositionElements() {
+            // Recalculate hand outline points for new dimensions
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
+            }
+            
+            // Reposition circle elements
+            for (let circle of circleElements) {
+                circle.x = (circle.x / width) * windowWidth;
+                circle.y = (circle.y / height) * windowHeight;
+            }
+            
+            // Reposition grid elements
+            for (let grid of gridElements) {
+                grid.x1 = (grid.x1 / width) * windowWidth;
+                grid.y1 = (grid.y1 / height) * windowHeight;
+                grid.x2 = (grid.x2 / width) * windowWidth;
+                grid.y2 = (grid.y2 / height) * windowHeight;
+            }
+            
+            // Reposition fragment elements
+            for (let fragment of fragmentElements) {
+                fragment.x = (fragment.x / width) * windowWidth;
+                fragment.y = (fragment.y / height) * windowHeight;
+            }
+            
+            // Reposition memory trace elements
+            for (let trace of memoryTraces) {
+                trace.x = (trace.x / width) * windowWidth;
+                trace.y = (trace.y / height) * windowHeight;
+            }
+        }
+        
+        function mousePressed() {
+            // Only process clicks after landing page has disappeared
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                // Toggle animation on click
+                isAnimating = !isAnimating;
+                
+                // Update sound based on animation state
+                if (!isAnimating && soundEnabled && soundLoaded && sadnessSound.isPlaying()) {
+                    sadnessSound.setVolume(0.3, 3);
+                } else if (isAnimating && soundEnabled && soundLoaded) {
+                    sadnessSound.setVolume(0.6, 3);
+                }
+            }
+            
+            return false;
+        }
+        
+        // Support touch events
+        function touchStarted() {
+            // Initialize audio context for iOS
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+    </script>
+</body>
+</html>

@@ -556,9 +556,6 @@
                 emotionSound = loadSound(soundFileUrl, 
                     () => {
                         debugLog("Sound loaded successfully");
-                        if (isAnimating && soundEnabled) {
-                            startSound();
-                        }
                     },
                     (err) => {
                         console.error("Error loading sound:", err);

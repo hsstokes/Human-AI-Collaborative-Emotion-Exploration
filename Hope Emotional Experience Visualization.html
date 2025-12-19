@@ -462,8 +462,7 @@
             
             if (soundEnabled && hopeSound && !hopeSound.isPlaying()) {
                 hopeSound.loop();
-                hopeSound.setVolume(0);
-                hopeSound.setVolume(0.6, 1);
+                hopeSound.setVolume(0.6);
             } else if (!soundEnabled && hopeSound && hopeSound.isPlaying()) {
                 hopeSound.setVolume(0, 1);
                 setTimeout(() => {

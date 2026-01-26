@@ -541,19 +541,31 @@
         
         function preload() {
             soundLoaded = false;
-            angerSound = loadSound('anger_soundscape.mp3', 
-                function() {
-                    console.log("Sound loaded successfully");
-                    soundLoaded = true;
-                },
-                function(err) {
-                    console.error("Error loading sound:", err);
-                    soundEnabled = false;
-                }
-            );
+            
+            try {
+                angerSound = loadSound('anger_soundscape.mp3', 
+                    function() {
+                        console.log("Sound loaded successfully");
+                        soundLoaded = true;
+                    },
+                    function(err) {
+                        console.error("Error loading sound:", err);
+                        soundEnabled = false;
+                        soundLoaded = false;
+                    }
+                );
+            } catch(e) {
+                console.error("Sound preload failed:", e);
+                soundEnabled = false;
+                soundLoaded = false;
+            }
         }
 
         function setup() {
+            // Ensure we continue even if sound failed
+            if (!soundLoaded) {
+                soundEnabled = false;
+            }
             createCanvas(windowWidth, windowHeight);
             
             createViolationElements();

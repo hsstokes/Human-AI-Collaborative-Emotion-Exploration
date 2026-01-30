@@ -92,12 +92,15 @@
             transform: scale(0.98);
         }
         
-        /* Canvas for the animation */
-        canvas {
+        /* Canvas container - matches pause-overlay.html pattern */
+        #canvas-container {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
+            touch-action: manipulation;
         }
         
         /* Anger resonance popup */
@@ -277,6 +280,9 @@
     </style>
 </head>
 <body>
+    <!-- Canvas container - matches pause-overlay.html pattern -->
+    <div id="canvas-container"></div>
+
     <!-- Initial landing overlay -->
     <div id="landing-overlay">
         <h1 class="landing-title">Emotional Collage Experience</h1>
@@ -562,11 +568,14 @@
         }
 
         function setup() {
+            // Create canvas and parent it to the container
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent('canvas-container');
+            
             // Ensure we continue even if sound failed
             if (!soundLoaded) {
                 soundEnabled = false;
             }
-            createCanvas(windowWidth, windowHeight);
             
             createViolationElements();
             createPressureElements();

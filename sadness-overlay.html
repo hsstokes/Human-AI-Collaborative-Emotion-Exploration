@@ -93,11 +93,15 @@
             transform: scale(0.98);
         }
         
-        canvas {
+        /* Canvas container - matches pause-overlay.html pattern */
+        #canvas-container {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
+            touch-action: manipulation;
         }
         
         .sadness-resonance {
@@ -271,6 +275,8 @@
     </style>
 </head>
 <body>
+    <!-- Canvas container - matches pause-overlay.html pattern -->
+    <div id="canvas-container"></div>
 
     <div id="landing-overlay">
         <h1 class="landing-title">Emotional Collage Experience</h1>
@@ -536,7 +542,9 @@
         }
 
         function setup() {
-            createCanvas(windowWidth, windowHeight);
+            // Create canvas and parent it to the container
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent('canvas-container');
             
             createHandOutline();
             createFallingElements();

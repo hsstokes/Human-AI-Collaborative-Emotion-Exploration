@@ -6,7 +6,7 @@
     <title>Embodied Without a Body: Human-AI Emotional Dialogue</title>
     <style>
         /*-----------------------------------
-          BASE STYLES
+        BASE STYLES
         ---------------------------------*/
         * {
             box-sizing: border-box;
@@ -26,11 +26,11 @@
             line-height: 1.6;
         }
 
-       /*-----------------------------------
+        /*-----------------------------------
         PAGE WRAPPERS
         ---------------------------------*/
-       .page-wrapper {
-            max-width: 900px;  /* Wider for content-heavy page */
+        .page-wrapper {
+            max-width: 900px;
             width: 95%;
             margin: 10px auto;
             border: 2px dashed #3498db;
@@ -40,7 +40,7 @@
         }
 
         .page-container {
-            max-width: 880px;  /* Match wrapper minus padding */
+            max-width: 880px;
             width: 100%;
             margin: 0 auto;
             border: 2px solid #2980b9;
@@ -52,13 +52,141 @@
         }
 
         /*-----------------------------------
-        REMOVE MAX-WIDTH FROM CHILD ELEMENTS
+        LAYOUT ELEMENTS
         ---------------------------------*/
-        header {
+        header,
+        main,
+        footer,
+        #videos-section,
+        .top-gallery,
+        .section-content {
             max-width: 100%;
-            margin: 0 auto 20px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
+        header {
+            margin-bottom: 20px;
+        }
+
+        main {
+            margin: 0 auto;
+        }
+
+        footer {
+            margin-top: 30px;
+            background-color: #f5e9c9;
+            border: 2px dotted #2980b9;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #videos-section {
+            margin-bottom: 20px;
+        }
+
+        /*-----------------------------------
+        TYPOGRAPHY
+        ---------------------------------*/
+        h1, h2, h3 {
+            border: 2px dotted #2980b9;
+            border-radius: 20px;
+            background-color: #f9f2e2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            color: #2c3e50;
+            max-width: 100%;
+        }
+
+        h1 { 
+            font-size: 1.8em;
+            padding: 12px;
+        }
+
+        h2 { 
+            font-size: 1.4em;
+            padding: 8px;
+            margin-top: 30px;
+        }
+
+        h3 { 
+            font-size: 1.2em;
+            padding: 6px;
+        }
+
+        p {
+            font-family: 'Courier New', Courier, monospace;
+            text-align: justify;
+            font-size: 14px;
+            color: #2c3e50;
+            background-color: #f9f2e2;
+            border: 2px dotted #2980b9;
+            border-radius: 10px;
+            padding: 7px;
+            max-width: 100%;
+            margin: 0 auto 15px;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        /*-----------------------------------
+        HEADER CONTENT
+        ---------------------------------*/
+        .header-content {
+            background-color: #f5e9c9;
+            border: 2px dotted #2980b9;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .title {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            font-weight: 400;
+            margin: 0 0 20px 0;
+            color: #3498db;
+        }
+
+        .intro-text {
+            text-align: justify;
+        }
+
+        .intro-text p {
+            border: none;
+            background: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .intro-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        /*-----------------------------------
+        TOP GALLERY
+        ---------------------------------*/
         .top-gallery {
             display: flex;
             justify-content: center;
@@ -68,70 +196,62 @@
             border: 2px dotted #2980b9;
             border-radius: 15px;
             flex-wrap: wrap;
-            max-width: 100%;  /* Changed from 600px */
-            margin: 0 auto 20px;
+            margin-bottom: 20px;
         }
 
-        #videos-section {
-            max-width: 100%;  /* Changed from 600px */
-            margin: 0 auto 20px;
+        .top-gallery img {
+            max-width: 30%;
+            min-width: 150px;
+            height: auto;
+            border: 2px dotted #2980b9;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            padding: 5px;
+            background-color: #f9f2e2;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            border-radius: 8px;
         }
 
-        main {
-            max-width: 100%;  /* Changed from 610px */
-            margin: 0 auto;
-        }
-
-        footer {
-            max-width: 100%;  /* Changed from 600px */
-            margin: 30px auto 0;
-            
-        }
-        h1, h2, h3 {
-            max-width: 100%;
-        }
-
-        p {
-            max-width: 100%;
-        }
-
-        .section-content {
-            max-width: 100%;
+        .top-gallery img:hover {
+            transform: scale(1.02);
         }
 
         /*-----------------------------------
-          INTRODUCTION & HIGHLIGHT BOXES
+        VIDEO SECTION
         ---------------------------------*/
-        .introduction {
-            background-color: #f5e9c9;
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
             border: 2px dotted #2980b9;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
+            border-radius: 10px;
+            background-color: #f5e9c9;
         }
 
-        .introduction p {
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .video-container h2 {
+            text-align: center;
+            font-size: 1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
             border: none;
             background: none;
-            padding: 0;
-            margin-bottom: 15px;
-        }
-
-        .introduction p:last-child {
-            margin-bottom: 0;
-        }
-
-        .highlight-box {
-            background-color: #f9f2e2;
-            border: 2px dashed #3498db;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            font-style: italic;
+            padding: 10px;
         }
 
         /*-----------------------------------
-          STICKY NAVIGATION SECTION
+        NAVIGATION
         ---------------------------------*/
         .nav-section {
             display: flex;
@@ -175,7 +295,79 @@
         }
 
         /*-----------------------------------
-          COLLAPSIBLE ACCORDION
+        SECTIONS
+        ---------------------------------*/
+        section {
+            margin-bottom: 30px;
+        }
+
+        .section-content {
+            background-color: #f5e9c9;
+            border: 2px dotted #2980b9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px dotted #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        /*-----------------------------------
+        INTRODUCTION & HIGHLIGHT BOXES
+        ---------------------------------*/
+        .introduction {
+            background-color: #f5e9c9;
+            border: 2px dotted #2980b9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .introduction p {
+            border: none;
+            background: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .introduction p:last-child {
+            margin-bottom: 0;
+        }
+
+        .highlight-box {
+            background-color: #f9f2e2;
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        .highlight {
+            background-color: #f9f2e2;
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .highlight h4 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        /*-----------------------------------
+        COLLAPSIBLE ACCORDION
         ---------------------------------*/
         .collapsible {
             background-color: #f9f2e2;
@@ -241,33 +433,7 @@
         }
 
         /*-----------------------------------
-          SECTION STYLES
-        ---------------------------------*/
-        section {
-            margin-bottom: 30px;
-        }
-
-        .section-content {
-            background-color: #f5e9c9;
-            border: 2px dotted #2980b9;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.4em;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #2c3e50;
-            border-bottom: 2px dotted #3498db;
-            padding-bottom: 10px;
-            text-align: center;
-        }
-
-        /*-----------------------------------
-          EMOTION EXAMPLE BOX
+        EMOTION COMPONENTS
         ---------------------------------*/
         .emotion-example {
             background-color: #f9f2e2;
@@ -315,7 +481,7 @@
         }
 
         /*-----------------------------------
-          PALETTE CONTAINER
+        PALETTE & COLOR COMPONENTS
         ---------------------------------*/
         .palette-container {
             display: flex;
@@ -343,41 +509,6 @@
             border-radius: 50%;
         }
 
-        /*-----------------------------------
-          ATTRIBUTE BOXES
-        ---------------------------------*/
-        .attribute {
-            background-color: #f9f2e2;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 2px dotted #2980b9;
-            border-radius: 10px;
-            line-height: 1.7;
-        }
-
-        .attribute-title {
-            color: #3498db;
-            font-weight: 600;
-            margin-right: 5px;
-        }
-
-        /*-----------------------------------
-          QUOTE BOXES
-        ---------------------------------*/
-        .quote {
-            font-style: italic;
-            padding: 15px;
-            background-color: #f9f2e2;
-            border: 2px dashed #3498db;
-            border-radius: 10px;
-            margin: 15px 0;
-            color: #555;
-            line-height: 1.8;
-        }
-
-        /*-----------------------------------
-          COLOR MAPPING
-        ---------------------------------*/
         .color-mapping {
             display: flex;
             flex-wrap: wrap;
@@ -399,7 +530,36 @@
         }
 
         /*-----------------------------------
-          RESULT CONTAINER
+        ATTRIBUTE & QUOTE BOXES
+        ---------------------------------*/
+        .attribute {
+            background-color: #f9f2e2;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px dotted #2980b9;
+            border-radius: 10px;
+            line-height: 1.7;
+        }
+
+        .attribute-title {
+            color: #3498db;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .quote {
+            font-style: italic;
+            padding: 15px;
+            background-color: #f9f2e2;
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            margin: 15px 0;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        /*-----------------------------------
+        RESULT CONTAINER
         ---------------------------------*/
         .result-container {
             margin-top: 20px;
@@ -439,25 +599,7 @@
         }
 
         /*-----------------------------------
-          HIGHLIGHT BOX
-        ---------------------------------*/
-        .highlight {
-            background-color: #f9f2e2;
-            border: 2px dashed #3498db;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-
-        .highlight h4 {
-            margin-top: 0;
-            color: #2c3e50;
-            font-size: 1.1em;
-            margin-bottom: 10px;
-        }
-
-        /*-----------------------------------
-          NFC CONTAINER
+        NFC CONTAINER
         ---------------------------------*/
         .nfc-container {
             display: flex;
@@ -481,7 +623,7 @@
         }
 
         /*-----------------------------------
-          IFRAME CONTAINER
+        IFRAME & AUDIO
         ---------------------------------*/
         .iframe-container {
             position: relative;
@@ -502,9 +644,6 @@
             height: 100%;
         }
 
-        /*-----------------------------------
-          AUDIO SECTION
-        ---------------------------------*/
         .audio-section {
             margin-top: 20px;
             padding: 20px;
@@ -526,7 +665,7 @@
         }
 
         /*-----------------------------------
-          ANALYSIS SECTION
+        ANALYSIS & INSIGHTS
         ---------------------------------*/
         .analysis {
             margin-top: 20px;
@@ -546,9 +685,6 @@
             text-decoration-style: dotted;
         }
 
-        /*-----------------------------------
-          INSIGHT GRID
-        ---------------------------------*/
         .insight-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -580,7 +716,7 @@
         }
 
         /*-----------------------------------
-          TWO COLUMN LAYOUT
+        TWO COLUMN LAYOUT
         ---------------------------------*/
         .two-column {
             display: flex;
@@ -595,7 +731,7 @@
         }
 
         /*-----------------------------------
-          EMOTION GRID
+        EMOTION GRID
         ---------------------------------*/
         .emotion-grid {
             display: grid;
@@ -653,125 +789,7 @@
         }
 
         /*-----------------------------------
-          HEADER STYLES
-        ---------------------------------*/
-        header {
-            max-width: 600px;
-            margin: 0 auto 20px;
-        }
-
-        .header-content {
-            background-color: #f5e9c9;
-            border: 2px dotted #2980b9;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-
-        .title {
-            font-size: 1.8em;
-            font-weight: 600;
-            margin: 0 0 10px 0;
-            color: #2c3e50;
-        }
-
-        .subtitle {
-            font-size: 1.2em;
-            font-weight: 400;
-            margin: 0 0 20px 0;
-            color: #3498db;
-        }
-
-        .intro-text {
-            text-align: justify;
-        }
-
-        .intro-text p {
-            border: none;
-            background: none;
-            padding: 0;
-            margin-bottom: 15px;
-        }
-
-        .intro-text p:last-child {
-            margin-bottom: 0;
-        }
-
-        /*-----------------------------------
-          TOP GALLERY
-        ---------------------------------*/
-        .top-gallery {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            padding: 20px;
-            background-color: #f5e9c9;
-            border: 2px dotted #2980b9;
-            border-radius: 15px;
-            flex-wrap: wrap;
-            max-width: 600px;
-            margin: 0 auto 20px;
-        }
-
-        .top-gallery img {
-            max-width: 30%;
-            min-width: 150px;
-            height: auto;
-            border: 2px dotted #2980b9;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            padding: 5px;
-            background-color: #f9f2e2;
-            transition: transform 0.3s ease;
-            cursor: pointer;
-            border-radius: 8px;
-        }
-
-        .top-gallery img:hover {
-            transform: scale(1.02);
-        }
-
-        /*-----------------------------------
-          VIDEO SECTION
-        ---------------------------------*/
-        #videos-section {
-            max-width: 600px;
-            margin: 0 auto 20px;
-        }
-
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            overflow: hidden;
-            max-width: 100%;
-            border: 2px dotted #2980b9;
-            border-radius: 10px;
-            background-color: #f5e9c9;
-        }
-
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 5px;
-        }
-
-        .video-container h2 {
-            text-align: center;
-            font-size: 1em;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            border: none;
-            background: none;
-            padding: 10px;
-        }
-
-        /*-----------------------------------
-          IMAGE CONTAINERS
+        IMAGE CONTAINERS
         ---------------------------------*/
         .image-container {
             display: flex;
@@ -798,18 +816,8 @@
         }
 
         /*-----------------------------------
-          FOOTER
+        FOOTER
         ---------------------------------*/
-        footer {
-            max-width: 600px;
-            margin: 30px auto 0;
-            background-color: #f5e9c9;
-            border: 2px dotted #2980b9;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-        }
-
         .footer-content {
             display: flex;
             flex-direction: column;
@@ -861,7 +869,50 @@
         }
 
         /*-----------------------------------
-          LIGHTBOX
+        VISUALIZATION BUTTONS
+        ---------------------------------*/
+        .visualization-link {
+            background: #f5f0e1;
+            border: 2px solid #d4c4a8;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .visualization-link p {
+            border: none;
+            background: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            font-style: italic;
+            color: #5a5a5a;
+        }
+
+        .viz-button {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .viz-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .viz-button:active {
+            transform: translateY(0);
+        }
+
+        /*-----------------------------------
+        LIGHTBOX
         ---------------------------------*/
         .lightbox-overlay {
             position: fixed;
@@ -909,65 +960,7 @@
         }
 
         /*-----------------------------------
-          TYPOGRAPHY
-        ---------------------------------*/
-        h1, h2, h3 {
-            border: 2px dotted #2980b9;
-            border-radius: 20px;
-            background-color: #f9f2e2;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            text-align: center;
-            color: #2c3e50;
-        }
-
-        h1 { 
-            font-size: 1.8em;
-            padding: 12px;
-        }
-
-        h2 { 
-            font-size: 1.4em;
-            padding: 8px;
-            margin-top: 30px;
-        }
-
-        h3 { 
-            font-size: 1.2em;
-            padding: 6px;
-        }
-
-        p {
-            font-family: 'Courier New', Courier, monospace;
-            text-align: justify;
-            font-size: 14px;
-            color: #2c3e50;
-            background-color: #f9f2e2;
-            border: 2px dotted #2980b9;
-            border-radius: 10px;
-            padding: 7px;
-            max-width: 600px;
-            margin: 0 auto;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-
-        a {
-            color: #3498db;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        a:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-
-        /*-----------------------------------
-          DIVIDERS
+        DIVIDERS
         ---------------------------------*/
         .dotted-divider {
             border: none;
@@ -978,57 +971,7 @@
         }
 
         /*-----------------------------------
-          MAIN CONTAINER
-        ---------------------------------*/
-        main {
-            max-width: 610px;
-            margin: 0 auto;
-        }
-
-        /*-----------------------------------
-        VISUALIZATION BUTTONS
-        ---------------------------------*/
-        .visualization-link {
-            background: #f5f0e1;
-            border: 2px solid #d4c4a8;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .visualization-link p {
-            border: none;
-            background: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-            font-style: italic;
-            color: #5a5a5a;
-        }
-
-        .viz-button {
-            display: inline-block;
-            background: #3498db;
-            color: white;
-            padding: 14px 28px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1rem;
-            transition: background 0.3s ease, transform 0.2s ease;
-        }
-
-        .viz-button:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-        }
-
-        .viz-button:active {
-            transform: translateY(0);
-        }
-
-        /*-----------------------------------
-          RESPONSIVE STYLES
+        RESPONSIVE STYLES
         ---------------------------------*/
         @media (max-width: 768px) {
             body {
@@ -1114,6 +1057,7 @@
                 align-items: center;
             }
         }
+        
     </style>
 </head>
 <body>

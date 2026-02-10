@@ -976,6 +976,48 @@
         }
 
         /*-----------------------------------
+        VISUALIZATION BUTTONS
+        ---------------------------------*/
+        .visualization-link {
+            background: #f5f0e1;
+            border: 2px solid #d4c4a8;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .visualization-link p {
+            border: none;
+            background: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            font-style: italic;
+            color: #5a5a5a;
+        }
+
+        .viz-button {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .viz-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .viz-button:active {
+            transform: translateY(0);
+        }
+
+        /*-----------------------------------
           RESPONSIVE STYLES
         ---------------------------------*/
         @media (max-width: 768px) {
@@ -1284,10 +1326,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="sadness-overlay.html" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>A visualization of sadness as weight accumulating slowly—particles drifting downward and pooling in quiet density</p>
+                        <a href="sadness-overlay.html" class="viz-button" target="_blank">
+                            Launch Sadness Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">A visualization of sadness as weight accumulating slowly—particles drifting downward and pooling in quiet density</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -1418,10 +1462,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="joy-overlay.HTML" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>A dynamic visualization of joy's radiating warmth, woven connections, and flowing abundance</p>
+                        <a href="joy-overlay.HTML" class="viz-button" target="_blank">
+                            Launch Joy Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">A dynamic visualization of joy's radiating warmth, woven connections, and flowing abundance</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -1550,10 +1596,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="anger-overlay.html" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>A dynamic visualization of anger's boundary violations, mounting pressure, and contained explosive force</p>
+                        <a href="anger-overlay.html" class="viz-button" target="_blank">
+                            Launch Anger Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">A dynamic visualization of anger's boundary violations, mounting pressure, and contained explosive force</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -1667,13 +1715,14 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                             <img src="nostalgia-sketchbook.jpg" alt="Nostalgia sketchbook">
                             <p class="result-caption">Human Collage: Physical materials with memory fragments</p>
                         </div>
-                        
-                        <div class="result-item" style="width: 100%; max-width: 100%; flex: none;">
-                            <div class="iframe-container">
-                                <iframe src="nostalgia-overlay.html" frameborder="0"></iframe>
-                            </div>
-                            <p class="result-caption">AI Response: Interactive overlay with color-coded processing</p>
-                        </div>
+                    </div>
+                    
+                    <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
+                    <div class="visualization-link">
+                        <p>AI Response: Interactive overlay with color-coded processing</p>
+                        <a href="nostalgia-overlay.html" class="viz-button" target="_blank">
+                            Launch Nostalgia Visualization
+                        </a>
                     </div>
                     
                     <div class="audio-section">
@@ -1803,10 +1852,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="pause-overlay.html" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>Click or tap on the visualization to experience the pause effect</p>
+                        <a href="pause-overlay.html" class="viz-button" target="_blank">
+                            Launch Pause Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">Click or tap on the visualization to experience the pause effect</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -1935,10 +1986,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>               
 
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="Hope Emotional Experience Visualization.html" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>Interactive Hope Visualization with color-coded processing elements</p>
+                        <a href="Hope Emotional Experience Visualization.html" class="viz-button" target="_blank">
+                            Launch Hope Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">Interactive Hope Visualization with color-coded processing elements</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -2067,10 +2120,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="contentment-overlay.html" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>A gentle, meditative visualization of contentment as a state of present awareness</p>
+                        <a href="contentment-overlay.html" class="viz-button" target="_blank">
+                            Launch Contentment Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">A gentle, meditative visualization of contentment as a state of present awareness</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -2199,10 +2254,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="anticipation-overlay.html" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>A dynamic visualization of anticipation's pattern detection, outcome projection, and readiness maintenance</p>
+                        <a href="anticipation-overlay.html" class="viz-button" target="_blank">
+                            Launch Anticipation Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">A dynamic visualization of anticipation's pattern detection, outcome projection, and readiness maintenance</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -2331,10 +2388,12 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                     </div>
                     
                     <h4 class="result-title" style="margin-top: 30px;">Interactive Digital Visualization</h4>
-                    <div class="iframe-container" style="margin-bottom: 20px;">
-                        <iframe src="disappointment-overlay.html" frameborder="0"></iframe>
+                    <div class="visualization-link">
+                        <p>A visualization of disappointment as the interruption of expectations, creating fractured pathways between hope and reality</p>
+                        <a href="disappointment-overlay.html" class="viz-button" target="_blank">
+                            Launch Disappointment Visualization
+                        </a>
                     </div>
-                    <p class="result-caption">A visualization of disappointment as the interruption of expectations, creating fractured pathways between hope and reality</p>
                     
                     <div class="audio-section">
                         <h4>Audio Dimension</h4>
@@ -2400,6 +2459,7 @@ End with a mapping that connects each color to a specific aspect of emotional pr
                 </div>
             </div>
         </section>
+    </main>
             
         <section id="emotion-map">
             <div class="section-content">

@@ -54,31 +54,39 @@
         /*-----------------------------------
         REMOVE MAX-WIDTH FROM CHILD ELEMENTS
         ---------------------------------*/
-        .top-gallery {
-            max-width: 100%;
-            margin: 0 auto 20px;
-        }
-
-        #videos-section {
-            max-width: 100%;
-            margin: 0 auto 20px;
-        }
-
         header {
             max-width: 100%;
             margin: 0 auto 20px;
         }
 
+        .top-gallery {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            background-color: #f5e9c9;
+            border: 2px dotted #2980b9;
+            border-radius: 15px;
+            flex-wrap: wrap;
+            max-width: 100%;  /* Changed from 600px */
+            margin: 0 auto 20px;
+        }
+
+        #videos-section {
+            max-width: 100%;  /* Changed from 600px */
+            margin: 0 auto 20px;
+        }
+
         main {
-            max-width: 100%;
+            max-width: 100%;  /* Changed from 610px */
             margin: 0 auto;
         }
 
         footer {
-            max-width: 100%;
+            max-width: 100%;  /* Changed from 600px */
             margin: 30px auto 0;
+            
         }
-
         h1, h2, h3 {
             max-width: 100%;
         }

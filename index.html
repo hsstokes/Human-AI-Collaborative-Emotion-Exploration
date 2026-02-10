@@ -778,7 +778,7 @@ TWO COLUMN LAYOUT
 }
 
 /*-----------------------------------
-EMOTION GRID
+EMOTION GRID - FIXED
 ---------------------------------*/
 .emotion-grid {
     display: grid;
@@ -790,7 +790,7 @@ EMOTION GRID
 
 .emotion-card {
     background: #f9f2e2;
-    padding: 12px 8px;
+    padding: 12px 6px;
     text-align: center;
     border-radius: 10px;
     border: 2px dotted #2980b9;
@@ -831,15 +831,18 @@ EMOTION GRID
     font-weight: 600;
     margin: 0;
     color: #2c3e50;
-    font-size: 0.85em;
+    font-size: 0.75em; /* Reduced from 0.85em */
     word-wrap: break-word;
     overflow-wrap: break-word;
+    hyphens: auto; /* Allow hyphenation for long words */
+    -webkit-hyphens: auto;
 }
 
 .emotion-category {
-    font-size: 0.7rem;
+    font-size: 0.65rem; /* Slightly smaller */
     color: #666;
     margin-top: 4px;
+    word-wrap: break-word;
 }
 
 /*-----------------------------------
@@ -872,9 +875,31 @@ IMAGE CONTAINERS
 }
 
 /*-----------------------------------
-FOOTER
+FOOTER - FIXED WITH HIGHER SPECIFICITY
 ---------------------------------*/
-.footer-content {
+footer {
+    margin-top: 30px;
+    background-color: #f5e9c9;
+    border: 2px dotted #2980b9;
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    width: 100%;
+}
+
+footer p {
+    border: none !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 0 10px 0;
+    font-size: 12px;
+}
+
+footer p:last-child {
+    margin-bottom: 0;
+}
+
+footer .footer-content {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -882,40 +907,49 @@ FOOTER
     width: 100%;
 }
 
-.footer-title {
-    font-size: 1.1em;
+footer .footer-title {
+    font-size: 1em;
     margin: 0;
     color: #2c3e50;
     font-weight: 600;
+    border: none;
+    background: none;
+    padding: 0;
+    box-shadow: none;
 }
 
-.footer-nav {
+footer .footer-nav {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
+    gap: 6px;
     justify-content: center;
+    align-items: center;
     width: 100%;
+    max-width: 100%;
 }
 
-.footer-nav a {
+footer .footer-nav a {
+    display: inline-block;
     color: #3498db;
     text-decoration: none;
-    font-size: 10px;
-    padding: 4px 8px;
+    font-size: 9px;
+    padding: 4px 6px;
     background-color: #f9f2e2;
     border: 1px solid #ccc;
-    border-radius: 8px;
+    border-radius: 6px;
     transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
-.footer-nav a:hover {
-    background-color: #f5e9c9;
+footer .footer-nav a:hover {
+    background-color: #e8dcc6;
     text-decoration: none;
 }
 
-.copyright {
+footer .copyright {
     font-size: 10px;
     color: #666;
+    margin-top: 5px;
 }
 
 /*-----------------------------------

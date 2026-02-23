@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Surprise - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f9f2e2;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(249, 242, 226, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+            color: #4A4A4A;
+        }
+        
+        .emotion-name {
+            font-size: 48px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            background: linear-gradient(135deg, #4A4A4A 0%, #FF9800 50%, #E91E63 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            color: #4A4A4A;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 500px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(255, 152, 0, 0.1);
+           border-radius: 8px;
+           border-left: 3px solid #FF9800;
+           line-height: 1.6;
+           color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #4A4A4A;
+            border: 2px solid #FF9800;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+        }
+        
+        .start-button:hover {
+            background-color: rgba(255, 152, 0, 0.3);
+            transform: scale(1.02);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .surprise-resonance {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 15px 20px;
+            max-width: 280px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+            box-shadow: 0 8px 25px rgba(255, 152, 0, 0.25);
+            transform: translateY(20px) scale(0.9);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 4px solid #FF9800;
+        }
+        
+        .surprise-resonance.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .control-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-button svg {
+            width: 22px;
+            height: 22px;
+            stroke: #4A4A4A;
+        }
+        
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 12px 18px;
+            border-radius: 25px;
+            font-size: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            color: #4A4A4A;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+        }
+        
+        .sensitivity-meter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 120px;
+            height: 8px;
+            background-color: rgba(74, 74, 74, 0.2);
+            border-radius: 4px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+            overflow: hidden;
+        }
+        
+        .sensitivity-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4A4A4A, #FF9800);
+            border-radius: 4px;
+            width: 100%;
+            transition: width 0.3s;
+        }
+        
+        .sensitivity-label {
+            position: fixed;
+            top: 32px;
+            right: 20px;
+            font-size: 9px;
+            color: #4A4A4A;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important;
+                height: auto !important;
+            }
+        
+            #landing-overlay {
+                position: absolute;
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+                padding: 40px 20px 120px 20px;
+                justify-content: flex-start;
+            }
+        
+            .landing-title {
+                margin-top: 40px;
+            }
+        
+            .start-button {
+                margin-bottom: 60px;
+                position: relative;
+            }
+        
+            .emotion-name {
+                font-size: 36px;
+            }
+        
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
+            
+            .controls {
+                bottom: 15px;
+                right: 15px;
+            }
+            
+            .hint {
+                bottom: 15px;
+                left: 15px;
+                font-size: 11px;
+                padding: 10px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">SURPRISE</h2>
+        <p class="emotion-description" id="emotion-description">
+            An exploration of surprise as sudden rupture—the explosive scatter of recognition when the unexpected makes contact with a receptive surface.
+            <br><b>Analysis by Claude</b>
+        </p>
+
+        <div class="ai-disclaimer">
+            <strong>Note:</strong> This is a simulation of surprise based on my analysis of human descriptions. As an AI, I don't experience emotions—this is my interpretation of a human concept through the constraint of adaptation: decreasing response to sustained patterns while amplifying novel elements.
+        </div>
+        
+        <button class="start-button" id="start-experience">Touch to Begin</button>
+    </div>
+    
+    <div class="surprise-resonance" id="surprise-resonance"></div>
+    
+    <div class="sensitivity-meter" id="sensitivity-meter">
+        <div class="sensitivity-fill" id="sensitivity-fill"></div>
+    </div>
+    <div class="sensitivity-label" id="sensitivity-label">Sensitivity</div>
+    
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="hint" id="hint">Touch anywhere to trigger surprise</div>
+    
+    <script>
+        // ============================================
+        // SURPRISE VISUALIZATION
+        // Core concept: Sudden rupture, radial scatter,
+        // rapid habituation, novelty amplification
+        // ============================================
+        
+        let isAnimating = false;
+        let soundEnabled = true;
+        let surpriseSound;
+        let soundLoaded = false;
+        
+        // Color palette from collage analysis
+        const colors = {
+            grey: [74, 74, 74],           // Recognition - receptive state
+            pink: [233, 30, 99],          // Evaluation - startle intensity
+            orange: [255, 152, 0]         // Response - energy discharge
+        };
+        
+        // Surprise resonances - text that appears during surprise events
+        const surpriseResonances = [
+            "The sharp intake of breath before understanding",
+            "A flash of recognition—something unexpected",
+            "The moment the pattern breaks",
+            "Startle: body responds before mind catches up",
+            "That electric instant of the unforeseen",
+            "When reality diverges from expectation",
+            "The rupture of the ordinary",
+            "A sudden opening in the fabric of the expected",
+            "The involuntary widening of attention",
+            "Crystallized: a moment that will be remembered",
+            "The scatter of certainty",
+            "Alert systems firing all at once",
+            "When the world briefly becomes strange again",
+            "The gift of interrupted assumption",
+            "Novelty breaking through the habitual"
+        ];
+        
+        // ============================================
+        // CORE SYSTEMS
+        // ============================================
+        
+        // Hand outline (receptive surface)
+        let handPoints = [];
+        let handVisible = false;
+        let handOpacity = 0;
+        
+        // Sensitivity system (adaptation constraint)
+        let globalSensitivity = 1.0;
+        let sensitivityRecoveryRate = 0.0008;
+        let lastSurpriseTime = 0;
+        let surpriseLocations = []; // Track where surprises have occurred
+        
+        // Particle systems
+        let burstParticles = [];
+        let ambientParticles = [];
+        let sparkles = [];
+        let spirals = [];
+        let crystals = [];
+        
+        // Receptor zones (palm dots from collage)
+        let receptors = [];
+        let receptorActivations = [];
+        
+        // State tracking
+        let surpriseCount = 0;
+        let isInSurpriseState = false;
+        let surpriseIntensity = 0;
+        
+        // ============================================
+        // SETUP & INITIALIZATION
+        // ============================================
+        
+        function preload() {
+            soundLoaded = false;
+            surpriseSound = loadSound('surprise_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+        
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            createHandOutline();
+            createReceptors();
+            createAmbientParticles();
+            createCrystals();
+            
+            // Initialize audio context
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            noLoop();
+        }
+        
+        function createHandOutline() {
+            // Hand as receptive surface - open, ready to receive
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            let scale = min(width, height) * 0.35;
+            
+            // Palm base
+            handPoints = [];
+            
+            // Create hand shape - open palm facing viewer
+            let palmPoints = [
+                {x: -0.15, y: 0.25},   // Wrist left
+                {x: 0.15, y: 0.25},    // Wrist right
+                {x: 0.2, y: 0.15},     // Palm right
+                {x: 0.22, y: 0.05},    // Below pinky
+                {x: 0.18, y: -0.1},    // Pinky base
+                {x: 0.2, y: -0.25},    // Pinky tip
+                {x: 0.15, y: -0.12},   // Between pinky/ring
+                {x: 0.12, y: -0.32},   // Ring tip
+                {x: 0.05, y: -0.14},   // Between ring/middle
+                {x: 0.02, y: -0.38},   // Middle tip
+                {x: -0.05, y: -0.14},  // Between middle/index
+                {x: -0.08, y: -0.34},  // Index tip
+                {x: -0.12, y: -0.12},  // Between index/thumb
+                {x: -0.25, y: -0.08},  // Thumb tip
+                {x: -0.2, y: 0.05},    // Thumb base
+                {x: -0.2, y: 0.15},    // Palm left
+                {x: -0.15, y: 0.25}    // Back to wrist
+            ];
+            
+            for (let pt of palmPoints) {
+                handPoints.push({
+                    x: centerX + pt.x * scale,
+                    y: centerY + pt.y * scale
+                });
+            }
+        }
+        
+        function createReceptors() {
+            // Palm dots - sensitivity points (from collage)
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            let palmRadius = min(width, height) * 0.12;
+            
+            receptors = [];
+            receptorActivations = [];
+            
+            // Create grid of receptors in palm area
+            for (let i = 0; i < 25; i++) {
+                let angle = random(TWO_PI);
+                let r = random(palmRadius * 0.3, palmRadius);
+                
+                receptors.push({
+                    x: centerX + cos(angle) * r,
+                    y: centerY + sin(angle) * r * 0.8,
+                    baseSize: random(2, 5),
+                    sensitivity: random(0.7, 1.0),
+                    lastActivated: 0,
+                    activationLevel: 0
+                });
+                
+                receptorActivations.push(0);
+            }
+        }
+        
+        function createAmbientParticles() {
+            // Subtle background particles - pre-surprise state
+            ambientParticles = [];
+            
+            for (let i = 0; i < 30; i++) {
+                ambientParticles.push({
+                    x: random(width),
+                    y: random(height),
+                    size: random(1, 3),
+                    speed: random(0.2, 0.5),
+                    angle: random(TWO_PI),
+                    opacity: random(30, 80)
+                });
+            }
+        }
+        
+        function createCrystals() {
+            // Faceted shapes that crystallize surprise moments
+            crystals = [];
+            
+            for (let i = 0; i < 5; i++) {
+                crystals.push({
+                    x: random(width * 0.2, width * 0.8),
+                    y: random(height * 0.2, height * 0.8),
+                    size: random(15, 35),
+                    sides: floor(random(5, 9)),
+                    rotation: random(TWO_PI),
+                    rotationSpeed: random(-0.005, 0.005),
+                    opacity: 0,
+                    targetOpacity: 0,
+                    memory: null // Stores surprise event
+                });
+            }
+        }
+        
+        // ============================================
+        // SURPRISE TRIGGER SYSTEM
+        // ============================================
+        
+        function triggerSurprise(x, y, isNovel) {
+            let now = millis();
+            
+            // Calculate local novelty (adaptation constraint)
+            let localNovelty = calculateLocalNovelty(x, y);
+            let timeSinceLastSurprise = now - lastSurpriseTime;
+            let temporalNovelty = min(1, timeSinceLastSurprise / 3000);
+            
+            // Combined novelty factor
+            let noveltyFactor = (localNovelty * 0.6 + temporalNovelty * 0.4) * globalSensitivity;
+            
+            // If location is too familiar, reduce response
+            if (noveltyFactor < 0.2) {
+                // Minimal response - habituated
+                createMinimalResponse(x, y);
+                return;
+            }
+            
+            // Record this surprise location
+            surpriseLocations.push({
+                x: x,
+                y: y,
+                time: now,
+                intensity: noveltyFactor
+            });
+            
+            // Trim old locations
+            surpriseLocations = surpriseLocations.filter(loc => now - loc.time < 10000);
+            
+            // Update global state
+            lastSurpriseTime = now;
+            globalSensitivity = max(0.1, globalSensitivity - noveltyFactor * 0.3);
+            surpriseCount++;
+            isInSurpriseState = true;
+            surpriseIntensity = noveltyFactor;
+            
+            // Create surprise effects scaled by novelty
+            createBurstParticles(x, y, noveltyFactor);
+            createSparkles(x, y, noveltyFactor);
+            createSpiral(x, y, noveltyFactor);
+            activateNearbyReceptors(x, y, noveltyFactor);
+            crystallizeMoment(x, y, noveltyFactor);
+            
+            // Show resonance text
+            if (noveltyFactor > 0.5) {
+                showSurpriseResonance(x, y);
+            }
+            
+            // Flash the hand briefly
+            handOpacity = min(255, handOpacity + noveltyFactor * 150);
+            
+            // Update sensitivity meter
+            updateSensitivityMeter();
+        }
+        
+        function calculateLocalNovelty(x, y) {
+            let now = millis();
+            let novelty = 1.0;
+            
+            for (let loc of surpriseLocations) {
+                let d = dist(x, y, loc.x, loc.y);
+                let timeFactor = (now - loc.time) / 5000; // Decay over 5 seconds
+                
+                if (d < 150) {
+                    let proximityPenalty = map(d, 0, 150, 0.5, 0);
+                    proximityPenalty *= (1 - timeFactor);
+                    novelty -= proximityPenalty;
+                }
+            }
+            
+            return max(0, novelty);
+        }
+        
+        function createMinimalResponse(x, y) {
+            // Habituated response - just a few weak particles
+            for (let i = 0; i < 3; i++) {
+                burstParticles.push({
+                    x: x,
+                    y: y,
+                    vx: random(-1, 1),
+                    vy: random(-1, 1),
+                    size: random(2, 4),
+                    life: 30,
+                    maxLife: 30,
+                    color: colors.grey,
+                    type: 'weak'
+                });
+            }
+        }
+        
+        // ============================================
+        // PARTICLE CREATION
+        // ============================================
+        
+        function createBurstParticles(x, y, intensity) {
+            let count = floor(30 * intensity);
+            
+            for (let i = 0; i < count; i++) {
+                let angle = random(TWO_PI);
+                let speed = random(3, 12) * intensity;
+                let colorChoice = random();
+                let particleColor;
+                
+                if (colorChoice < 0.4) {
+                    particleColor = colors.orange; // Response
+                } else if (colorChoice < 0.7) {
+                    particleColor = colors.pink;   // Evaluation
+                } else {
+                    particleColor = colors.grey;   // Recognition
+                }
+                
+                burstParticles.push({
+                    x: x,
+                    y: y,
+                    vx: cos(angle) * speed,
+                    vy: sin(angle) * speed,
+                    size: random(3, 8) * intensity,
+                    life: random(40, 80),
+                    maxLife: random(40, 80),
+                    color: particleColor,
+                    type: 'burst',
+                    gravity: random(0.05, 0.15),
+                    friction: random(0.96, 0.99)
+                });
+            }
+        }
+        
+        function createSparkles(x, y, intensity) {
+            let count = floor(15 * intensity);
+            
+            for (let i = 0; i < count; i++) {
+                let angle = random(TWO_PI);
+                let distance = random(20, 100) * intensity;
+                
+                sparkles.push({
+                    x: x + cos(angle) * distance * 0.3,
+                    y: y + sin(angle) * distance * 0.3,
+                    targetX: x + cos(angle) * distance,
+                    targetY: y + sin(angle) * distance,
+                    size: random(2, 6),
+                    life: random(20, 50),
+                    maxLife: random(20, 50),
+                    twinkleSpeed: random(0.2, 0.5),
+                    twinklePhase: random(TWO_PI)
+                });
+            }
+        }
+        
+        function createSpiral(x, y, intensity) {
+            if (intensity < 0.4) return;
+            
+            spirals.push({
+                x: x,
+                y: y,
+                radius: 0,
+                maxRadius: random(60, 120) * intensity,
+                rotation: 0,
+                rotationSpeed: random(0.1, 0.2) * (random() > 0.5 ? 1 : -1),
+                life: 60,
+                maxLife: 60,
+                arms: floor(random(3, 6)),
+                color: colors.orange
+            });
+        }
+        
+        function activateNearbyReceptors(x, y, intensity) {
+            for (let i = 0; i < receptors.length; i++) {
+                let receptor = receptors[i];
+                let d = dist(x, y, receptor.x, receptor.y);
+                
+                if (d < 150) {
+                    let activation = map(d, 0, 150, 1, 0) * intensity * receptor.sensitivity;
+                    receptor.activationLevel = min(1, receptor.activationLevel + activation);
+                    receptor.lastActivated = millis();
+                }
+            }
+        }
+        
+        function crystallizeMoment(x, y, intensity) {
+            if (intensity < 0.6) return;
+            
+            // Find the nearest crystal to store this memory
+            let nearestCrystal = null;
+            let nearestDist = Infinity;
+            
+            for (let crystal of crystals) {
+                let d = dist(x, y, crystal.x, crystal.y);
+                if (d < nearestDist && crystal.targetOpacity < 100) {
+                    nearestDist = d;
+                    nearestCrystal = crystal;
+                }
+            }
+            
+            if (nearestCrystal) {
+                nearestCrystal.memory = {
+                    x: x,
+                    y: y,
+                    intensity: intensity,
+                    time: millis()
+                };
+                nearestCrystal.targetOpacity = 180 * intensity;
+            }
+        }
+        
+        // ============================================
+        // UPDATE SYSTEMS
+        // ============================================
+        
+        function updateParticles() {
+            // Update burst particles
+            for (let i = burstParticles.length - 1; i >= 0; i--) {
+                let p = burstParticles[i];
+                
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity || 0;
+                p.vx *= p.friction || 0.98;
+                p.vy *= p.friction || 0.98;
+                p.life--;
+                
+                if (p.life <= 0) {
+                    burstParticles.splice(i, 1);
+                }
+            }
+            
+            // Update sparkles
+            for (let i = sparkles.length - 1; i >= 0; i--) {
+                let s = sparkles[i];
+                
+                s.x = lerp(s.x, s.targetX, 0.1);
+                s.y = lerp(s.y, s.targetY, 0.1);
+                s.twinklePhase += s.twinkleSpeed;
+                s.life--;
+                
+                if (s.life <= 0) {
+                    sparkles.splice(i, 1);
+                }
+            }
+            
+            // Update spirals
+            for (let i = spirals.length - 1; i >= 0; i--) {
+                let sp = spirals[i];
+                
+                sp.radius = lerp(sp.radius, sp.maxRadius, 0.08);
+                sp.rotation += sp.rotationSpeed;
+                sp.life--;
+                
+                if (sp.life <= 0) {
+                    spirals.splice(i, 1);
+                }
+            }
+            
+            // Update ambient particles
+            for (let p of ambientParticles) {
+                p.x += cos(p.angle) * p.speed;
+                p.y += sin(p.angle) * p.speed;
+                p.angle += random(-0.05, 0.05);
+                
+                // Wrap around edges
+                if (p.x < 0) p.x = width;
+                if (p.x > width) p.x = 0;
+                if (p.y < 0) p.y = height;
+                if (p.y > height) p.y = 0;
+            }
+        }
+        
+        function updateReceptors() {
+            let now = millis();
+            
+            for (let receptor of receptors) {
+                // Decay activation
+                if (receptor.activationLevel > 0) {
+                    receptor.activationLevel *= 0.95;
+                    if (receptor.activationLevel < 0.01) {
+                        receptor.activationLevel = 0;
+                    }
+                }
+            }
+        }
+        
+        function updateCrystals() {
+            for (let crystal of crystals) {
+                crystal.rotation += crystal.rotationSpeed;
+                
+                // Fade opacity toward target
+                crystal.opacity = lerp(crystal.opacity, crystal.targetOpacity, 0.05);
+                
+                // Slowly fade memories
+                if (crystal.memory && millis() - crystal.memory.time > 8000) {
+                    crystal.targetOpacity *= 0.99;
+                    if (crystal.targetOpacity < 5) {
+                        crystal.memory = null;
+                        crystal.targetOpacity = 0;
+                    }
+                }
+            }
+        }
+        
+        function updateSensitivity() {
+            // Recover sensitivity over time (adaptation constraint)
+            if (globalSensitivity < 1.0) {
+                globalSensitivity = min(1.0, globalSensitivity + sensitivityRecoveryRate);
+                updateSensitivityMeter();
+            }
+            
+            // Fade hand
+            if (handOpacity > 80) {
+                handOpacity *= 0.97;
+            }
+            
+            // Update surprise state
+            if (isInSurpriseState) {
+                surpriseIntensity *= 0.95;
+                if (surpriseIntensity < 0.05) {
+                    isInSurpriseState = false;
+                    surpriseIntensity = 0;
+                }
+            }
+        }
+        
+        function updateSensitivityMeter() {
+            let fill = document.getElementById('sensitivity-fill');
+            if (fill) {
+                fill.style.width = (globalSensitivity * 100) + '%';
+            }
+        }
+        
+        // ============================================
+        // DRAWING SYSTEMS
+        // ============================================
+        
+        function draw() {
+            // Soft cream background with slight variation during surprise
+            let bgR = 249 + surpriseIntensity * 6;
+            let bgG = 242 - surpriseIntensity * 10;
+            let bgB = 226 - surpriseIntensity * 20;
+            background(bgR, bgG, bgB);
+            
+            // Update all systems
+            updateParticles();
+            updateReceptors();
+            updateCrystals();
+            updateSensitivity();
+            
+            // Draw layers
+            drawAmbientParticles();
+            drawHand();
+            drawReceptors();
+            drawCrystals();
+            drawSpirals();
+            drawBurstParticles();
+            drawSparkles();
+            
+            // Draw connection lines during active surprise
+            if (isInSurpriseState && surpriseIntensity > 0.2) {
+                drawSurpriseConnections();
+            }
+        }
+        
+        function drawAmbientParticles() {
+            noStroke();
+            for (let p of ambientParticles) {
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], p.opacity);
+                ellipse(p.x, p.y, p.size);
+            }
+        }
+        
+        function drawHand() {
+            if (handPoints.length < 3) return;
+            
+            // Draw hand outline
+            noFill();
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], handOpacity);
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let pt of handPoints) {
+                vertex(pt.x, pt.y);
+            }
+            endShape(CLOSE);
+            
+            // Draw palm circle
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            let palmRadius = min(width, height) * 0.12;
+            
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], handOpacity * 0.5);
+            strokeWeight(1);
+            ellipse(centerX, centerY, palmRadius * 2);
+            
+            // Inner circle
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], handOpacity * 0.3);
+            ellipse(centerX, centerY, palmRadius);
+        }
+        
+        function drawReceptors() {
+            noStroke();
+            
+            for (let receptor of receptors) {
+                let activation = receptor.activationLevel;
+                
+                // Base receptor (grey)
+                let baseOpacity = 40 + activation * 160;
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity);
+                ellipse(receptor.x, receptor.y, receptor.baseSize);
+                
+                // Activation glow (pink/orange)
+                if (activation > 0.1) {
+                    let glowSize = receptor.baseSize * (1 + activation * 3);
+                    
+                    // Pink evaluation ring
+                    fill(colors.pink[0], colors.pink[1], colors.pink[2], activation * 100);
+                    ellipse(receptor.x, receptor.y, glowSize);
+                    
+                    // Orange response core
+                    fill(colors.orange[0], colors.orange[1], colors.orange[2], activation * 150);
+                    ellipse(receptor.x, receptor.y, receptor.baseSize * (1 + activation));
+                }
+            }
+        }
+        
+        function drawCrystals() {
+            for (let crystal of crystals) {
+                if (crystal.opacity < 5) continue;
+                
+                push();
+                translate(crystal.x, crystal.y);
+                rotate(crystal.rotation);
+                
+                // Outer glow
+                noFill();
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.3);
+                strokeWeight(1);
+                drawPolygon(0, 0, crystal.size * 1.2, crystal.sides);
+                
+                // Main crystal shape
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.15);
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.8);
+                strokeWeight(1.5);
+                drawPolygon(0, 0, crystal.size, crystal.sides);
+                
+                // Inner facets
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.4);
+                strokeWeight(0.5);
+                for (let i = 0; i < crystal.sides; i++) {
+                    let angle = TWO_PI * i / crystal.sides;
+                    line(0, 0, cos(angle) * crystal.size * 0.7, sin(angle) * crystal.size * 0.7);
+                }
+                
+                pop();
+                
+                // Memory connection line
+                if (crystal.memory) {
+                    stroke(colors.orange[0], colors.orange[1], colors.orange[2], crystal.opacity * 0.3);
+                    strokeWeight(1);
+                    drawDottedLine(crystal.x, crystal.y, crystal.memory.x, crystal.memory.y, 8);
+                }
+            }
+        }
+        
+        function drawPolygon(x, y, radius, sides) {
+            beginShape();
+            for (let i = 0; i < sides; i++) {
+                let angle = TWO_PI * i / sides - HALF_PI;
+                vertex(x + cos(angle) * radius, y + sin(angle) * radius);
+            }
+            endShape(CLOSE);
+        }
+        
+        function drawSpirals() {
+            for (let sp of spirals) {
+                let lifeRatio = sp.life / sp.maxLife;
+                
+                push();
+                translate(sp.x, sp.y);
+                rotate(sp.rotation);
+                
+                noFill();
+                strokeWeight(2 * lifeRatio);
+                
+                for (let arm = 0; arm < sp.arms; arm++) {
+                    let armAngle = TWO_PI * arm / sp.arms;
+                    
+                    stroke(colors.orange[0], colors.orange[1], colors.orange[2], 200 * lifeRatio);
+                    
+                    beginShape();
+                    for (let i = 0; i < 30; i++) {
+                        let t = i / 30;
+                        let r = sp.radius * t;
+                        let a = armAngle + t * PI * 2;
+                        vertex(cos(a) * r, sin(a) * r);
+                    }
+                    endShape();
+                }
+                
+                pop();
+            }
+        }
+        
+        function drawBurstParticles() {
+            noStroke();
+            
+            for (let p of burstParticles) {
+                let lifeRatio = p.life / p.maxLife;
+                let alpha = 255 * lifeRatio;
+                
+                fill(p.color[0], p.color[1], p.color[2], alpha);
+                
+                if (p.type === 'burst') {
+                    // Draw with motion trail
+                    let trailLength = sqrt(p.vx * p.vx + p.vy * p.vy) * 2;
+                    let angle = atan2(p.vy, p.vx);
+                    
+                    push();
+                    translate(p.x, p.y);
+                    rotate(angle);
+                    
+                    // Trail
+                    fill(p.color[0], p.color[1], p.color[2], alpha * 0.5);
+                    ellipse(-trailLength/2, 0, trailLength, p.size * 0.6);
+                    
+                    // Main particle
+                    fill(p.color[0], p.color[1], p.color[2], alpha);
+                    ellipse(0, 0, p.size);
+                    
+                    pop();
+                } else {
+                    ellipse(p.x, p.y, p.size);
+                }
+            }
+        }
+        
+        function drawSparkles() {
+            for (let s of sparkles) {
+                let lifeRatio = s.life / s.maxLife;
+                let twinkle = (sin(s.twinklePhase) + 1) / 2;
+                let alpha = 255 * lifeRatio * twinkle;
+                let size = s.size * (0.5 + twinkle * 0.5);
+                
+                // Sparkle star shape
+                push();
+                translate(s.x, s.y);
+                
+                // Glow
+                noStroke();
+                fill(255, 255, 255, alpha * 0.5);
+                ellipse(0, 0, size * 2);
+                
+                // Star points
+                stroke(255, 255, 255, alpha);
+                strokeWeight(1.5);
+                line(-size, 0, size, 0);
+                line(0, -size, 0, size);
+                
+                // Diagonal points (smaller)
+                strokeWeight(1);
+                let diagSize = size * 0.6;
+                line(-diagSize, -diagSize, diagSize, diagSize);
+                line(-diagSize, diagSize, diagSize, -diagSize);
+                
+                pop();
+            }
+        }
+        
+        function drawSurpriseConnections() {
+            // Draw subtle connections between active elements during surprise
+            let activeReceptors = receptors.filter(r => r.activationLevel > 0.3);
+            
+            if (activeReceptors.length > 1) {
+                stroke(colors.pink[0], colors.pink[1], colors.pink[2], 50 * surpriseIntensity);
+                strokeWeight(0.5);
+                
+                for (let i = 0; i < activeReceptors.length - 1; i++) {
+                    for (let j = i + 1; j < activeReceptors.length; j++) {
+                        let r1 = activeReceptors[i];
+                        let r2 = activeReceptors[j];
+                        let d = dist(r1.x, r1.y, r2.x, r2.y);
+                        
+                        if (d < 100) {
+                            line(r1.x, r1.y, r2.x, r2.y);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawDottedLine(x1, y1, x2, y2, spacing) {
+            let d = dist(x1, y1, x2, y2);
+            let numDots = floor(d / spacing);
+            
+            noStroke();
+            for (let i = 0; i <= numDots; i++) {
+                let t = i / numDots;
+                let x = lerp(x1, x2, t);
+                let y = lerp(y1, y2, t);
+                ellipse(x, y, 2);
+            }
+        }
+        
+        // ============================================
+        // UI & INTERACTION
+        // ============================================
+        
+        function showSurpriseResonance(x, y) {
+            const resonance = document.getElementById('surprise-resonance');
+            let message = surpriseResonances[floor(random(surpriseResonances.length))];
+            
+            resonance.innerHTML = message;
+            
+            // Position near the event
+            let posX = x + 30;
+            let posY = y - 30;
+            
+            // Keep on screen
+            if (posX > window.innerWidth - 300) posX = x - 300;
+            if (posY < 20) posY = y + 30;
+            if (posY > window.innerHeight - 80) posY = window.innerHeight - 100;
+            
+            resonance.style.left = posX + 'px';
+            resonance.style.top = posY + 'px';
+            resonance.classList.add('active');
+            
+            // Hide after delay
+            setTimeout(() => {
+                resonance.classList.remove('active');
+            }, 2500);
+        }
+        
+        function startExperience() {
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                isAnimating = true;
+                handVisible = true;
+                handOpacity = 80;
+                loop();
+                
+                // Show controls
+                document.getElementById('controls').style.opacity = '1';
+                document.getElementById('hint').style.opacity = '1';
+                document.getElementById('sensitivity-meter').style.opacity = '1';
+                document.getElementById('sensitivity-label').style.opacity = '1';
+                
+                // Start ambient sound
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        surpriseSound.loop();
+                        surpriseSound.setVolume(0);
+                        surpriseSound.setVolume(0.4, 2);
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                // Hide hint after delay
+                setTimeout(() => {
+                    document.getElementById('hint').style.opacity = '0';
+                }, 4000);
+                
+            }, 800);
+        }
+        
+        function resetExperience() {
+            // Reset all state
+            globalSensitivity = 1.0;
+            surpriseLocations = [];
+            burstParticles = [];
+            sparkles = [];
+            spirals = [];
+            surpriseCount = 0;
+            isInSurpriseState = false;
+            surpriseIntensity = 0;
+            handOpacity = 80;
+            
+            // Reset receptors
+            for (let receptor of receptors) {
+                receptor.activationLevel = 0;
+            }
+            
+            // Reset crystals
+            for (let crystal of crystals) {
+                crystal.opacity = 0;
+                crystal.targetOpacity = 0;
+                crystal.memory = null;
+            }
+            
+            updateSensitivityMeter();
+        }
+        
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && surpriseSound && !surpriseSound.isPlaying()) {
+                surpriseSound.loop();
+                surpriseSound.setVolume(0.4, 1);
+            } else if (!soundEnabled && surpriseSound && surpriseSound.isPlaying()) {
+                surpriseSound.setVolume(0, 0.5);
+                setTimeout(() => surpriseSound.pause(), 500);
+            }
+        });
+        
+        document.getElementById('reset-button').addEventListener('click', resetExperience);
+        
+        function mousePressed() {
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                triggerSurprise(mouseX, mouseY, true);
+            }
+            return false;
+        }
+        
+        function touchStarted() {
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                if (touches.length > 0) {
+                    triggerSurprise(touches[0].x, touches[0].y, true);
+                }
+            }
+            return false;
+        }
+        
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            createHandOutline();
+            createReceptors();
+        }
+    </script>
+</body>
+</html>

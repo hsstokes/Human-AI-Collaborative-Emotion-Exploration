@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Surprise - Emotional Experience</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
             padding: 0;
@@ -15,7 +19,6 @@
             background-color: #f9f2e2;
             font-family: 'Roboto Mono', monospace;
             -webkit-text-size-adjust: 100%;
-            touch-action: none;
         }
         
         #landing-overlay {
@@ -27,56 +30,71 @@
             background-color: rgba(249, 242, 226, 0.97);
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             z-index: 9999;
-            box-sizing: border-box;
             padding: 20px;
             transition: opacity 0.8s ease-in-out;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .landing-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 40px 15px 100px 15px;
         }
         
         .landing-title {
-            font-size: 24px;
+            font-size: clamp(18px, 5vw, 24px);
             font-weight: 500;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             text-align: center;
             letter-spacing: 1px;
             color: #4A4A4A;
         }
         
         .emotion-name {
-            font-size: 48px;
-            margin-bottom: 30px;
+            font-size: clamp(28px, 10vw, 48px);
+            margin-bottom: 25px;
             text-transform: uppercase;
-            letter-spacing: 6px;
+            letter-spacing: clamp(3px, 1.5vw, 6px);
             background: linear-gradient(135deg, #4A4A4A 0%, #FF9800 50%, #E91E63 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-align: center;
+            word-break: break-word;
         }
         
         .emotion-description {
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: clamp(12px, 3.5vw, 14px);
+            line-height: 1.7;
+            width: 100%;
             max-width: 500px;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             opacity: 0.8;
             color: #4A4A4A;
+            padding: 0 10px;
         }
 
         .ai-disclaimer {
-           font-size: 13px;
-           max-width: 500px;
-           text-align: center;
-           margin-bottom: 40px;
-           margin-top: 10px;
-           padding: 15px 20px;
-           background-color: rgba(255, 152, 0, 0.1);
-           border-radius: 8px;
-           border-left: 3px solid #FF9800;
-           line-height: 1.6;
-           color: #333;
+            font-size: clamp(11px, 3vw, 13px);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: rgba(255, 152, 0, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #FF9800;
+            line-height: 1.6;
+            color: #333;
         }
         
         .start-button {
@@ -86,10 +104,12 @@
             border: 2px solid #FF9800;
             border-radius: 30px;
             font-family: 'Roboto Mono', monospace;
-            font-size: 16px;
+            font-size: clamp(14px, 4vw, 16px);
             cursor: pointer;
             transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
             box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+            flex-shrink: 0;
+            margin-bottom: 40px;
         }
         
         .start-button:hover {
@@ -99,10 +119,11 @@
         
         .start-button:active {
             transform: scale(0.98);
+            background-color: rgba(255, 152, 0, 0.4);
         }
         
         canvas {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             z-index: 1;
@@ -112,9 +133,9 @@
             position: fixed;
             background-color: rgba(255, 255, 255, 0.95);
             border-radius: 12px;
-            padding: 15px 20px;
-            max-width: 280px;
-            font-size: 13px;
+            padding: 12px 16px;
+            max-width: min(280px, calc(100vw - 40px));
+            font-size: clamp(11px, 3vw, 13px);
             line-height: 1.5;
             color: #333;
             box-shadow: 0 8px 25px rgba(255, 152, 0, 0.25);
@@ -154,11 +175,16 @@
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .control-button:hover {
             transform: scale(1.1);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-button:active {
+            transform: scale(0.95);
         }
         
         .control-button svg {
@@ -171,23 +197,25 @@
             position: fixed;
             bottom: 20px;
             left: 20px;
+            right: 90px;
             background-color: rgba(255, 255, 255, 0.9);
-            padding: 12px 18px;
+            padding: 10px 14px;
             border-radius: 25px;
-            font-size: 12px;
+            font-size: clamp(10px, 2.5vw, 12px);
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
             opacity: 0;
             transition: opacity 0.5s;
             z-index: 50;
             color: #4A4A4A;
             border: 1px solid rgba(255, 152, 0, 0.3);
+            text-align: center;
         }
         
         .sensitivity-meter {
             position: fixed;
             top: 20px;
             right: 20px;
-            width: 120px;
+            width: min(120px, 30vw);
             height: 8px;
             background-color: rgba(74, 74, 74, 0.2);
             border-radius: 4px;
@@ -209,7 +237,7 @@
             position: fixed;
             top: 32px;
             right: 20px;
-            font-size: 9px;
+            font-size: clamp(8px, 2vw, 9px);
             color: #4A4A4A;
             opacity: 0;
             transition: opacity 0.5s;
@@ -218,68 +246,62 @@
             letter-spacing: 1px;
         }
         
-        @media (max-width: 768px) {
-            body {
-                overflow-y: auto !important;
-                height: auto !important;
+        /* Landscape phone adjustments */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .landing-content {
+                padding: 20px 15px 60px 15px;
             }
-        
-            #landing-overlay {
-                position: absolute;
-                height: auto;
-                min-height: 100%;
-                overflow-y: auto;
-                padding: 40px 20px 120px 20px;
-                justify-content: flex-start;
-            }
-        
+            
             .landing-title {
-                margin-top: 40px;
+                margin-bottom: 15px;
             }
-        
-            .start-button {
-                margin-bottom: 60px;
-                position: relative;
-            }
-        
+            
             .emotion-name {
-                font-size: 36px;
+                margin-bottom: 15px;
             }
-        
+            
+            .emotion-description {
+                margin-bottom: 15px;
+            }
+            
             .ai-disclaimer {
-                width: 90%;
-                font-size: 12px;
-                max-width: 90%;
+                margin-bottom: 20px;
+                padding: 10px;
+            }
+        }
+        
+        /* Small screens */
+        @media (max-width: 400px) {
+            .landing-content {
+                padding: 30px 10px 80px 10px;
             }
             
-            .controls {
-                bottom: 15px;
-                right: 15px;
+            .ai-disclaimer {
+                padding: 12px 10px;
             }
             
-            .hint {
-                bottom: 15px;
-                left: 15px;
-                font-size: 11px;
-                padding: 10px 14px;
+            .start-button {
+                padding: 12px 28px;
             }
         }
     </style>
 </head>
 <body>
     <div id="landing-overlay">
-        <h1 class="landing-title">Emotional Collage Experience</h1>
-        <h2 class="emotion-name" id="emotion-title">SURPRISE</h2>
-        <p class="emotion-description" id="emotion-description">
-            An exploration of surprise as sudden rupture—the explosive scatter of recognition when the unexpected makes contact with a receptive surface.
-            <br><b>Analysis by Claude</b>
-        </p>
+        <div class="landing-content">
+            <h1 class="landing-title">Emotional Collage Experience</h1>
+            <h2 class="emotion-name" id="emotion-title">SURPRISE</h2>
+            <p class="emotion-description" id="emotion-description">
+                An exploration of surprise as sudden rupture—the explosive scatter of recognition when the unexpected makes contact with a receptive surface.
+                <br><b>Analysis by Claude</b>
+            </p>
 
-        <div class="ai-disclaimer">
-            <strong>Note:</strong> This is a simulation of surprise based on my analysis of human descriptions. As an AI, I don't experience emotions—this is my interpretation of a human concept through the constraint of adaptation: decreasing response to sustained patterns while amplifying novel elements.
+            <div class="ai-disclaimer">
+                <strong>Note:</strong> This is a simulation of surprise based on my analysis of human descriptions. As an AI, I don't experience emotions—this is my interpretation of a human concept through the constraint of adaptation: decreasing response to sustained patterns while amplifying novel elements.
+            </div>
+            
+            <button class="start-button" id="start-experience">Touch to Begin</button>
         </div>
-        
-        <button class="start-button" id="start-experience">Touch to Begin</button>
     </div>
     
     <div class="surprise-resonance" id="surprise-resonance"></div>
@@ -353,7 +375,7 @@
         let handPoints = [];
         let handVisible = false;
         let handOpacity = 0;
-        let handBaseOpacity = 180; // Much stronger base visibility
+        let handBaseOpacity = 180;
         
         // Anticipation pulse system
         let anticipationPhase = 0;
@@ -369,7 +391,7 @@
         let globalSensitivity = 1.0;
         let sensitivityRecoveryRate = 0.0008;
         let lastSurpriseTime = 0;
-        let surpriseLocations = []; // Track where surprises have occurred
+        let surpriseLocations = [];
         
         // Particle systems
         let burstParticles = [];
@@ -418,7 +440,6 @@
             createEnergyField();
             createNerveLines();
             
-            // Initialize audio context
             if (getAudioContext().state !== 'running') {
                 getAudioContext().resume();
             }
@@ -427,33 +448,30 @@
         }
         
         function createHandOutline() {
-            // Hand as receptive surface - open, ready to receive
             let centerX = width * 0.5;
             let centerY = height * 0.5;
             let scale = min(width, height) * 0.35;
             
-            // Palm base
             handPoints = [];
             
-            // Create hand shape - open palm facing viewer
             let palmPoints = [
-                {x: -0.15, y: 0.25},   // Wrist left
-                {x: 0.15, y: 0.25},    // Wrist right
-                {x: 0.2, y: 0.15},     // Palm right
-                {x: 0.22, y: 0.05},    // Below pinky
-                {x: 0.18, y: -0.1},    // Pinky base
-                {x: 0.2, y: -0.25},    // Pinky tip
-                {x: 0.15, y: -0.12},   // Between pinky/ring
-                {x: 0.12, y: -0.32},   // Ring tip
-                {x: 0.05, y: -0.14},   // Between ring/middle
-                {x: 0.02, y: -0.38},   // Middle tip
-                {x: -0.05, y: -0.14},  // Between middle/index
-                {x: -0.08, y: -0.34},  // Index tip
-                {x: -0.12, y: -0.12},  // Between index/thumb
-                {x: -0.25, y: -0.08},  // Thumb tip
-                {x: -0.2, y: 0.05},    // Thumb base
-                {x: -0.2, y: 0.15},    // Palm left
-                {x: -0.15, y: 0.25}    // Back to wrist
+                {x: -0.15, y: 0.25},
+                {x: 0.15, y: 0.25},
+                {x: 0.2, y: 0.15},
+                {x: 0.22, y: 0.05},
+                {x: 0.18, y: -0.1},
+                {x: 0.2, y: -0.25},
+                {x: 0.15, y: -0.12},
+                {x: 0.12, y: -0.32},
+                {x: 0.05, y: -0.14},
+                {x: 0.02, y: -0.38},
+                {x: -0.05, y: -0.14},
+                {x: -0.08, y: -0.34},
+                {x: -0.12, y: -0.12},
+                {x: -0.25, y: -0.08},
+                {x: -0.2, y: 0.05},
+                {x: -0.2, y: 0.15},
+                {x: -0.15, y: 0.25}
             ];
             
             for (let pt of palmPoints) {
@@ -467,7 +485,6 @@
         }
         
         function createEnergyField() {
-            // Concentric energy rings around the hand
             energyField = [];
             let centerX = width * 0.5;
             let centerY = height * 0.5;
@@ -484,7 +501,6 @@
         }
         
         function createNerveLines() {
-            // Lines radiating from palm center - neural pathways
             nerveLines = [];
             let centerX = width * 0.5;
             let centerY = height * 0.5;
@@ -506,7 +522,6 @@
         }
         
         function createReceptors() {
-            // Palm dots - sensitivity points (from collage)
             let centerX = width * 0.5;
             let centerY = height * 0.5;
             let palmRadius = min(width, height) * 0.12;
@@ -514,7 +529,6 @@
             receptors = [];
             receptorActivations = [];
             
-            // Create grid of receptors in palm area - more of them, more visible
             for (let i = 0; i < 35; i++) {
                 let angle = random(TWO_PI);
                 let r = random(palmRadius * 0.2, palmRadius * 1.1);
@@ -528,7 +542,7 @@
                     activationLevel: 0,
                     idlePhase: random(TWO_PI),
                     idleSpeed: random(0.02, 0.05),
-                    idlePulse: random(0.3, 0.6) // Baseline activity level
+                    idlePulse: random(0.3, 0.6)
                 });
                 
                 receptorActivations.push(0);
@@ -536,7 +550,6 @@
         }
         
         function createAmbientParticles() {
-            // More visible background particles - pre-surprise state
             ambientParticles = [];
             
             for (let i = 0; i < 50; i++) {
@@ -553,7 +566,6 @@
         }
         
         function createCrystals() {
-            // Faceted shapes that crystallize surprise moments
             crystals = [];
             
             for (let i = 0; i < 5; i++) {
@@ -566,7 +578,7 @@
                     rotationSpeed: random(-0.005, 0.005),
                     opacity: 0,
                     targetOpacity: 0,
-                    memory: null // Stores surprise event
+                    memory: null
                 });
             }
         }
@@ -578,22 +590,17 @@
         function triggerSurprise(x, y, isNovel) {
             let now = millis();
             
-            // Calculate local novelty (adaptation constraint)
             let localNovelty = calculateLocalNovelty(x, y);
             let timeSinceLastSurprise = now - lastSurpriseTime;
             let temporalNovelty = min(1, timeSinceLastSurprise / 3000);
             
-            // Combined novelty factor
             let noveltyFactor = (localNovelty * 0.6 + temporalNovelty * 0.4) * globalSensitivity;
             
-            // If location is too familiar, reduce response
             if (noveltyFactor < 0.2) {
-                // Minimal response - habituated
                 createMinimalResponse(x, y);
                 return;
             }
             
-            // Record this surprise location
             surpriseLocations.push({
                 x: x,
                 y: y,
@@ -601,32 +608,26 @@
                 intensity: noveltyFactor
             });
             
-            // Trim old locations
             surpriseLocations = surpriseLocations.filter(loc => now - loc.time < 10000);
             
-            // Update global state
             lastSurpriseTime = now;
             globalSensitivity = max(0.1, globalSensitivity - noveltyFactor * 0.3);
             surpriseCount++;
             isInSurpriseState = true;
             surpriseIntensity = noveltyFactor;
             
-            // Create surprise effects scaled by novelty
             createBurstParticles(x, y, noveltyFactor);
             createSparkles(x, y, noveltyFactor);
             createSpiral(x, y, noveltyFactor);
             activateNearbyReceptors(x, y, noveltyFactor);
             crystallizeMoment(x, y, noveltyFactor);
             
-            // Show resonance text
             if (noveltyFactor > 0.5) {
                 showSurpriseResonance(x, y);
             }
             
-            // Flash the hand briefly
             handOpacity = min(255, handOpacity + noveltyFactor * 150);
             
-            // Update sensitivity meter
             updateSensitivityMeter();
         }
         
@@ -636,7 +637,7 @@
             
             for (let loc of surpriseLocations) {
                 let d = dist(x, y, loc.x, loc.y);
-                let timeFactor = (now - loc.time) / 5000; // Decay over 5 seconds
+                let timeFactor = (now - loc.time) / 5000;
                 
                 if (d < 150) {
                     let proximityPenalty = map(d, 0, 150, 0.5, 0);
@@ -649,7 +650,6 @@
         }
         
         function createMinimalResponse(x, y) {
-            // Habituated response - just a few weak particles
             for (let i = 0; i < 3; i++) {
                 burstParticles.push({
                     x: x,
@@ -679,11 +679,11 @@
                 let particleColor;
                 
                 if (colorChoice < 0.4) {
-                    particleColor = colors.orange; // Response
+                    particleColor = colors.orange;
                 } else if (colorChoice < 0.7) {
-                    particleColor = colors.pink;   // Evaluation
+                    particleColor = colors.pink;
                 } else {
-                    particleColor = colors.grey;   // Recognition
+                    particleColor = colors.grey;
                 }
                 
                 burstParticles.push({
@@ -756,7 +756,6 @@
         function crystallizeMoment(x, y, intensity) {
             if (intensity < 0.6) return;
             
-            // Find the nearest crystal to store this memory
             let nearestCrystal = null;
             let nearestDist = Infinity;
             
@@ -784,7 +783,6 @@
         // ============================================
         
         function updateParticles() {
-            // Update burst particles
             for (let i = burstParticles.length - 1; i >= 0; i--) {
                 let p = burstParticles[i];
                 
@@ -800,7 +798,6 @@
                 }
             }
             
-            // Update sparkles
             for (let i = sparkles.length - 1; i >= 0; i--) {
                 let s = sparkles[i];
                 
@@ -814,7 +811,6 @@
                 }
             }
             
-            // Update spirals
             for (let i = spirals.length - 1; i >= 0; i--) {
                 let sp = spirals[i];
                 
@@ -827,13 +823,11 @@
                 }
             }
             
-            // Update ambient particles
             for (let p of ambientParticles) {
                 p.x += cos(p.angle) * p.speed;
                 p.y += sin(p.angle) * p.speed;
                 p.angle += random(-0.05, 0.05);
                 
-                // Wrap around edges
                 if (p.x < 0) p.x = width;
                 if (p.x > width) p.x = 0;
                 if (p.y < 0) p.y = height;
@@ -845,10 +839,8 @@
             let now = millis();
             
             for (let receptor of receptors) {
-                // Update idle pulse
                 receptor.idlePhase += receptor.idleSpeed;
                 
-                // Decay activation
                 if (receptor.activationLevel > 0) {
                     receptor.activationLevel *= 0.95;
                     if (receptor.activationLevel < 0.01) {
@@ -862,10 +854,8 @@
             for (let crystal of crystals) {
                 crystal.rotation += crystal.rotationSpeed;
                 
-                // Fade opacity toward target
                 crystal.opacity = lerp(crystal.opacity, crystal.targetOpacity, 0.05);
                 
-                // Slowly fade memories
                 if (crystal.memory && millis() - crystal.memory.time > 8000) {
                     crystal.targetOpacity *= 0.99;
                     if (crystal.targetOpacity < 5) {
@@ -877,18 +867,15 @@
         }
         
         function updateAnticipation() {
-            // Update global anticipation phase
             anticipationPhase += anticipationSpeed;
             energyPulsePhase += 0.015;
             
-            // Random micro-twitches on hand points
             microTwitchTimer++;
             if (microTwitchTimer > random(60, 180)) {
                 microTwitchTimer = 0;
                 microTwitchTarget = floor(random(handPoints.length));
             }
             
-            // Apply micro-twitches
             for (let i = 0; i < handPoints.length; i++) {
                 let pt = handPoints[i];
                 if (i === microTwitchTarget) {
@@ -902,20 +889,17 @@
         }
         
         function updateSensitivity() {
-            // Recover sensitivity over time (adaptation constraint)
             if (globalSensitivity < 1.0) {
                 globalSensitivity = min(1.0, globalSensitivity + sensitivityRecoveryRate);
                 updateSensitivityMeter();
             }
             
-            // Fade hand back to base (but keep strong baseline)
             if (handOpacity > handBaseOpacity) {
                 handOpacity *= 0.97;
             } else {
                 handOpacity = handBaseOpacity;
             }
             
-            // Update surprise state
             if (isInSurpriseState) {
                 surpriseIntensity *= 0.95;
                 if (surpriseIntensity < 0.05) {
@@ -937,20 +921,17 @@
         // ============================================
         
         function draw() {
-            // Soft cream background with slight variation during surprise
             let bgR = 249 + surpriseIntensity * 6;
             let bgG = 242 - surpriseIntensity * 10;
             let bgB = 226 - surpriseIntensity * 20;
             background(bgR, bgG, bgB);
             
-            // Update all systems
             updateParticles();
             updateReceptors();
             updateCrystals();
             updateAnticipation();
             updateSensitivity();
             
-            // Draw layers (back to front)
             drawAmbientParticles();
             drawEnergyField();
             drawNerveLines();
@@ -961,7 +942,6 @@
             drawBurstParticles();
             drawSparkles();
             
-            // Draw connection lines during active surprise
             if (isInSurpriseState && surpriseIntensity > 0.2) {
                 drawSurpriseConnections();
             }
@@ -979,7 +959,6 @@
             let centerX = width * 0.5;
             let centerY = height * 0.5;
             
-            // Pulsing anticipation value
             let pulse = (sin(anticipationPhase) + 1) / 2;
             
             for (let ring of energyField) {
@@ -988,7 +967,6 @@
                 let ringPulse = (sin(ring.phase + energyPulsePhase) + 1) / 2;
                 let opacity = 30 + ringPulse * 40 + pulse * 20;
                 
-                // Draw dashed circle
                 stroke(colors.grey[0], colors.grey[1], colors.grey[2], opacity);
                 strokeWeight(1 + ringPulse * 0.5);
                 noFill();
@@ -1003,19 +981,16 @@
                 }
             }
             
-            // Central glow
             noStroke();
             let glowSize = min(width, height) * 0.25;
             let glowPulse = (sin(anticipationPhase * 0.7) + 1) / 2;
             
-            // Outer glow - orange tint
             for (let i = 5; i > 0; i--) {
                 let alpha = (6 - i) * 8 * (0.5 + glowPulse * 0.5);
                 fill(colors.orange[0], colors.orange[1], colors.orange[2], alpha);
                 ellipse(centerX, centerY, glowSize * (1 + i * 0.15));
             }
             
-            // Inner glow - grey
             for (let i = 3; i > 0; i--) {
                 let alpha = (4 - i) * 15 * (0.6 + glowPulse * 0.4);
                 fill(colors.grey[0], colors.grey[1], colors.grey[2], alpha);
@@ -1034,13 +1009,11 @@
                 let endX = centerX + cos(nerve.angle) * nerve.length;
                 let endY = centerY + sin(nerve.angle) * nerve.length;
                 
-                // Main nerve line
                 let alpha = 60 + pulse * 60;
                 stroke(colors.grey[0], colors.grey[1], colors.grey[2], alpha);
                 strokeWeight(1.5);
                 line(centerX, centerY, endX, endY);
                 
-                // Pulse traveling along nerve
                 let pulsePos = (millis() * 0.001 + nerve.pulsePhase) % 1;
                 let pulseX = lerp(centerX, endX, pulsePos);
                 let pulseY = lerp(centerY, endY, pulsePos);
@@ -1049,7 +1022,6 @@
                 fill(colors.orange[0], colors.orange[1], colors.orange[2], 100 + pulse * 100);
                 ellipse(pulseX, pulseY, 4 + pulse * 3);
                 
-                // Branches
                 for (let b = 0; b < nerve.branches; b++) {
                     let branchStart = 0.4 + (b / nerve.branches) * 0.5;
                     let branchX = lerp(centerX, endX, branchStart);
@@ -1072,7 +1044,6 @@
             let pulse = (sin(anticipationPhase) + 1) / 2;
             let currentOpacity = handOpacity + pulse * 30;
             
-            // Outer glow for hand
             noFill();
             for (let g = 3; g > 0; g--) {
                 stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.15 * (4 - g) / 3);
@@ -1084,7 +1055,6 @@
                 endShape(CLOSE);
             }
             
-            // Main hand outline
             stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity);
             strokeWeight(2.5);
             
@@ -1094,7 +1064,6 @@
             }
             endShape(CLOSE);
             
-            // Secondary inner line
             stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.4);
             strokeWeight(1);
             beginShape();
@@ -1107,40 +1076,32 @@
             }
             endShape(CLOSE);
             
-            // Draw palm circles
             let palmRadius = min(width, height) * 0.12;
             
-            // Outer palm circle with pulse
             stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.7);
             strokeWeight(1.5);
             ellipse(centerX, centerY, palmRadius * 2 * (1 + pulse * 0.03));
             
-            // Middle circle
             stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.5);
             strokeWeight(1);
             ellipse(centerX, centerY, palmRadius * 1.4);
             
-            // Inner circle
             stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.3);
             ellipse(centerX, centerY, palmRadius * 0.8);
             
-            // Center dot
             noStroke();
             fill(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity);
             ellipse(centerX, centerY, 6 + pulse * 2);
             
-            // Fingertip highlights
-            let fingertips = [5, 7, 9, 11, 13]; // Indices of fingertip points
+            let fingertips = [5, 7, 9, 11, 13];
             for (let idx of fingertips) {
                 if (idx < handPoints.length) {
                     let pt = handPoints[idx];
                     let tipPulse = (sin(anticipationPhase + idx) + 1) / 2;
                     
-                    // Glow
                     fill(colors.orange[0], colors.orange[1], colors.orange[2], 30 + tipPulse * 40);
                     ellipse(pt.x, pt.y, 15 + tipPulse * 5);
                     
-                    // Core
                     fill(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.8);
                     ellipse(pt.x, pt.y, 5);
                 }
@@ -1154,34 +1115,26 @@
                 let activation = receptor.activationLevel;
                 let idlePulse = (sin(receptor.idlePhase) + 1) / 2 * receptor.idlePulse;
                 
-                // Combine idle pulse with activation
                 let totalActivity = max(idlePulse, activation);
                 
-                // Base receptor with idle pulsing
                 let baseOpacity = 60 + totalActivity * 160;
                 let baseSize = receptor.baseSize * (1 + idlePulse * 0.3);
                 
-                // Outer glow (always slightly visible)
                 fill(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity * 0.3);
                 ellipse(receptor.x, receptor.y, baseSize * 2.5);
                 
-                // Main receptor
                 fill(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity);
                 ellipse(receptor.x, receptor.y, baseSize);
                 
-                // Activation effects (pink/orange)
                 if (activation > 0.1) {
                     let glowSize = receptor.baseSize * (1 + activation * 3);
                     
-                    // Pink evaluation ring
                     fill(colors.pink[0], colors.pink[1], colors.pink[2], activation * 100);
                     ellipse(receptor.x, receptor.y, glowSize);
                     
-                    // Orange response core
                     fill(colors.orange[0], colors.orange[1], colors.orange[2], activation * 150);
                     ellipse(receptor.x, receptor.y, receptor.baseSize * (1 + activation));
                 } else if (idlePulse > 0.3) {
-                    // Subtle orange hint during high idle pulse
                     fill(colors.orange[0], colors.orange[1], colors.orange[2], idlePulse * 40);
                     ellipse(receptor.x, receptor.y, baseSize * 1.5);
                 }
@@ -1196,19 +1149,16 @@
                 translate(crystal.x, crystal.y);
                 rotate(crystal.rotation);
                 
-                // Outer glow
                 noFill();
                 stroke(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.3);
                 strokeWeight(1);
                 drawPolygon(0, 0, crystal.size * 1.2, crystal.sides);
                 
-                // Main crystal shape
                 fill(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.15);
                 stroke(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.8);
                 strokeWeight(1.5);
                 drawPolygon(0, 0, crystal.size, crystal.sides);
                 
-                // Inner facets
                 stroke(colors.grey[0], colors.grey[1], colors.grey[2], crystal.opacity * 0.4);
                 strokeWeight(0.5);
                 for (let i = 0; i < crystal.sides; i++) {
@@ -1218,7 +1168,6 @@
                 
                 pop();
                 
-                // Memory connection line
                 if (crystal.memory) {
                     stroke(colors.orange[0], colors.orange[1], colors.orange[2], crystal.opacity * 0.3);
                     strokeWeight(1);
@@ -1276,7 +1225,6 @@
                 fill(p.color[0], p.color[1], p.color[2], alpha);
                 
                 if (p.type === 'burst') {
-                    // Draw with motion trail
                     let trailLength = sqrt(p.vx * p.vx + p.vy * p.vy) * 2;
                     let angle = atan2(p.vy, p.vx);
                     
@@ -1284,11 +1232,9 @@
                     translate(p.x, p.y);
                     rotate(angle);
                     
-                    // Trail
                     fill(p.color[0], p.color[1], p.color[2], alpha * 0.5);
                     ellipse(-trailLength/2, 0, trailLength, p.size * 0.6);
                     
-                    // Main particle
                     fill(p.color[0], p.color[1], p.color[2], alpha);
                     ellipse(0, 0, p.size);
                     
@@ -1306,22 +1252,18 @@
                 let alpha = 255 * lifeRatio * twinkle;
                 let size = s.size * (0.5 + twinkle * 0.5);
                 
-                // Sparkle star shape
                 push();
                 translate(s.x, s.y);
                 
-                // Glow
                 noStroke();
                 fill(255, 255, 255, alpha * 0.5);
                 ellipse(0, 0, size * 2);
                 
-                // Star points
                 stroke(255, 255, 255, alpha);
                 strokeWeight(1.5);
                 line(-size, 0, size, 0);
                 line(0, -size, 0, size);
                 
-                // Diagonal points (smaller)
                 strokeWeight(1);
                 let diagSize = size * 0.6;
                 line(-diagSize, -diagSize, diagSize, diagSize);
@@ -1332,7 +1274,6 @@
         }
         
         function drawSurpriseConnections() {
-            // Draw subtle connections between active elements during surprise
             let activeReceptors = receptors.filter(r => r.activationLevel > 0.3);
             
             if (activeReceptors.length > 1) {
@@ -1376,20 +1317,22 @@
             
             resonance.innerHTML = message;
             
-            // Position near the event
             let posX = x + 30;
             let posY = y - 30;
             
-            // Keep on screen
-            if (posX > window.innerWidth - 300) posX = x - 300;
+            // Better mobile positioning
+            let maxX = window.innerWidth - resonance.offsetWidth - 20;
+            let maxY = window.innerHeight - 100;
+            
+            if (posX > maxX) posX = Math.max(20, x - resonance.offsetWidth - 30);
+            if (posX < 20) posX = 20;
             if (posY < 20) posY = y + 30;
-            if (posY > window.innerHeight - 80) posY = window.innerHeight - 100;
+            if (posY > maxY) posY = maxY;
             
             resonance.style.left = posX + 'px';
             resonance.style.top = posY + 'px';
             resonance.classList.add('active');
             
-            // Hide after delay
             setTimeout(() => {
                 resonance.classList.remove('active');
             }, 2500);
@@ -1400,19 +1343,18 @@
             
             setTimeout(() => {
                 document.getElementById('landing-overlay').style.display = 'none';
+                document.body.style.overflow = 'hidden';
                 
                 isAnimating = true;
                 handVisible = true;
                 handOpacity = handBaseOpacity;
                 loop();
                 
-                // Show controls
                 document.getElementById('controls').style.opacity = '1';
                 document.getElementById('hint').style.opacity = '1';
                 document.getElementById('sensitivity-meter').style.opacity = '1';
                 document.getElementById('sensitivity-label').style.opacity = '1';
                 
-                // Start ambient sound
                 if (soundEnabled && soundLoaded) {
                     try {
                         surpriseSound.loop();
@@ -1423,7 +1365,6 @@
                     }
                 }
                 
-                // Hide hint after delay
                 setTimeout(() => {
                     document.getElementById('hint').style.opacity = '0';
                 }, 4000);
@@ -1432,7 +1373,6 @@
         }
         
         function resetExperience() {
-            // Reset all state
             globalSensitivity = 1.0;
             surpriseLocations = [];
             burstParticles = [];
@@ -1443,12 +1383,10 @@
             surpriseIntensity = 0;
             handOpacity = handBaseOpacity;
             
-            // Reset receptors
             for (let receptor of receptors) {
                 receptor.activationLevel = 0;
             }
             
-            // Reset crystals
             for (let crystal of crystals) {
                 crystal.opacity = 0;
                 crystal.targetOpacity = 0;

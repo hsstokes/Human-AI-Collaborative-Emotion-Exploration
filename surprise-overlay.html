@@ -353,6 +353,17 @@
         let handPoints = [];
         let handVisible = false;
         let handOpacity = 0;
+        let handBaseOpacity = 180; // Much stronger base visibility
+        
+        // Anticipation pulse system
+        let anticipationPhase = 0;
+        let anticipationSpeed = 0.02;
+        let microTwitchTimer = 0;
+        let microTwitchTarget = null;
+        
+        // Energy field around hand
+        let energyField = [];
+        let energyPulsePhase = 0;
         
         // Sensitivity system (adaptation constraint)
         let globalSensitivity = 1.0;
@@ -370,6 +381,9 @@
         // Receptor zones (palm dots from collage)
         let receptors = [];
         let receptorActivations = [];
+        
+        // Nerve lines radiating from palm
+        let nerveLines = [];
         
         // State tracking
         let surpriseCount = 0;
@@ -401,6 +415,8 @@
             createReceptors();
             createAmbientParticles();
             createCrystals();
+            createEnergyField();
+            createNerveLines();
             
             // Initialize audio context
             if (getAudioContext().state !== 'running') {
@@ -443,7 +459,48 @@
             for (let pt of palmPoints) {
                 handPoints.push({
                     x: centerX + pt.x * scale,
-                    y: centerY + pt.y * scale
+                    y: centerY + pt.y * scale,
+                    baseX: centerX + pt.x * scale,
+                    baseY: centerY + pt.y * scale
+                });
+            }
+        }
+        
+        function createEnergyField() {
+            // Concentric energy rings around the hand
+            energyField = [];
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            for (let i = 0; i < 4; i++) {
+                energyField.push({
+                    radius: min(width, height) * (0.18 + i * 0.06),
+                    phase: random(TWO_PI),
+                    speed: 0.01 + random(0.005),
+                    segments: 60,
+                    dashRatio: 0.6 + random(0.2)
+                });
+            }
+        }
+        
+        function createNerveLines() {
+            // Lines radiating from palm center - neural pathways
+            nerveLines = [];
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            for (let i = 0; i < 12; i++) {
+                let angle = (TWO_PI / 12) * i + random(-0.2, 0.2);
+                let length = min(width, height) * random(0.15, 0.28);
+                
+                nerveLines.push({
+                    startX: centerX,
+                    startY: centerY,
+                    angle: angle,
+                    length: length,
+                    pulsePhase: random(TWO_PI),
+                    pulseSpeed: random(0.03, 0.06),
+                    branches: floor(random(2, 5))
                 });
             }
         }
@@ -457,18 +514,21 @@
             receptors = [];
             receptorActivations = [];
             
-            // Create grid of receptors in palm area
-            for (let i = 0; i < 25; i++) {
+            // Create grid of receptors in palm area - more of them, more visible
+            for (let i = 0; i < 35; i++) {
                 let angle = random(TWO_PI);
-                let r = random(palmRadius * 0.3, palmRadius);
+                let r = random(palmRadius * 0.2, palmRadius * 1.1);
                 
                 receptors.push({
                     x: centerX + cos(angle) * r,
                     y: centerY + sin(angle) * r * 0.8,
-                    baseSize: random(2, 5),
+                    baseSize: random(3, 7),
                     sensitivity: random(0.7, 1.0),
                     lastActivated: 0,
-                    activationLevel: 0
+                    activationLevel: 0,
+                    idlePhase: random(TWO_PI),
+                    idleSpeed: random(0.02, 0.05),
+                    idlePulse: random(0.3, 0.6) // Baseline activity level
                 });
                 
                 receptorActivations.push(0);
@@ -476,17 +536,18 @@
         }
         
         function createAmbientParticles() {
-            // Subtle background particles - pre-surprise state
+            // More visible background particles - pre-surprise state
             ambientParticles = [];
             
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 50; i++) {
                 ambientParticles.push({
                     x: random(width),
                     y: random(height),
-                    size: random(1, 3),
-                    speed: random(0.2, 0.5),
+                    size: random(2, 5),
+                    speed: random(0.3, 0.8),
                     angle: random(TWO_PI),
-                    opacity: random(30, 80)
+                    opacity: random(50, 120),
+                    color: random() > 0.7 ? colors.orange : colors.grey
                 });
             }
         }
@@ -784,6 +845,9 @@
             let now = millis();
             
             for (let receptor of receptors) {
+                // Update idle pulse
+                receptor.idlePhase += receptor.idleSpeed;
+                
                 // Decay activation
                 if (receptor.activationLevel > 0) {
                     receptor.activationLevel *= 0.95;
@@ -812,6 +876,31 @@
             }
         }
         
+        function updateAnticipation() {
+            // Update global anticipation phase
+            anticipationPhase += anticipationSpeed;
+            energyPulsePhase += 0.015;
+            
+            // Random micro-twitches on hand points
+            microTwitchTimer++;
+            if (microTwitchTimer > random(60, 180)) {
+                microTwitchTimer = 0;
+                microTwitchTarget = floor(random(handPoints.length));
+            }
+            
+            // Apply micro-twitches
+            for (let i = 0; i < handPoints.length; i++) {
+                let pt = handPoints[i];
+                if (i === microTwitchTarget) {
+                    pt.x = pt.baseX + random(-2, 2);
+                    pt.y = pt.baseY + random(-2, 2);
+                } else {
+                    pt.x = lerp(pt.x, pt.baseX, 0.1);
+                    pt.y = lerp(pt.y, pt.baseY, 0.1);
+                }
+            }
+        }
+        
         function updateSensitivity() {
             // Recover sensitivity over time (adaptation constraint)
             if (globalSensitivity < 1.0) {
@@ -819,9 +908,11 @@
                 updateSensitivityMeter();
             }
             
-            // Fade hand
-            if (handOpacity > 80) {
+            // Fade hand back to base (but keep strong baseline)
+            if (handOpacity > handBaseOpacity) {
                 handOpacity *= 0.97;
+            } else {
+                handOpacity = handBaseOpacity;
             }
             
             // Update surprise state
@@ -856,10 +947,13 @@
             updateParticles();
             updateReceptors();
             updateCrystals();
+            updateAnticipation();
             updateSensitivity();
             
-            // Draw layers
+            // Draw layers (back to front)
             drawAmbientParticles();
+            drawEnergyField();
+            drawNerveLines();
             drawHand();
             drawReceptors();
             drawCrystals();
@@ -876,18 +970,123 @@
         function drawAmbientParticles() {
             noStroke();
             for (let p of ambientParticles) {
-                fill(colors.grey[0], colors.grey[1], colors.grey[2], p.opacity);
+                fill(p.color[0], p.color[1], p.color[2], p.opacity);
                 ellipse(p.x, p.y, p.size);
+            }
+        }
+        
+        function drawEnergyField() {
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            // Pulsing anticipation value
+            let pulse = (sin(anticipationPhase) + 1) / 2;
+            
+            for (let ring of energyField) {
+                ring.phase += ring.speed;
+                
+                let ringPulse = (sin(ring.phase + energyPulsePhase) + 1) / 2;
+                let opacity = 30 + ringPulse * 40 + pulse * 20;
+                
+                // Draw dashed circle
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], opacity);
+                strokeWeight(1 + ringPulse * 0.5);
+                noFill();
+                
+                let dashLength = TWO_PI / ring.segments;
+                for (let i = 0; i < ring.segments; i++) {
+                    if (random() < ring.dashRatio) {
+                        let startAngle = i * dashLength + ring.phase;
+                        let endAngle = startAngle + dashLength * 0.7;
+                        arc(centerX, centerY, ring.radius * 2, ring.radius * 2, startAngle, endAngle);
+                    }
+                }
+            }
+            
+            // Central glow
+            noStroke();
+            let glowSize = min(width, height) * 0.25;
+            let glowPulse = (sin(anticipationPhase * 0.7) + 1) / 2;
+            
+            // Outer glow - orange tint
+            for (let i = 5; i > 0; i--) {
+                let alpha = (6 - i) * 8 * (0.5 + glowPulse * 0.5);
+                fill(colors.orange[0], colors.orange[1], colors.orange[2], alpha);
+                ellipse(centerX, centerY, glowSize * (1 + i * 0.15));
+            }
+            
+            // Inner glow - grey
+            for (let i = 3; i > 0; i--) {
+                let alpha = (4 - i) * 15 * (0.6 + glowPulse * 0.4);
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], alpha);
+                ellipse(centerX, centerY, glowSize * 0.5 * (1 + i * 0.2));
+            }
+        }
+        
+        function drawNerveLines() {
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            for (let nerve of nerveLines) {
+                nerve.pulsePhase += nerve.pulseSpeed;
+                let pulse = (sin(nerve.pulsePhase) + 1) / 2;
+                
+                let endX = centerX + cos(nerve.angle) * nerve.length;
+                let endY = centerY + sin(nerve.angle) * nerve.length;
+                
+                // Main nerve line
+                let alpha = 60 + pulse * 60;
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], alpha);
+                strokeWeight(1.5);
+                line(centerX, centerY, endX, endY);
+                
+                // Pulse traveling along nerve
+                let pulsePos = (millis() * 0.001 + nerve.pulsePhase) % 1;
+                let pulseX = lerp(centerX, endX, pulsePos);
+                let pulseY = lerp(centerY, endY, pulsePos);
+                
+                noStroke();
+                fill(colors.orange[0], colors.orange[1], colors.orange[2], 100 + pulse * 100);
+                ellipse(pulseX, pulseY, 4 + pulse * 3);
+                
+                // Branches
+                for (let b = 0; b < nerve.branches; b++) {
+                    let branchStart = 0.4 + (b / nerve.branches) * 0.5;
+                    let branchX = lerp(centerX, endX, branchStart);
+                    let branchY = lerp(centerY, endY, branchStart);
+                    let branchAngle = nerve.angle + (random() > 0.5 ? 0.4 : -0.4);
+                    let branchLength = nerve.length * 0.25;
+                    
+                    stroke(colors.grey[0], colors.grey[1], colors.grey[2], alpha * 0.5);
+                    strokeWeight(0.75);
+                    line(branchX, branchY, 
+                         branchX + cos(branchAngle) * branchLength,
+                         branchY + sin(branchAngle) * branchLength);
+                }
             }
         }
         
         function drawHand() {
             if (handPoints.length < 3) return;
             
-            // Draw hand outline
+            let pulse = (sin(anticipationPhase) + 1) / 2;
+            let currentOpacity = handOpacity + pulse * 30;
+            
+            // Outer glow for hand
             noFill();
-            stroke(colors.grey[0], colors.grey[1], colors.grey[2], handOpacity);
-            strokeWeight(1.5);
+            for (let g = 3; g > 0; g--) {
+                stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.15 * (4 - g) / 3);
+                strokeWeight(g * 3);
+                beginShape();
+                for (let pt of handPoints) {
+                    vertex(pt.x, pt.y);
+                }
+                endShape(CLOSE);
+            }
+            
+            // Main hand outline
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity);
+            strokeWeight(2.5);
             
             beginShape();
             for (let pt of handPoints) {
@@ -895,18 +1094,57 @@
             }
             endShape(CLOSE);
             
-            // Draw palm circle
+            // Secondary inner line
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.4);
+            strokeWeight(1);
+            beginShape();
             let centerX = width * 0.5;
             let centerY = height * 0.5;
+            for (let pt of handPoints) {
+                let innerX = lerp(pt.x, centerX, 0.08);
+                let innerY = lerp(pt.y, centerY, 0.08);
+                vertex(innerX, innerY);
+            }
+            endShape(CLOSE);
+            
+            // Draw palm circles
             let palmRadius = min(width, height) * 0.12;
             
-            stroke(colors.grey[0], colors.grey[1], colors.grey[2], handOpacity * 0.5);
+            // Outer palm circle with pulse
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.7);
+            strokeWeight(1.5);
+            ellipse(centerX, centerY, palmRadius * 2 * (1 + pulse * 0.03));
+            
+            // Middle circle
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.5);
             strokeWeight(1);
-            ellipse(centerX, centerY, palmRadius * 2);
+            ellipse(centerX, centerY, palmRadius * 1.4);
             
             // Inner circle
-            stroke(colors.grey[0], colors.grey[1], colors.grey[2], handOpacity * 0.3);
-            ellipse(centerX, centerY, palmRadius);
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.3);
+            ellipse(centerX, centerY, palmRadius * 0.8);
+            
+            // Center dot
+            noStroke();
+            fill(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity);
+            ellipse(centerX, centerY, 6 + pulse * 2);
+            
+            // Fingertip highlights
+            let fingertips = [5, 7, 9, 11, 13]; // Indices of fingertip points
+            for (let idx of fingertips) {
+                if (idx < handPoints.length) {
+                    let pt = handPoints[idx];
+                    let tipPulse = (sin(anticipationPhase + idx) + 1) / 2;
+                    
+                    // Glow
+                    fill(colors.orange[0], colors.orange[1], colors.orange[2], 30 + tipPulse * 40);
+                    ellipse(pt.x, pt.y, 15 + tipPulse * 5);
+                    
+                    // Core
+                    fill(colors.grey[0], colors.grey[1], colors.grey[2], currentOpacity * 0.8);
+                    ellipse(pt.x, pt.y, 5);
+                }
+            }
         }
         
         function drawReceptors() {
@@ -914,13 +1152,24 @@
             
             for (let receptor of receptors) {
                 let activation = receptor.activationLevel;
+                let idlePulse = (sin(receptor.idlePhase) + 1) / 2 * receptor.idlePulse;
                 
-                // Base receptor (grey)
-                let baseOpacity = 40 + activation * 160;
+                // Combine idle pulse with activation
+                let totalActivity = max(idlePulse, activation);
+                
+                // Base receptor with idle pulsing
+                let baseOpacity = 60 + totalActivity * 160;
+                let baseSize = receptor.baseSize * (1 + idlePulse * 0.3);
+                
+                // Outer glow (always slightly visible)
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity * 0.3);
+                ellipse(receptor.x, receptor.y, baseSize * 2.5);
+                
+                // Main receptor
                 fill(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity);
-                ellipse(receptor.x, receptor.y, receptor.baseSize);
+                ellipse(receptor.x, receptor.y, baseSize);
                 
-                // Activation glow (pink/orange)
+                // Activation effects (pink/orange)
                 if (activation > 0.1) {
                     let glowSize = receptor.baseSize * (1 + activation * 3);
                     
@@ -931,6 +1180,10 @@
                     // Orange response core
                     fill(colors.orange[0], colors.orange[1], colors.orange[2], activation * 150);
                     ellipse(receptor.x, receptor.y, receptor.baseSize * (1 + activation));
+                } else if (idlePulse > 0.3) {
+                    // Subtle orange hint during high idle pulse
+                    fill(colors.orange[0], colors.orange[1], colors.orange[2], idlePulse * 40);
+                    ellipse(receptor.x, receptor.y, baseSize * 1.5);
                 }
             }
         }
@@ -1150,7 +1403,7 @@
                 
                 isAnimating = true;
                 handVisible = true;
-                handOpacity = 80;
+                handOpacity = handBaseOpacity;
                 loop();
                 
                 // Show controls
@@ -1188,7 +1441,7 @@
             surpriseCount = 0;
             isInSurpriseState = false;
             surpriseIntensity = 0;
-            handOpacity = 80;
+            handOpacity = handBaseOpacity;
             
             // Reset receptors
             for (let receptor of receptors) {
@@ -1254,6 +1507,8 @@
             resizeCanvas(windowWidth, windowHeight);
             createHandOutline();
             createReceptors();
+            createEnergyField();
+            createNerveLines();
         }
     </script>
 </body>

@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Fear - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0a0a0a;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 10, 10, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+            color: #888;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #B22234;
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            color: #aaa;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 550px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(178, 34, 52, 0.15);
+           border-radius: 8px;
+           border-left: 3px solid #B22234;
+           line-height: 1.6;
+           color: #ccc;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: #B22234;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 15px rgba(178, 34, 52, 0.4);
+        }
+        
+        .start-button:hover {
+            background-color: #8B1A2A;
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .threat-echo {
+            position: fixed;
+            background-color: rgba(20, 20, 20, 0.95);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #ddd;
+            box-shadow: 0 4px 15px rgba(178, 34, 52, 0.3);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 3px solid #B22234;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(30, 30, 30, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            border: 1px solid rgba(178, 34, 52, 0.3);
+        }
+        
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .hint {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            color: #aaa;
+            border: 1px solid rgba(178, 34, 52, 0.3);
+        }
+        
+        .timeline {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 500px;
+            height: 40px;
+            background-color: rgba(30, 30, 30, 0.5);
+            border-radius: 20px;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(178, 34, 52, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background-color: rgba(178, 34, 52, 0.8);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .timeline-handle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #B22234;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 10px rgba(178, 34, 52, 0.5);
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important;
+                height: auto !important;
+            }
+        
+            #landing-overlay {
+                position: absolute;
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+                padding: 40px 20px 120px 20px;
+                justify-content: flex-start;
+            }
+        
+            .landing-title {
+                margin-top: 40px;
+            }
+        
+            .start-button {
+                margin-bottom: 60px;
+                position: relative;
+            }
+        
+            .emotion-name {
+                font-size: 42px;
+            }
+        
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
+        }
+        
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px;
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%;
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%;
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">FEAR</h2>
+        <p class="emotion-description" id="emotion-description">
+            A reflection on the hypervigilant scanning of threat detection, the body's ancient alarm system preparing for danger.
+            <br><b>Analysis by Claude</b>
+        </p>
+
+        <div class="ai-disclaimer">
+            <strong>Note:</strong> This is a simulation of fear based on my analysis of human descriptions. As an AI, I don't experience emotions or feelings - this is just my interpretation of a human concept.
+        </div>
+        
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
+    
+    <div class="threat-echo" id="threat-echo"></div>
+    
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#B22234" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#B22234" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="hint" id="hint">Tap on elements to experience fear responses</div>
+    
+    <div class="timeline" id="timeline">
+        <div class="timeline-bar" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress"></div>
+            <div class="timeline-handle" id="timeline-handle"></div>
+        </div>
+    </div>
+    
+    <script>
+        let isAnimating = true;
+        let soundEnabled = true;
+        let fearSound;
+        let soundLoaded = false;
+        let timelineActive = false;
+        let isDraggingTimeline = false;
+        let timePosition = 0;
+        let previousTimePosition = 0;
+        let activatedTimeline = false;
+        
+        // Fear-specific threat echoes
+        const threatEchoes = [
+            "Something is watching from the shadows",
+            "The silence feels too loud",
+            "Every exit is blocked in my mind",
+            "My heart beats like a warning drum",
+            "The air itself feels dangerous",
+            "I can't tell where the threat is coming from",
+            "My body knows before my mind does",
+            "The familiar suddenly seems threatening",
+            "I'm frozen between fight and flight",
+            "Every sound could be a signal",
+            "The darkness has weight to it",
+            "My skin prickles with ancient warnings",
+            "Time slows down and speeds up at once",
+            "I can feel my pulse in my throat",
+            "The world has too many hiding places"
+        ];
+        
+        // Color palette for Fear
+        const colors = {
+            red: [178, 34, 52],        // Threat detection, alarm
+            yellow: [255, 216, 0],      // Environmental scanning, vigilance
+            black: [26, 26, 26],        // Escape routes, shadows
+            darkRed: [139, 26, 42],     // Deep threat
+            alertYellow: [255, 180, 0]  // Warning signals
+        };
+        
+        // Element arrays
+        let warningSymbols = [];       // Red crossed circles - threat markers
+        let ravenShapes = [];          // Black bird shapes with yellow eyes
+        let lightningBolts = [];       // Electric cascade elements
+        let scanningBeams = [];        // Yellow environmental scanning
+        let escapeRoutes = [];         // Black pathways
+        let chainElements = [];        // Binding/constraining elements
+        
+        // Central vulnerable hand
+        let handOutlinePoints = [];
+        let handProgress = 0;
+        let handPulse = 0;
+        
+        // Orbital system for threat symbols
+        let orbitalCenter = { x: 0, y: 0 };
+        let orbitingThreats = [];
+        
+        // Threat detection focal points
+        let threatFocals = [];
+        let activeThreatFocal = null;
+        
+        // Startle effect
+        let startleActive = false;
+        let startleIntensity = 0;
+        let lastStartleTime = 0;
+        
+        function startExperience() {
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                isAnimating = true;
+                loop();
+                updateLayoutForOrientation();
+                
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        fearSound.loop();
+                        fearSound.setVolume(0);
+                        fearSound.setVolume(0.5, 2);
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('controls').style.opacity = '1';
+                    document.getElementById('hint').style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        document.getElementById('hint').style.opacity = '0';
+                    }, 5000);
+                }, 2000);
+            }, 1000);
+        }
+        
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
+        
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && fearSound && !fearSound.isPlaying()) {
+                fearSound.loop();
+                fearSound.setVolume(0);
+                fearSound.setVolume(0.5, 1);
+            } else if (!soundEnabled && fearSound && fearSound.isPlaying()) {
+                fearSound.setVolume(0, 1);
+                setTimeout(() => {
+                    fearSound.pause();
+                }, 1000);
+            }
+        });
+        
+        document.getElementById('reset-button').addEventListener('click', function() {
+            timePosition = 0;
+            previousTimePosition = 0;
+            resetExperience();
+            updateTimelineUI();
+        });
+        
+        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        
+        function startTimelineDrag(e) {
+            if (e.type === 'touchstart') e.preventDefault();
+            isDraggingTimeline = true;
+            updateTimelinePosition(e);
+            document.addEventListener('mousemove', updateTimelinePosition);
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
+            document.addEventListener('mouseup', endTimelineDrag);
+            document.addEventListener('touchend', endTimelineDrag);
+        }
+        
+        function updateTimelinePosition(e) {
+            if (!isDraggingTimeline) return;
+            if (e.type === 'touchmove') e.preventDefault();
+            
+            const timeline = document.getElementById('timeline-bar');
+            const rect = timeline.getBoundingClientRect();
+            let clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            let percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+            
+            timePosition = percentage * 30000;
+            setTimePosition(timePosition);
+        }
+        
+        function endTimelineDrag() {
+            isDraggingTimeline = false;
+            document.removeEventListener('mousemove', updateTimelinePosition);
+            document.removeEventListener('touchmove', updateTimelinePosition);
+            document.removeEventListener('mouseup', endTimelineDrag);
+            document.removeEventListener('touchend', endTimelineDrag);
+            previousTimePosition = timePosition;
+        }
+        
+        function updateTimelineUI() {
+            const percentage = timePosition / 30000;
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+        }
+        
+        function preload() {
+            soundLoaded = false;
+            fearSound = loadSound('fear_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            orbitalCenter = { x: width / 2, y: height / 2 };
+            
+            createHandOutline();
+            createWarningSymbols();
+            createRavenShapes();
+            createLightningBolts();
+            createScanningBeams();
+            createEscapeRoutes();
+            createChainElements();
+            createOrbitingThreats();
+            createThreatFocals();
+            
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            isAnimating = false;
+            noLoop();
+        }
+        
+        function getRandomThreat() {
+            return threatEchoes[floor(random(threatEchoes.length))];
+        }
+        
+        function createHandOutline() {
+            // Open, vulnerable hand - palm exposed, fingers spread in startle
+            handOutlinePoints = [];
+            
+            // Base of palm
+            handOutlinePoints.push({x: 0.42, y: 0.72});
+            handOutlinePoints.push({x: 0.58, y: 0.72});
+            
+            // Right side - slightly tensed
+            handOutlinePoints.push({x: 0.62, y: 0.65});
+            handOutlinePoints.push({x: 0.65, y: 0.58});
+            
+            // Pinky - spread outward
+            handOutlinePoints.push({x: 0.70, y: 0.52});
+            handOutlinePoints.push({x: 0.72, y: 0.44});
+            handOutlinePoints.push({x: 0.68, y: 0.40});
+            
+            // Ring finger
+            handOutlinePoints.push({x: 0.62, y: 0.38});
+            handOutlinePoints.push({x: 0.61, y: 0.30});
+            handOutlinePoints.push({x: 0.58, y: 0.26});
+            
+            // Middle finger - extended
+            handOutlinePoints.push({x: 0.54, y: 0.24});
+            handOutlinePoints.push({x: 0.52, y: 0.16});
+            handOutlinePoints.push({x: 0.50, y: 0.14});
+            
+            // Index finger - spread
+            handOutlinePoints.push({x: 0.46, y: 0.18});
+            handOutlinePoints.push({x: 0.42, y: 0.24});
+            handOutlinePoints.push({x: 0.40, y: 0.30});
+            
+            // Thumb - extended defensively
+            handOutlinePoints.push({x: 0.35, y: 0.38});
+            handOutlinePoints.push({x: 0.28, y: 0.42});
+            handOutlinePoints.push({x: 0.30, y: 0.50});
+            
+            // Left side
+            handOutlinePoints.push({x: 0.35, y: 0.60});
+            handOutlinePoints.push({x: 0.38, y: 0.68});
+            handOutlinePoints.push({x: 0.42, y: 0.72});
+            
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
+        }
+        
+        function createWarningSymbols() {
+            // Red crossed-circle warning markers
+            for (let i = 0; i < 8; i++) {
+                warningSymbols.push({
+                    x: random(width * 0.15, width * 0.85),
+                    y: random(height * 0.15, height * 0.85),
+                    size: random(25, 45),
+                    rotation: random(TWO_PI),
+                    rotationSpeed: random(-0.02, 0.02),
+                    opacity: random(180, 255),
+                    startTime: i * 800,
+                    visible: false,
+                    pulseRate: random(0.003, 0.008),
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomThreat()
+                });
+            }
+        }
+        
+        function createRavenShapes() {
+            // Black bird/raven shapes with yellow crescent eyes
+            for (let i = 0; i < 6; i++) {
+                ravenShapes.push({
+                    x: random(width * 0.1, width * 0.9),
+                    y: random(height * 0.1, height * 0.9),
+                    size: random(30, 50),
+                    rotation: random(TWO_PI),
+                    flapPhase: random(TWO_PI),
+                    flapSpeed: random(0.02, 0.05),
+                    opacity: random(200, 255),
+                    startTime: 3000 + i * 1200,
+                    visible: false,
+                    eyeGlow: random(0.5, 1),
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomThreat()
+                });
+            }
+        }
+        
+        function createLightningBolts() {
+            // Electric cascade elements
+            for (let i = 0; i < 12; i++) {
+                lightningBolts.push({
+                    x: random(width * 0.1, width * 0.9),
+                    y: random(height * 0.1, height * 0.9),
+                    length: random(40, 80),
+                    angle: random(TWO_PI),
+                    segments: floor(random(3, 6)),
+                    opacity: 0,
+                    targetOpacity: random(150, 220),
+                    flashRate: random(0.05, 0.15),
+                    startTime: 6000 + i * 600,
+                    visible: false,
+                    flickerPhase: random(TWO_PI)
+                });
+            }
+        }
+        
+        function createScanningBeams() {
+            // Yellow environmental scanning beams
+            for (let i = 0; i < 5; i++) {
+                scanningBeams.push({
+                    x: orbitalCenter.x,
+                    y: orbitalCenter.y,
+                    angle: (TWO_PI / 5) * i,
+                    length: random(150, 300),
+                    width: random(2, 5),
+                    scanSpeed: random(0.005, 0.015),
+                    opacity: random(60, 120),
+                    startTime: 2000 + i * 500,
+                    visible: false,
+                    pulsePhase: random(TWO_PI)
+                });
+            }
+        }
+        
+        function createEscapeRoutes() {
+            // Black pathways suggesting escape routes
+            for (let i = 0; i < 8; i++) {
+                let angle = (TWO_PI / 8) * i + random(-0.2, 0.2);
+                let startDist = random(80, 120);
+                let endDist = random(250, 400);
+                
+                escapeRoutes.push({
+                    startX: orbitalCenter.x + cos(angle) * startDist,
+                    startY: orbitalCenter.y + sin(angle) * startDist,
+                    endX: orbitalCenter.x + cos(angle) * endDist,
+                    endY: orbitalCenter.y + sin(angle) * endDist,
+                    progress: 0,
+                    speed: random(0.002, 0.006),
+                    opacity: random(80, 150),
+                    dotSize: random(3, 6),
+                    dotSpacing: random(12, 20),
+                    startTime: 8000 + i * 700,
+                    visible: false,
+                    blocked: random() > 0.6, // Some routes appear blocked
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomThreat()
+                });
+            }
+        }
+        
+        function createChainElements() {
+            // Chain/binding elements
+            for (let i = 0; i < 4; i++) {
+                let angle = random(TWO_PI);
+                let dist = random(100, 180);
+                
+                chainElements.push({
+                    x: orbitalCenter.x + cos(angle) * dist,
+                    y: orbitalCenter.y + sin(angle) * dist,
+                    links: floor(random(4, 8)),
+                    linkSize: random(8, 14),
+                    angle: angle,
+                    swayPhase: random(TWO_PI),
+                    swaySpeed: random(0.01, 0.03),
+                    opacity: random(150, 220),
+                    startTime: 10000 + i * 1500,
+                    visible: false,
+                    color: random() > 0.5 ? 'bronze' : 'red'
+                });
+            }
+        }
+        
+        function createOrbitingThreats() {
+            // Threat symbols that orbit the vulnerable center
+            for (let i = 0; i < 12; i++) {
+                let orbitRadius = random(120, 280);
+                let startAngle = (TWO_PI / 12) * i + random(-0.3, 0.3);
+                
+                orbitingThreats.push({
+                    angle: startAngle,
+                    radius: orbitRadius,
+                    speed: random(0.003, 0.012) * (random() > 0.5 ? 1 : -1),
+                    size: random(15, 30),
+                    type: floor(random(3)), // 0: warning, 1: eye, 2: x-mark
+                    opacity: random(150, 230),
+                    startTime: 1000 + i * 400,
+                    visible: false,
+                    wobble: random(0.02, 0.05),
+                    wobblePhase: random(TWO_PI),
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomThreat()
+                });
+            }
+        }
+        
+        function createThreatFocals() {
+            // Major threat detection focal points
+            for (let i = 0; i < 4; i++) {
+                let angle = (TWO_PI / 4) * i + PI/4;
+                let dist = random(180, 250);
+                
+                threatFocals.push({
+                    x: orbitalCenter.x + cos(angle) * dist,
+                    y: orbitalCenter.y + sin(angle) * dist,
+                    size: random(50, 70),
+                    opacity: 0,
+                    targetOpacity: random(180, 220),
+                    pulseRate: random(0.002, 0.005),
+                    activated: false,
+                    activationProgress: 0,
+                    startTime: 5000 + i * 2000,
+                    message: getRandomThreat(),
+                    threatLevel: random(0.5, 1)
+                });
+            }
+        }
+
+        function draw() {
+            // Dark background with subtle red tint
+            background(12, 10, 10);
+            
+            // Add ambient threat glow
+            drawAmbientThreat();
+            
+            if (isAnimating && !isDraggingTimeline) {
+                timePosition += deltaTime;
+                
+                if (timePosition > 30000) {
+                    timePosition = 30000;
+                    if (!activatedTimeline) {
+                        showTimeline();
+                        activatedTimeline = true;
+                    }
+                }
+                
+                updateTimelineUI();
+                previousTimePosition = timePosition;
+            }
+            
+            // Update startle effect
+            updateStartleEffect();
+            
+            // Draw layers in order
+            drawEscapeRoutes();
+            drawScanningBeams();
+            drawHandOutline();
+            drawChainElements();
+            drawOrbitingThreats();
+            drawWarningSymbols();
+            drawRavenShapes();
+            drawLightningBolts();
+            drawThreatFocals();
+            
+            // Draw startle flash overlay
+            drawStartleFlash();
+            
+            // Update hand pulse
+            if (isAnimating) {
+                handProgress = min(1, handProgress + 0.0008);
+                handPulse += 0.05;
+            }
+            
+            updateActivatedElements();
+            
+            // Random startle trigger
+            if (isAnimating && random() < 0.001 && millis() - lastStartleTime > 5000) {
+                triggerStartle();
+            }
+        }
+        
+        function drawAmbientThreat() {
+            // Subtle pulsing red glow from center
+            let pulseIntensity = 20 + sin(millis() * 0.002) * 10;
+            
+            for (let i = 5; i > 0; i--) {
+                let size = 200 + i * 80;
+                let alpha = pulseIntensity / i;
+                
+                noStroke();
+                fill(colors.red[0], colors.red[1], colors.red[2], alpha);
+                ellipse(orbitalCenter.x, orbitalCenter.y, size);
+            }
+        }
+        
+        function drawStartleFlash() {
+            if (startleIntensity > 0) {
+                noStroke();
+                fill(255, 255, 255, startleIntensity * 100);
+                rect(0, 0, width, height);
+            }
+        }
+        
+        function updateStartleEffect() {
+            if (startleActive) {
+                startleIntensity = max(0, startleIntensity - 0.05);
+                if (startleIntensity <= 0) {
+                    startleActive = false;
+                }
+            }
+        }
+        
+        function triggerStartle() {
+            startleActive = true;
+            startleIntensity = 1;
+            lastStartleTime = millis();
+        }
+        
+        function showTimeline() {
+            document.getElementById('timeline').style.opacity = '1';
+            updateLayoutForOrientation();
+        }
+        
+        function drawHandOutline() {
+            if (timePosition < 2000) return;
+            
+            let pointsToShow = floor(handOutlinePoints.length * handProgress);
+            if (pointsToShow < 2) return;
+            
+            // Pulsing effect for vulnerability
+            let pulseAmount = sin(handPulse) * 0.3;
+            let baseOpacity = 80 + pulseAmount * 40;
+            
+            // Draw the protective circle around hand
+            noFill();
+            stroke(colors.red[0], colors.red[1], colors.red[2], 40 + pulseAmount * 20);
+            strokeWeight(2);
+            ellipse(orbitalCenter.x, orbitalCenter.y, 200 + pulseAmount * 20);
+            
+            // Inner glow
+            stroke(colors.red[0], colors.red[1], colors.red[2], 20);
+            strokeWeight(8);
+            ellipse(orbitalCenter.x, orbitalCenter.y, 190 + pulseAmount * 15);
+            
+            // Draw hand outline - vulnerable, exposed
+            noFill();
+            stroke(200, 180, 170, baseOpacity);
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let i = 0; i < pointsToShow; i++) {
+                // Add slight tremor to suggest fear
+                let tremor = startleActive ? random(-3, 3) : random(-0.5, 0.5);
+                vertex(handOutlinePoints[i].x + tremor, handOutlinePoints[i].y + tremor);
+            }
+            endShape();
+            
+            // Draw stippled palm texture
+            if (handProgress > 0.3) {
+                let stippleOpacity = map(handProgress, 0.3, 1, 0, baseOpacity * 0.5);
+                stroke(200, 180, 170, stippleOpacity);
+                strokeWeight(1);
+                
+                for (let i = 0; i < 50 * handProgress; i++) {
+                    let angle = random(TWO_PI);
+                    let dist = random(20, 60);
+                    let px = orbitalCenter.x + cos(angle) * dist * 0.8;
+                    let py = orbitalCenter.y + sin(angle) * dist + 20;
+                    point(px, py);
+                }
+            }
+        }
+        
+        function drawWarningSymbols() {
+            for (let symbol of warningSymbols) {
+                if (timePosition > symbol.startTime) {
+                    symbol.visible = true;
+                }
+                
+                if (symbol.visible) {
+                    symbol.rotation += symbol.rotationSpeed;
+                    
+                    let pulseAmount = sin(millis() * symbol.pulseRate);
+                    let currentSize = symbol.size + pulseAmount * 5;
+                    let currentOpacity = symbol.opacity + (symbol.activated ? 50 : 0);
+                    
+                    push();
+                    translate(symbol.x, symbol.y);
+                    rotate(symbol.rotation);
+                    
+                    // Outer circle
+                    noFill();
+                    stroke(colors.red[0], colors.red[1], colors.red[2], currentOpacity);
+                    strokeWeight(3);
+                    ellipse(0, 0, currentSize);
+                    
+                    // X through circle
+                    strokeWeight(2.5);
+                    line(-currentSize * 0.3, -currentSize * 0.3, currentSize * 0.3, currentSize * 0.3);
+                    line(-currentSize * 0.3, currentSize * 0.3, currentSize * 0.3, -currentSize * 0.3);
+                    
+                    // Glow when activated
+                    if (symbol.activated) {
+                        noFill();
+                        stroke(colors.red[0], colors.red[1], colors.red[2], 60);
+                        strokeWeight(8);
+                        ellipse(0, 0, currentSize + 15);
+                    }
+                    
+                    pop();
+                }
+            }
+        }
+        
+        function drawRavenShapes() {
+            for (let raven of ravenShapes) {
+                if (timePosition > raven.startTime) {
+                    raven.visible = true;
+                }
+                
+                if (raven.visible) {
+                    raven.flapPhase += raven.flapSpeed;
+                    let flapOffset = sin(raven.flapPhase) * 8;
+                    let currentOpacity = raven.opacity + (raven.activated ? 40 : 0);
+                    
+                    push();
+                    translate(raven.x, raven.y);
+                    rotate(raven.rotation);
+                    
+                    // Bird body - abstract shape
+                    noStroke();
+                    fill(colors.black[0], colors.black[1], colors.black[2], currentOpacity);
+                    
+                    // Body
+                    ellipse(0, 0, raven.size * 0.8, raven.size * 0.5);
+                    
+                    // Head
+                    ellipse(raven.size * 0.3, -raven.size * 0.1, raven.size * 0.4, raven.size * 0.35);
+                    
+                    // Wings
+                    triangle(
+                        -raven.size * 0.2, 0,
+                        -raven.size * 0.7, -raven.size * 0.3 + flapOffset,
+                        -raven.size * 0.4, raven.size * 0.15
+                    );
+                    triangle(
+                        -raven.size * 0.2, 0,
+                        -raven.size * 0.6, raven.size * 0.4 - flapOffset,
+                        -raven.size * 0.3, raven.size * 0.2
+                    );
+                    
+                    // Yellow crescent eye
+                    let eyeGlow = raven.eyeGlow + sin(millis() * 0.005) * 0.3;
+                    fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], 200 * eyeGlow);
+                    arc(raven.size * 0.35, -raven.size * 0.12, raven.size * 0.15, raven.size * 0.12, PI * 0.2, PI * 1.3);
+                    
+                    // Beak
+                    fill(80, 60, 50, currentOpacity);
+                    triangle(
+                        raven.size * 0.45, -raven.size * 0.08,
+                        raven.size * 0.65, -raven.size * 0.05,
+                        raven.size * 0.45, 0
+                    );
+                    
+                    pop();
+                }
+            }
+        }
+        
+        function drawLightningBolts() {
+            for (let bolt of lightningBolts) {
+                if (timePosition > bolt.startTime) {
+                    bolt.visible = true;
+                }
+                
+                if (bolt.visible) {
+                    // Flickering effect
+                    bolt.flickerPhase += bolt.flashRate;
+                    let flicker = (sin(bolt.flickerPhase) + 1) * 0.5;
+                    
+                    // Random flash intensity
+                    if (random() < 0.02) {
+                        flicker = 1;
+                    }
+                    
+                    let currentOpacity = bolt.targetOpacity * flicker;
+                    
+                    if (currentOpacity > 20) {
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], currentOpacity);
+                        strokeWeight(2);
+                        noFill();
+                        
+                        let px = bolt.x;
+                        let py = bolt.y;
+                        let segLength = bolt.length / bolt.segments;
+                        
+                        beginShape();
+                        vertex(px, py);
+                        
+                        for (let i = 0; i < bolt.segments; i++) {
+                            let jag = random(-15, 15);
+                            px += cos(bolt.angle) * segLength + jag;
+                            py += sin(bolt.angle) * segLength + random(-8, 8);
+                            vertex(px, py);
+                        }
+                        
+                        endShape();
+                        
+                        // Glow effect
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], currentOpacity * 0.3);
+                        strokeWeight(6);
+                        
+                        px = bolt.x;
+                        py = bolt.y;
+                        
+                        beginShape();
+                        vertex(px, py);
+                        
+                        for (let i = 0; i < bolt.segments; i++) {
+                            px += cos(bolt.angle) * segLength;
+                            py += sin(bolt.angle) * segLength;
+                            vertex(px, py);
+                        }
+                        
+                        endShape();
+                    }
+                }
+            }
+        }
+        
+        function drawScanningBeams() {
+            for (let beam of scanningBeams) {
+                if (timePosition > beam.startTime) {
+                    beam.visible = true;
+                }
+                
+                if (beam.visible) {
+                    beam.angle += beam.scanSpeed;
+                    beam.pulsePhase += 0.03;
+                    
+                    let pulseOpacity = beam.opacity * (0.5 + sin(beam.pulsePhase) * 0.5);
+                    
+                    // Draw scanning beam
+                    let endX = orbitalCenter.x + cos(beam.angle) * beam.length;
+                    let endY = orbitalCenter.y + sin(beam.angle) * beam.length;
+                    
+                    // Gradient effect along beam
+                    for (let i = 0; i < 10; i++) {
+                        let t = i / 10;
+                        let px = lerp(orbitalCenter.x, endX, t);
+                        let py = lerp(orbitalCenter.y, endY, t);
+                        let segOpacity = pulseOpacity * (1 - t * 0.7);
+                        
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], segOpacity);
+                        strokeWeight(beam.width * (1 - t * 0.5));
+                        
+                        let nextT = (i + 1) / 10;
+                        let nextX = lerp(orbitalCenter.x, endX, nextT);
+                        let nextY = lerp(orbitalCenter.y, endY, nextT);
+                        
+                        line(px, py, nextX, nextY);
+                    }
+                    
+                    // Scanning tip
+                    noStroke();
+                    fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], pulseOpacity * 1.5);
+                    ellipse(endX, endY, 8, 8);
+                }
+            }
+        }
+        
+        function drawEscapeRoutes() {
+            for (let route of escapeRoutes) {
+                if (timePosition > route.startTime) {
+                    route.visible = true;
+                }
+                
+                if (route.visible) {
+                    if (isAnimating) {
+                        route.progress = min(1, route.progress + route.speed);
+                    }
+                    
+                    let distance = dist(route.startX, route.startY, route.endX, route.endY);
+                    let numDots = floor(distance / route.dotSpacing);
+                    
+                    for (let i = 0; i <= numDots * route.progress; i++) {
+                        let t = i / numDots;
+                        let x = lerp(route.startX, route.endX, t);
+                        let y = lerp(route.startY, route.endY, t);
+                        
+                        // Color based on whether route is blocked
+                        if (route.blocked && t > 0.6) {
+                            // Blocked section turns red
+                            fill(colors.red[0], colors.red[1], colors.red[2], route.opacity * (1 - (t - 0.6) * 2));
+                        } else {
+                            fill(colors.black[0] + 30, colors.black[1] + 30, colors.black[2] + 30, route.opacity);
+                        }
+                        
+                        noStroke();
+                        ellipse(x, y, route.dotSize);
+                    }
+                    
+                    // Blocked marker
+                    if (route.blocked && route.progress > 0.7) {
+                        let blockX = lerp(route.startX, route.endX, 0.7);
+                        let blockY = lerp(route.startY, route.endY, 0.7);
+                        
+                        stroke(colors.red[0], colors.red[1], colors.red[2], route.opacity);
+                        strokeWeight(2);
+                        let blockSize = 12;
+                        line(blockX - blockSize, blockY - blockSize, blockX + blockSize, blockY + blockSize);
+                        line(blockX - blockSize, blockY + blockSize, blockX + blockSize, blockY - blockSize);
+                    }
+                    
+                    // Highlight when activated
+                    if (route.activated) {
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 80);
+                        strokeWeight(route.dotSize + 4);
+                        noFill();
+                        
+                        beginShape();
+                        for (let i = 0; i <= numDots * route.progress; i++) {
+                            let t = i / numDots;
+                            let x = lerp(route.startX, route.endX, t);
+                            let y = lerp(route.startY, route.endY, t);
+                            vertex(x, y);
+                        }
+                        endShape();
+                    }
+                }
+            }
+        }
+        
+        function drawChainElements() {
+            for (let chain of chainElements) {
+                if (timePosition > chain.startTime) {
+                    chain.visible = true;
+                }
+                
+                if (chain.visible) {
+                    chain.swayPhase += chain.swaySpeed;
+                    let swayOffset = sin(chain.swayPhase) * 5;
+                    
+                    let chainColor = chain.color === 'bronze' ? [205, 127, 50] : colors.red;
+                    
+                    for (let i = 0; i < chain.links; i++) {
+                        let linkX = chain.x + cos(chain.angle + PI/2) * (i * chain.linkSize * 0.8) + swayOffset * (i / chain.links);
+                        let linkY = chain.y + sin(chain.angle + PI/2) * (i * chain.linkSize * 0.8);
+                        
+                        noFill();
+                        stroke(chainColor[0], chainColor[1], chainColor[2], chain.opacity);
+                        strokeWeight(2);
+                        
+                        // Alternating link orientations
+                        if (i % 2 === 0) {
+                            ellipse(linkX, linkY, chain.linkSize, chain.linkSize * 0.6);
+                        } else {
+                            ellipse(linkX, linkY, chain.linkSize * 0.6, chain.linkSize);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawOrbitingThreats() {
+            for (let threat of orbitingThreats) {
+                if (timePosition > threat.startTime) {
+                    threat.visible = true;
+                }
+                
+                if (threat.visible) {
+                    // Update orbit
+                    threat.angle += threat.speed;
+                    threat.wobblePhase += threat.wobble;
+                    
+                    let wobbleOffset = sin(threat.wobblePhase) * 10;
+                    let currentRadius = threat.radius + wobbleOffset;
+                    
+                    let x = orbitalCenter.x + cos(threat.angle) * currentRadius;
+                    let y = orbitalCenter.y + sin(threat.angle) * currentRadius;
+                    
+                    let currentOpacity = threat.opacity + (threat.activated ? 50 : 0);
+                    
+                    push();
+                    translate(x, y);
+                    
+                    if (threat.type === 0) {
+                        // Warning symbol (small crossed circle)
+                        noFill();
+                        stroke(colors.red[0], colors.red[1], colors.red[2], currentOpacity);
+                        strokeWeight(2);
+                        ellipse(0, 0, threat.size);
+                        line(-threat.size * 0.25, -threat.size * 0.25, threat.size * 0.25, threat.size * 0.25);
+                        line(-threat.size * 0.25, threat.size * 0.25, threat.size * 0.25, -threat.size * 0.25);
+                        
+                    } else if (threat.type === 1) {
+                        // Watchful eye (yellow crescent)
+                        noStroke();
+                        fill(colors.yellow[0], colors.yellow[1], colors.yellow[2], currentOpacity);
+                        arc(0, 0, threat.size, threat.size * 0.6, PI * 0.1, PI * 0.9);
+                        
+                        // Pupil
+                        fill(colors.black[0], colors.black[1], colors.black[2], currentOpacity);
+                        ellipse(0, -threat.size * 0.1, threat.size * 0.25, threat.size * 0.25);
+                        
+                    } else {
+                        // X mark
+                        stroke(colors.red[0], colors.red[1], colors.red[2], currentOpacity);
+                        strokeWeight(3);
+                        let xSize = threat.size * 0.4;
+                        line(-xSize, -xSize, xSize, xSize);
+                        line(-xSize, xSize, xSize, -xSize);
+                    }
+                    
+                    // Glow when activated
+                    if (threat.activated) {
+                        noFill();
+                        stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], 60);
+                        strokeWeight(4);
+                        ellipse(0, 0, threat.size + 15);
+                    }
+                    
+                    pop();
+                }
+            }
+        }
+        
+        function drawThreatFocals() {
+            for (let i = 0; i < threatFocals.length; i++) {
+                let focal = threatFocals[i];
+                
+                if (timePosition > focal.startTime) {
+                    if (focal.opacity < focal.targetOpacity) {
+                        focal.opacity = min(focal.targetOpacity, focal.opacity + 1);
+                    }
+                    
+                    let pulseAmount = sin(millis() * focal.pulseRate);
+                    let pulseSize = focal.size + pulseAmount * 15;
+                    
+                    // Threat level indicator rings
+                    for (let j = 0; j < 3; j++) {
+                        let ringSize = pulseSize + j * 20;
+                        let ringOpacity = (focal.opacity * (1 - j * 0.3)) * focal.threatLevel;
+                        
+                        noFill();
+                        stroke(colors.red[0], colors.red[1], colors.red[2], ringOpacity * 0.5);
+                        strokeWeight(2 - j * 0.5);
+                        ellipse(focal.x, focal.y, ringSize);
+                    }
+                    
+                    // Central threat marker
+                    noFill();
+                    stroke(colors.red[0], colors.red[1], colors.red[2], focal.opacity);
+                    strokeWeight(2.5);
+                    ellipse(focal.x, focal.y, pulseSize * 0.5);
+                    
+                    // Crosshairs
+                    let crossSize = pulseSize * 0.35;
+                    line(focal.x - crossSize, focal.y, focal.x + crossSize, focal.y);
+                    line(focal.x, focal.y - crossSize, focal.x, focal.y + crossSize);
+                    
+                    // Center dot
+                    fill(colors.red[0], colors.red[1], colors.red[2], focal.opacity);
+                    noStroke();
+                    ellipse(focal.x, focal.y, 8);
+                    
+                    // Activation expansion
+                    if (focal.activated && focal.activationProgress > 0) {
+                        for (let j = 0; j < 4; j++) {
+                            let expandSize = pulseSize + j * 30 * focal.activationProgress;
+                            let expandOpacity = (100 - j * 25) * focal.activationProgress;
+                            
+                            noFill();
+                            stroke(colors.yellow[0], colors.yellow[1], colors.yellow[2], expandOpacity);
+                            strokeWeight(2);
+                            ellipse(focal.x, focal.y, expandSize);
+                        }
+                    }
+                    
+                    // Interactive hint
+                    if (!focal.activated && focal.opacity > 100) {
+                        fill(colors.red[0], colors.red[1], colors.red[2], 60 + sin(millis() * 0.004) * 30);
+                        textAlign(CENTER, CENTER);
+                        textSize(9);
+                        text("!", focal.x, focal.y);
+                    }
+                }
+            }
+        }
+        
+        function updateActivatedElements() {
+            // Update warning symbols
+            for (let symbol of warningSymbols) {
+                if (symbol.activated && millis() - symbol.activatedTime > 4000) {
+                    symbol.activated = false;
+                }
+            }
+            
+            // Update raven shapes
+            for (let raven of ravenShapes) {
+                if (raven.activated && millis() - raven.activatedTime > 4000) {
+                    raven.activated = false;
+                }
+            }
+            
+            // Update escape routes
+            for (let route of escapeRoutes) {
+                if (route.activated && millis() - route.activatedTime > 4000) {
+                    route.activated = false;
+                }
+            }
+            
+            // Update orbiting threats
+            for (let threat of orbitingThreats) {
+                if (threat.activated && millis() - threat.activatedTime > 4000) {
+                    threat.activated = false;
+                }
+            }
+            
+            // Update threat focals
+            for (let focal of threatFocals) {
+                if (focal.activated) {
+                    focal.activationProgress = min(1, focal.activationProgress + 0.02);
+                } else if (focal.activationProgress > 0) {
+                    focal.activationProgress = max(0, focal.activationProgress - 0.02);
+                }
+            }
+        }
+        
+        function setTimePosition(time) {
+            const timeDiff = time - previousTimePosition;
+            if (timeDiff < -2000) {
+                resetExperience();
+            }
+        }
+        
+        function resetExperience() {
+            for (let symbol of warningSymbols) {
+                symbol.visible = timePosition > symbol.startTime;
+                symbol.activated = false;
+            }
+            
+            for (let raven of ravenShapes) {
+                raven.visible = timePosition > raven.startTime;
+                raven.activated = false;
+            }
+            
+            for (let bolt of lightningBolts) {
+                bolt.visible = timePosition > bolt.startTime;
+            }
+            
+            for (let beam of scanningBeams) {
+                beam.visible = timePosition > beam.startTime;
+            }
+            
+            for (let route of escapeRoutes) {
+                route.visible = timePosition > route.startTime;
+                route.progress = 0;
+                route.activated = false;
+            }
+            
+            for (let chain of chainElements) {
+                chain.visible = timePosition > chain.startTime;
+            }
+            
+            for (let threat of orbitingThreats) {
+                threat.visible = timePosition > threat.startTime;
+                threat.activated = false;
+            }
+            
+            for (let focal of threatFocals) {
+                focal.opacity = 0;
+                focal.activated = false;
+                focal.activationProgress = 0;
+            }
+            
+            handProgress = min(1, timePosition / 15000);
+            activeThreatFocal = null;
+            startleActive = false;
+            startleIntensity = 0;
+        }
+        
+        function showThreatEcho(message, x, y) {
+            const echo = document.getElementById('threat-echo');
+            echo.innerHTML = message;
+            
+            let posX = x;
+            let posY = y - 60;
+            
+            if (posX < 20) posX = 20;
+            if (posX > window.innerWidth - 270) posX = window.innerWidth - 270;
+            if (posY < 20) posY = 20;
+            if (posY > window.innerHeight - 100) posY = window.innerHeight - 100;
+            
+            echo.style.left = posX + 'px';
+            echo.style.top = posY + 'px';
+            echo.style.transform = 'translateY(0)';
+            echo.style.opacity = '1';
+            
+            // Trigger startle on interaction
+            if (random() < 0.3) {
+                triggerStartle();
+            }
+            
+            setTimeout(() => {
+                echo.style.opacity = '0';
+                echo.style.transform = 'translateY(20px)';
+            }, 4000);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        function repositionElements() {
+            let oldCenterX = orbitalCenter.x;
+            let oldCenterY = orbitalCenter.y;
+            
+            orbitalCenter.x = windowWidth / 2;
+            orbitalCenter.y = windowHeight / 2;
+            
+            // Reposition hand outline
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / oldCenterX) * orbitalCenter.x;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / oldCenterY) * orbitalCenter.y;
+            }
+            
+            // Reposition other elements relative to new center
+            for (let symbol of warningSymbols) {
+                symbol.x = (symbol.x / oldCenterX) * orbitalCenter.x;
+                symbol.y = (symbol.y / oldCenterY) * orbitalCenter.y;
+            }
+            
+            for (let raven of ravenShapes) {
+                raven.x = (raven.x / oldCenterX) * orbitalCenter.x;
+                raven.y = (raven.y / oldCenterY) * orbitalCenter.y;
+            }
+            
+            for (let bolt of lightningBolts) {
+                bolt.x = (bolt.x / oldCenterX) * orbitalCenter.x;
+                bolt.y = (bolt.y / oldCenterY) * orbitalCenter.y;
+            }
+            
+            for (let chain of chainElements) {
+                chain.x = (chain.x / oldCenterX) * orbitalCenter.x;
+                chain.y = (chain.y / oldCenterY) * orbitalCenter.y;
+            }
+            
+            for (let focal of threatFocals) {
+                focal.x = (focal.x / oldCenterX) * orbitalCenter.x;
+                focal.y = (focal.y / oldCenterY) * orbitalCenter.y;
+            }
+            
+            // Recalculate escape routes
+            for (let route of escapeRoutes) {
+                route.startX = (route.startX / oldCenterX) * orbitalCenter.x;
+                route.startY = (route.startY / oldCenterY) * orbitalCenter.y;
+                route.endX = (route.endX / oldCenterX) * orbitalCenter.x;
+                route.endY = (route.endY / oldCenterY) * orbitalCenter.y;
+            }
+        }
+        
+        function mousePressed() {
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                
+                // Check threat focal points first
+                for (let i = 0; i < threatFocals.length; i++) {
+                    let focal = threatFocals[i];
+                    if (focal.opacity > 50) {
+                        let d = dist(mouseX, mouseY, focal.x, focal.y);
+                        if (d < focal.size / 2) {
+                            focal.activated = !focal.activated;
+                            if (focal.activated) {
+                                activeThreatFocal = i;
+                                showThreatEcho(focal.message, focal.x, focal.y);
+                            } else {
+                                activeThreatFocal = null;
+                            }
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check warning symbols
+                for (let symbol of warningSymbols) {
+                    if (symbol.visible && symbol.interactive) {
+                        let d = dist(mouseX, mouseY, symbol.x, symbol.y);
+                        if (d < symbol.size / 2) {
+                            symbol.activated = !symbol.activated;
+                            symbol.activatedTime = millis();
+                            if (symbol.activated) {
+                                showThreatEcho(symbol.message, symbol.x, symbol.y);
+                            }
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check raven shapes
+                for (let raven of ravenShapes) {
+                    if (raven.visible && raven.interactive) {
+                        let d = dist(mouseX, mouseY, raven.x, raven.y);
+                        if (d < raven.size / 2) {
+                            raven.activated = !raven.activated;
+                            raven.activatedTime = millis();
+                            if (raven.activated) {
+                                showThreatEcho(raven.message, raven.x, raven.y);
+                            }
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check orbiting threats
+                for (let threat of orbitingThreats) {
+                    if (threat.visible && threat.interactive) {
+                        let x = orbitalCenter.x + cos(threat.angle) * threat.radius;
+                        let y = orbitalCenter.y + sin(threat.angle) * threat.radius;
+                        let d = dist(mouseX, mouseY, x, y);
+                        if (d < threat.size / 2 + 10) {
+                            threat.activated = !threat.activated;
+                            threat.activatedTime = millis();
+                            if (threat.activated) {
+                                showThreatEcho(threat.message, x, y);
+                            }
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check escape routes
+                for (let route of escapeRoutes) {
+                    if (route.visible && route.interactive) {
+                        let midX = (route.startX + route.endX) / 2;
+                        let midY = (route.startY + route.endY) / 2;
+                        let d = dist(mouseX, mouseY, midX, midY);
+                        if (d < 25) {
+                            route.activated = !route.activated;
+                            route.activatedTime = millis();
+                            if (route.activated) {
+                                showThreatEcho(route.message, midX, midY);
+                            }
+                            return false;
+                        }
+                    }
+                }
+                
+                // Toggle pause if nothing clicked
+                isAnimating = !isAnimating;
+                
+                if (!isAnimating && soundEnabled && soundLoaded && fearSound.isPlaying()) {
+                    fearSound.setVolume(0.25, 1);
+                } else if (isAnimating && soundEnabled && soundLoaded) {
+                    fearSound.setVolume(0.5, 1);
+                }
+            }
+            
+            return false;
+        }
+        
+        function touchStarted() {
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            return mousePressed();
+        }
+    </script>
+</body>
+</html>

@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pride - Emotional Experience</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         body {
             margin: 0;
             padding: 0;
@@ -15,7 +19,7 @@
             background-color: #faf8f5;
             font-family: 'Roboto Mono', monospace;
             -webkit-text-size-adjust: 100%;
-            touch-action: none;
+            touch-action: manipulation;
         }
         
         #landing-overlay {
@@ -33,6 +37,8 @@
             box-sizing: border-box;
             padding: 20px;
             transition: opacity 1s ease-in-out;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         .landing-title {
@@ -88,6 +94,8 @@
             cursor: pointer;
             transition: transform 0.2s, background-color 0.3s;
             box-shadow: 0 4px 12px rgba(184, 115, 51, 0.15);
+            -webkit-appearance: none;
+            appearance: none;
         }
         
         .start-button:hover {
@@ -96,6 +104,7 @@
         
         .start-button:active {
             transform: scale(0.98);
+            background-color: rgba(184, 115, 51, 0.35);
         }
         
         canvas {
@@ -103,6 +112,7 @@
             top: 0;
             left: 0;
             z-index: 1;
+            touch-action: none;
         }
         
         .pride-resonance {
@@ -136,8 +146,8 @@
         }
         
         .control-button {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background-color: rgba(255, 255, 255, 0.9);
             display: flex;
@@ -146,6 +156,12 @@
             box-shadow: 0 2px 8px rgba(184, 115, 51, 0.2);
             cursor: pointer;
             border: 1px solid rgba(184, 115, 51, 0.3);
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .control-button:active {
+            background-color: rgba(184, 115, 51, 0.15);
+            transform: scale(0.95);
         }
         
         .control-button svg {
@@ -177,36 +193,39 @@
             transform: translateX(-50%);
             width: 70%;
             max-width: 500px;
-            height: 40px;
+            height: 44px;
             background-color: rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
+            border-radius: 22px;
             z-index: 40;
             opacity: 0;
             transition: opacity 0.5s;
             display: flex;
             align-items: center;
             padding: 0 15px;
+            touch-action: none;
         }
         
         .timeline-bar {
             width: 100%;
-            height: 4px;
+            height: 8px;
             background-color: rgba(184, 115, 51, 0.2);
-            border-radius: 2px;
+            border-radius: 4px;
             position: relative;
+            cursor: pointer;
         }
         
         .timeline-progress {
             height: 100%;
             background: linear-gradient(90deg, #B87333, #E91E63);
-            border-radius: 2px;
+            border-radius: 4px;
             width: 0%;
-            transition: width 0.3s;
+            transition: width 0.1s;
+            pointer-events: none;
         }
         
         .timeline-handle {
-            width: 16px;
-            height: 16px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: linear-gradient(135deg, #B87333, #CD8B4A);
             position: absolute;
@@ -214,68 +233,72 @@
             transform: translate(-50%, -50%);
             box-shadow: 0 2px 8px rgba(184, 115, 51, 0.3);
             cursor: pointer;
+            pointer-events: none;
         }
         
         @media (max-width: 768px) {
             body {
                 overflow-y: auto !important;
                 height: auto !important;
-                padding-bottom: 5rem;
             }
 
             #landing-overlay {
                 position: absolute;
                 height: auto;
-                min-height: 100%;
+                min-height: 100vh;
                 overflow-y: auto;
-                padding: 20px 20px 120px 20px;
+                padding: 20px 20px 100px 20px;
                 justify-content: flex-start;
             }
 
             .landing-title {
-                margin-top: 20px;
-                font-size: 2rem;
+                margin-top: 30px;
+                font-size: 1.25rem;
             }
 
             .emotion-name {
-                font-size: 32px;
-                margin-bottom: 0.5rem;
+                font-size: 28px;
+                margin-bottom: 20px;
             }
 
-            .landing-subtitle {
-                font-size: 0.9rem;
-                line-height: 1.4;
-                margin-bottom: 1rem;
+            .emotion-description {
+                font-size: 13px;
+                margin-bottom: 20px;
             }
 
             .ai-disclaimer {
                 width: 90%;
                 font-size: 11px;
                 max-width: 90%;
-                padding: 0.75rem;
-                margin-bottom: 1rem;
+                padding: 12px 15px;
+                margin-bottom: 20px;
             }
 
             .start-button {
-                position: fixed;
-                bottom: 1rem;
-                left: 1rem;
-                right: 1rem;
-                width: auto;
-                z-index: 100;
-                margin-bottom: 0;
+                padding: 18px 40px;
+                font-size: 18px;
+                margin-top: 10px;
+            }
+            
+            .control-button {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .hint {
+                display: none;
             }
         }
 
         @media screen and (orientation: portrait) {
             .controls {
-                bottom: 70px;
+                bottom: 80px;
                 right: 15px;
             }
             
             .timeline {
-                bottom: 20px;
-                width: 80%;
+                bottom: 25px;
+                width: 85%;
             }
         }
 
@@ -350,9 +373,10 @@
         let previousTimePosition = 0;
         let activatedTimeline = false;
         let composurePhase = 0;
-        let composureRate = 0.3; // Steady, dignified rhythm for pride
+        let composureRate = 0.3;
+        let touchX = 0;
+        let touchY = 0;
         
-        // Pride resonances - text snippets that appear when interacting
         const prideResonances = [
             "The quiet satisfaction of earned accomplishment",
             "Standing in your worth without apology",
@@ -371,35 +395,23 @@
             "Self-possession as a form of grace"
         ];
         
-        // Color palette for Pride
         const colors = {
-            copper: [184, 115, 51],      // Copper/Bronze - Recognition (accumulated value)
-            pink: [233, 30, 99],          // Pink - Evaluation (social positioning)
-            silver: [128, 128, 128]       // Silver/Grey - Response (composed presence)
+            copper: [184, 115, 51],
+            pink: [233, 30, 99],
+            silver: [128, 128, 128]
         };
         
-        // Elements for each conceptual layer
-        let achievementElements = [];    // Copper elements - recognition (accumulated markers)
-        let evaluationElements = [];     // Pink elements - evaluation (social awareness)
-        let presenceElements = [];       // Silver elements - response (composed dignity)
-        
-        // Connection lines between elements
+        let achievementElements = [];
+        let evaluationElements = [];
+        let presenceElements = [];
         let connectionLines = [];
-        
-        // Hand outline coordinates
         let handOutlinePoints = [];
         let handProgress = 0;
-        
-        // Interactive elements
         let prideCenters = [];
         let activePrideCenter = null;
         let centerActivated = false;
-        
-        // Decorative medallion elements (from collage)
         let medallions = [];
         let glitterParticles = [];
-        
-        // Timeline tracking
         let timelineProgress = 0;
         
         function startExperience() {
@@ -407,6 +419,7 @@
             
             setTimeout(() => {
                 document.getElementById('landing-overlay').style.display = 'none';
+                document.body.style.overflow = 'hidden';
                 
                 isAnimating = true;
                 loop();
@@ -439,9 +452,9 @@
             const timeline = document.getElementById('timeline');
             
             if (window.matchMedia("(orientation: portrait)").matches) {
-                controls.style.bottom = "70px";
+                controls.style.bottom = "80px";
                 controls.style.right = "15px";
-                timeline.style.width = "80%";
+                timeline.style.width = "85%";
             } else {
                 controls.style.bottom = "15px";
                 controls.style.right = "100px"; 
@@ -457,13 +470,27 @@
             }, 100);
         });
         
-        document.getElementById('start-experience').addEventListener('click', startExperience);
-        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+        // Start button event listeners
+        const startBtn = document.getElementById('start-experience');
+        startBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        startBtn.addEventListener('touchend', function(e) {
             e.preventDefault();
             startExperience();
         });
         
-        document.getElementById('sound-toggle').addEventListener('click', function() {
+        // Sound toggle
+        const soundToggle = document.getElementById('sound-toggle');
+        soundToggle.addEventListener('click', toggleSound);
+        soundToggle.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSound();
+        });
+        
+        function toggleSound() {
             soundEnabled = !soundEnabled;
             document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
             
@@ -477,20 +504,33 @@
                     prideSound.pause();
                 }, 1500);
             }
+        }
+        
+        // Reset button
+        const resetBtn = document.getElementById('reset-button');
+        resetBtn.addEventListener('click', resetAll);
+        resetBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetAll();
         });
         
-        document.getElementById('reset-button').addEventListener('click', function() {
+        function resetAll() {
             timePosition = 0;
             previousTimePosition = 0;
             resetExperience();
             updateTimelineUI();
-        });
+        }
         
-        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
-        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        // Timeline interactions
+        const timelineBar = document.getElementById('timeline-bar');
+        
+        timelineBar.addEventListener('mousedown', startTimelineDrag);
+        timelineBar.addEventListener('touchstart', startTimelineDrag, { passive: false });
         
         function startTimelineDrag(e) {
-            if (e.type === 'touchstart') e.preventDefault();
+            e.preventDefault();
+            e.stopPropagation();
             isDraggingTimeline = true;
             updateTimelinePosition(e);
             
@@ -502,12 +542,18 @@
         
         function updateTimelinePosition(e) {
             if (!isDraggingTimeline) return;
-            if (e.type === 'touchmove') e.preventDefault();
+            e.preventDefault();
             
             const timeline = document.getElementById('timeline-bar');
             const rect = timeline.getBoundingClientRect();
             
-            let clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            let clientX;
+            if (e.type.includes('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
             let percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
             
             document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
@@ -517,7 +563,7 @@
             setTimePosition(timePosition);
         }
         
-        function endTimelineDrag() {
+        function endTimelineDrag(e) {
             isDraggingTimeline = false;
             document.removeEventListener('mousemove', updateTimelinePosition);
             document.removeEventListener('touchmove', updateTimelinePosition);
@@ -571,9 +617,6 @@
         }
         
         function createAchievementElements() {
-            // Copper/Bronze elements - accumulated value markers
-            
-            // Central achievement marker (large)
             achievementElements.push({
                 type: 'medal',
                 x: width * 0.5,
@@ -593,7 +636,6 @@
                 rotation: 0
             });
             
-            // Cascading achievement markers (like glitter trail in collage)
             for (let i = 0; i < 15; i++) {
                 let angle = random(-PI/3, PI/3);
                 let distance = 80 + i * 25;
@@ -621,7 +663,6 @@
                 });
             }
             
-            // Anchor achievement elements (stable, grounded)
             for (let i = 0; i < 4; i++) {
                 let x = width * (0.25 + 0.5 * i/3);
                 let y = height * 0.7 + random(-15, 15);
@@ -648,9 +689,6 @@
         }
         
         function createEvaluationElements() {
-            // Pink elements - social positioning and awareness
-            
-            // Central evaluation ring
             evaluationElements.push({
                 type: 'ring',
                 x: width * 0.5,
@@ -669,7 +707,6 @@
                 pulseRate: 0.001
             });
             
-            // Evaluation nodes (social awareness points)
             for (let i = 0; i < 8; i++) {
                 let angle = TWO_PI * i / 8 + PI/8;
                 let distance = random(120, max(width, height) * 0.35);
@@ -694,7 +731,6 @@
                 });
             }
             
-            // Evaluation arcs (contextual awareness)
             for (let i = 0; i < 3; i++) {
                 let startAngle = random(0, TWO_PI);
                 let arcLength = random(PI/4, PI/2);
@@ -721,9 +757,6 @@
         }
         
         function createPresenceElements() {
-            // Silver/Grey elements - composed dignified presence
-            
-            // Central presence circle (protective boundary)
             presenceElements.push({
                 type: 'boundary',
                 x: width * 0.5,
@@ -742,7 +775,6 @@
                 pulseRate: 0.0008
             });
             
-            // Presence pillars (stability and groundedness)
             for (let i = 0; i < 6; i++) {
                 let angle = TWO_PI * i / 6;
                 let distance = random(80, max(width, height) * 0.32);
@@ -767,7 +799,6 @@
                 });
             }
             
-            // Presence dots (subtle dignity markers)
             for (let i = 0; i < 12; i++) {
                 presenceElements.push({
                     type: 'dot',
@@ -786,7 +817,6 @@
         }
         
         function createConnectionLines() {
-            // Connect achievement elements to evaluation elements
             for (let i = 0; i < achievementElements.length; i++) {
                 let achievement = achievementElements[i];
                 
@@ -815,7 +845,6 @@
                     }
                 }
                 
-                // Connect to presence elements
                 for (let j = 0; j < presenceElements.length; j++) {
                     let presence = presenceElements[j];
                     
@@ -840,7 +869,6 @@
                 }
             }
             
-            // Connect evaluation nodes to presence elements
             for (let i = 0; i < evaluationElements.length; i++) {
                 let evaluation = evaluationElements[i];
                 
@@ -870,36 +898,22 @@
         }
 
         function createHandOutline() {
-            // Hand within protective circle - open, receptive but poised
-            // Based on collage: hand in center of circular boundary
-            
             handOutlinePoints.push({x: 0.52, y: 0.52});
             handOutlinePoints.push({x: 0.58, y: 0.52});
-            
-            // Right side of hand
             handOutlinePoints.push({x: 0.61, y: 0.48});
             handOutlinePoints.push({x: 0.60, y: 0.43});
-            
-            // Fingers (slightly curled inward - composed)
             handOutlinePoints.push({x: 0.58, y: 0.38});
             handOutlinePoints.push({x: 0.56, y: 0.35});
             handOutlinePoints.push({x: 0.54, y: 0.33});
-            
-            // Middle fingers
             handOutlinePoints.push({x: 0.51, y: 0.32});
             handOutlinePoints.push({x: 0.48, y: 0.33});
             handOutlinePoints.push({x: 0.46, y: 0.35});
-            
-            // Left fingers
             handOutlinePoints.push({x: 0.44, y: 0.38});
             handOutlinePoints.push({x: 0.43, y: 0.43});
             handOutlinePoints.push({x: 0.44, y: 0.48});
-            
-            // Left side of palm
             handOutlinePoints.push({x: 0.47, y: 0.52});
             handOutlinePoints.push({x: 0.52, y: 0.52});
             
-            // Convert to absolute
             for (let i = 0; i < handOutlinePoints.length; i++) {
                 handOutlinePoints[i].x *= width;
                 handOutlinePoints[i].y *= height;
@@ -907,7 +921,6 @@
         }
         
         function createPrideCenters() {
-            // Main pride center around hand
             prideCenters.push({
                 x: width * 0.52,
                 y: height * 0.42,
@@ -922,7 +935,6 @@
                 elements: []
             });
             
-            // Secondary pride centers
             for (let i = 0; i < 2; i++) {
                 prideCenters.push({
                     x: random(width * 0.25, width * 0.75),
@@ -939,7 +951,6 @@
                 });
             }
             
-            // Assign elements to pride centers
             for (let i = 0; i < achievementElements.length; i++) {
                 let achievement = achievementElements[i];
                 
@@ -1012,7 +1023,6 @@
         }
         
         function createMedallions() {
-            // Ornate medallion elements (from collage)
             medallions.push({
                 x: width * 0.72,
                 y: height * 0.48,
@@ -1041,7 +1051,6 @@
         }
         
         function createGlitterParticles() {
-            // Glitter particles cascading (from collage trail)
             for (let i = 0; i < 30; i++) {
                 let baseX = width * 0.55 + random(-20, 80);
                 let baseY = height * 0.35 + i * 8 + random(-10, 10);
@@ -1080,7 +1089,6 @@
 
             composurePhase += composureRate * deltaTime * 0.001;
             
-            // Draw layers in order
             drawGlitterParticles();
             drawAchievementElements();
             drawConnectionLines();
@@ -1117,7 +1125,6 @@
                         fill(colors.pink[0], colors.pink[1], colors.pink[2], currentOpacity);
                     }
                     
-                    // Star shape for glitter
                     push();
                     translate(particle.x, particle.y);
                     rotate(millis() * 0.001 + particle.twinklePhase);
@@ -1150,7 +1157,6 @@
                     if (achievement.activated || achievement.shine > 0) {
                         shineFactor = achievement.shine / achievement.maxShine;
                         
-                        // Draw glow
                         noFill();
                         stroke(colors.copper[0], colors.copper[1], colors.copper[2], 70 * shineFactor);
                         strokeWeight(2);
@@ -1159,7 +1165,6 @@
                         ellipse(achievement.x, achievement.y, glowSize + 12);
                     }
                     
-                    // Draw based on type
                     if (achievement.type === 'medal') {
                         drawMedal(achievement, pulseAmount, shineFactor);
                     } else if (achievement.type === 'circle') {
@@ -1172,7 +1177,6 @@
                         drawAnchor(achievement, pulseAmount, shineFactor);
                     }
                     
-                    // Interactive hint
                     if (achievement.interactive && !achievement.activated) {
                         noFill();
                         stroke(colors.copper[0], colors.copper[1], colors.copper[2], 35);
@@ -1191,23 +1195,19 @@
             
             let opacity = achievement.opacity * (0.75 + shineFactor * 0.25);
             
-            // Outer ring
             noFill();
             stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
             strokeWeight(2);
             let size = achievement.size * (1 + pulseAmount);
             ellipse(0, 0, size);
             
-            // Inner circle
             fill(colors.copper[0], colors.copper[1], colors.copper[2], opacity * 0.4);
             noStroke();
             ellipse(0, 0, size * 0.6);
             
-            // Center dot
             fill(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
             ellipse(0, 0, size * 0.2);
             
-            // Decorative rays
             stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity * 0.6);
             strokeWeight(1);
             for (let i = 0; i < 8; i++) {
@@ -1260,7 +1260,6 @@
             strokeWeight(2);
             ellipse(achievement.x, achievement.y, size);
             
-            // Inner dot
             fill(colors.copper[0], colors.copper[1], colors.copper[2], opacity * 0.6);
             noStroke();
             ellipse(achievement.x, achievement.y, size * 0.3);
@@ -1277,13 +1276,8 @@
             strokeWeight(2);
             noFill();
             
-            // Horizontal line at top
             line(-size/2, -size/3, size/2, -size/3);
-            
-            // Vertical line
             line(0, -size/3, 0, size/2);
-            
-            // Bottom curve
             arc(0, size/2, size * 0.6, size * 0.4, 0, PI);
             
             pop();
@@ -1320,7 +1314,6 @@
             if (evaluation.activated || evaluation.awareness > 0) {
                 awarenessFactor = evaluation.awareness / evaluation.maxAwareness;
                 
-                // Glow
                 noFill();
                 stroke(colors.pink[0], colors.pink[1], colors.pink[2], 50 * awarenessFactor);
                 strokeWeight(evaluation.thickness + 2);
@@ -1424,7 +1417,6 @@
             strokeWeight(presence.thickness);
             ellipse(presence.x, presence.y, presence.size * (1 + pulseAmount));
             
-            // Inner subtle circle
             stroke(colors.silver[0], colors.silver[1], colors.silver[2], presence.opacity * 0.3);
             strokeWeight(0.5);
             ellipse(presence.x, presence.y, presence.size * 0.7 * (1 + pulseAmount));
@@ -1450,12 +1442,10 @@
             
             let opacity = presence.opacity * (0.7 + composureFactor * 0.3);
             
-            // Main pillar line
             stroke(colors.silver[0], colors.silver[1], colors.silver[2], opacity);
             strokeWeight(presence.width);
             line(0, -presence.height/2, 0, presence.height/2);
             
-            // Cap elements
             strokeWeight(presence.width * 1.2);
             point(0, -presence.height/2);
             point(0, presence.height/2);
@@ -1492,13 +1482,11 @@
                     translate(medallion.x, medallion.y);
                     rotate(medallion.rotation);
                     
-                    // Outer ring
                     noFill();
                     stroke(colors.copper[0], colors.copper[1], colors.copper[2], medallion.opacity);
                     strokeWeight(1.5);
                     ellipse(0, 0, medallion.size);
                     
-                    // Petals/filigree pattern
                     stroke(colors.copper[0], colors.copper[1], colors.copper[2], medallion.opacity * 0.8);
                     strokeWeight(1);
                     
@@ -1510,14 +1498,12 @@
                         line(cos(angle) * innerR, sin(angle) * innerR,
                              cos(angle) * outerR, sin(angle) * outerR);
                         
-                        // Small circles at petal tips
                         noStroke();
                         fill(colors.copper[0], colors.copper[1], colors.copper[2], medallion.opacity * 0.6);
                         ellipse(cos(angle) * outerR, sin(angle) * outerR, 3);
                         stroke(colors.copper[0], colors.copper[1], colors.copper[2], medallion.opacity * 0.8);
                     }
                     
-                    // Center circle
                     fill(colors.copper[0], colors.copper[1], colors.copper[2], medallion.opacity * 0.5);
                     noStroke();
                     ellipse(0, 0, medallion.size * 0.25);
@@ -1626,35 +1612,29 @@
             endShape(pointsToShow === handOutlinePoints.length ? CLOSE : OPEN);
             
             if (pointsToShow === handOutlinePoints.length) {
-                // Palm details
                 stroke(colors.silver[0], colors.silver[1], colors.silver[2], 80);
                 strokeWeight(0.8);
                 
-                // Heart line
                 let palmCenterX = (handOutlinePoints[0].x + handOutlinePoints[14].x) / 2;
                 let palmCenterY = (handOutlinePoints[0].y + handOutlinePoints[7].y) / 2;
                 
                 line(handOutlinePoints[0].x + 8, palmCenterY - 5,
                      handOutlinePoints[14].x - 8, palmCenterY - 5);
                 
-                // Pride symbol in palm when activated
                 if (activePrideCenter !== null && prideCenters[activePrideCenter].activationProgress > 0.4) {
                     let progress = prideCenters[activePrideCenter].activationProgress;
                     
                     push();
                     translate(palmCenterX, palmCenterY);
                     
-                    // Crown symbol for pride
                     stroke(colors.copper[0], colors.copper[1], colors.copper[2], 150 * progress);
                     strokeWeight(1.2);
                     noFill();
                     
                     let crownSize = 15 * progress;
                     
-                    // Crown base
                     line(-crownSize, crownSize * 0.3, crownSize, crownSize * 0.3);
                     
-                    // Crown points
                     beginShape();
                     vertex(-crownSize, crownSize * 0.3);
                     vertex(-crownSize * 0.6, -crownSize * 0.5);
@@ -1665,7 +1645,6 @@
                     vertex(crownSize, crownSize * 0.3);
                     endShape();
                     
-                    // Jewels on crown points
                     fill(colors.pink[0], colors.pink[1], colors.pink[2], 180 * progress);
                     noStroke();
                     ellipse(-crownSize * 0.6, -crownSize * 0.5, 3);
@@ -1690,14 +1669,12 @@
                     let pulseSize = center.size + pulseAmount * 10;
                     
                     if (i === activePrideCenter && center.activationProgress > 0) {
-                        // Radiate outward
                         for (let j = 0; j < 3; j++) {
                             let expandedSize = pulseSize + j * 18 * center.activationProgress;
                             let glowOpacity = (60 - j * 18) * center.activationProgress;
                             
                             noFill();
                             
-                            // Blend copper and pink for pride glow
                             let blendedR = lerp(colors.copper[0], colors.pink[0], 0.4);
                             let blendedG = lerp(colors.copper[1], colors.pink[1], 0.4);
                             let blendedB = lerp(colors.copper[2], colors.pink[2], 0.4);
@@ -1708,18 +1685,15 @@
                         }
                     }
                     
-                    // Main boundary
                     noFill();
                     stroke(colors.copper[0], colors.copper[1], colors.copper[2], center.opacity);
                     strokeWeight(1.2);
                     ellipse(center.x, center.y, pulseSize);
                     
-                    // Inner circle
                     fill(colors.copper[0], colors.copper[1], colors.copper[2], center.opacity * 0.15);
                     noStroke();
                     ellipse(center.x, center.y, pulseSize * 0.35);
                     
-                    // Interactive hint - crown symbol
                     if (!center.activated) {
                         fill(colors.copper[0], colors.copper[1], colors.copper[2], 
                             50 + 25 * sin(millis() * 0.002));
@@ -1728,7 +1702,6 @@
                         push();
                         translate(center.x, center.y);
                         
-                        // Simple crown hint
                         let s = 8;
                         beginShape();
                         vertex(-s, s * 0.3);
@@ -1799,7 +1772,6 @@
         }
         
         function updateElementPropagation() {
-            // Achievement → Evaluation propagation
             for (let i = 0; i < achievementElements.length; i++) {
                 let achievement = achievementElements[i];
                 
@@ -1824,7 +1796,6 @@
                 }
             }
             
-            // Evaluation → Presence propagation
             for (let i = 0; i < evaluationElements.length; i++) {
                 let evaluation = evaluationElements[i];
                 
@@ -1849,7 +1820,6 @@
                 }
             }
             
-            // Presence → Achievement feedback (pride reinforcement loop)
             for (let i = 0; i < presenceElements.length; i++) {
                 let presence = presenceElements[i];
                 
@@ -1987,7 +1957,8 @@
             }
         }
         
-        function mousePressed() {
+        // Unified interaction handler
+        function handleInteraction(x, y) {
             if (document.getElementById('landing-overlay').style.display === 'none') {
                 
                 // Check pride centers first
@@ -1995,9 +1966,9 @@
                     let center = prideCenters[i];
                     
                     if (timePosition > center.startTime) {
-                        let d = dist(mouseX, mouseY, center.x, center.y);
+                        let d = dist(x, y, center.x, center.y);
                         
-                        if (d < center.size / 2) {
+                        if (d < center.size / 2 + 15) { // Increased hit area for touch
                             center.activated = !center.activated;
                             
                             if (center.activated) {
@@ -2029,7 +2000,7 @@
                                 centerActivated = false;
                             }
                             
-                            return false;
+                            return true;
                         }
                     }
                 }
@@ -2037,9 +2008,9 @@
                 // Check achievement elements
                 for (let achievement of achievementElements) {
                     if (achievement.visible && achievement.interactive) {
-                        let d = dist(mouseX, mouseY, achievement.x, achievement.y);
+                        let d = dist(x, y, achievement.x, achievement.y);
                         
-                        if (d < achievement.size + 5) {
+                        if (d < achievement.size + 15) { // Increased hit area
                             achievement.activated = !achievement.activated;
                             achievement.activatedTime = millis();
                             
@@ -2048,7 +2019,7 @@
                                 showPrideResonance(getRandomResonance(), achievement.x, achievement.y);
                             }
                             
-                            return false;
+                            return true;
                         }
                     }
                 }
@@ -2058,10 +2029,10 @@
                     if (evaluation.visible && evaluation.interactive) {
                         if (evaluation.type === 'node' || evaluation.type === 'ring') {
                             let d = evaluation.type === 'ring' 
-                                ? abs(dist(mouseX, mouseY, evaluation.x, evaluation.y) - evaluation.size/2)
-                                : dist(mouseX, mouseY, evaluation.x, evaluation.y);
+                                ? abs(dist(x, y, evaluation.x, evaluation.y) - evaluation.size/2)
+                                : dist(x, y, evaluation.x, evaluation.y);
                             
-                            let hitSize = evaluation.type === 'ring' ? 12 : evaluation.size + 5;
+                            let hitSize = evaluation.type === 'ring' ? 20 : evaluation.size + 15;
                             
                             if (d < hitSize) {
                                 evaluation.activated = !evaluation.activated;
@@ -2072,7 +2043,7 @@
                                     showPrideResonance(getRandomResonance(), evaluation.x, evaluation.y);
                                 }
                                 
-                                return false;
+                                return true;
                             }
                         }
                     }
@@ -2083,12 +2054,12 @@
                     if (presence.visible && presence.interactive) {
                         let d;
                         if (presence.type === 'boundary') {
-                            d = abs(dist(mouseX, mouseY, presence.x, presence.y) - presence.size/2);
+                            d = abs(dist(x, y, presence.x, presence.y) - presence.size/2);
                         } else {
-                            d = dist(mouseX, mouseY, presence.x, presence.y);
+                            d = dist(x, y, presence.x, presence.y);
                         }
                         
-                        let hitSize = presence.type === 'boundary' ? 15 : presence.height/2 + 10;
+                        let hitSize = presence.type === 'boundary' ? 25 : presence.height/2 + 20;
                         
                         if (d < hitSize) {
                             presence.activated = !presence.activated;
@@ -2099,7 +2070,7 @@
                                 showPrideResonance(getRandomResonance(), presence.x, presence.y);
                             }
                             
-                            return false;
+                            return true;
                         }
                     }
                 }
@@ -2117,20 +2088,30 @@
             return false;
         }
         
-        function projectionPointOnLine(p, a, b) {
-            let ap = p5.Vector.sub(p, a);
-            let ab = p5.Vector.sub(b, a);
-            ab.normalize();
-            ab.mult(ap.dot(ab));
-            return p5.Vector.add(a, ab);
+        function mousePressed() {
+            handleInteraction(mouseX, mouseY);
+            return false;
         }
         
-        function touchStarted() {
+        function touchStarted(event) {
+            // Resume audio context on first touch
             if (getAudioContext().state !== 'running') {
                 getAudioContext().resume();
             }
             
-            return mousePressed();
+            // Get touch coordinates relative to canvas
+            if (touches.length > 0) {
+                touchX = touches[0].x;
+                touchY = touches[0].y;
+                handleInteraction(touchX, touchY);
+            }
+            
+            // Prevent default to avoid double-firing with mouse events
+            return false;
+        }
+        
+        function touchEnded() {
+            return false;
         }
     </script>
 </body>

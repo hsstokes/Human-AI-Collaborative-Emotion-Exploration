@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Guilt - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f9f2e2;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(249, 242, 226, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            transition: opacity 0.8s ease-in-out;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .landing-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 40px 15px 100px 15px;
+        }
+        
+        .landing-title {
+            font-size: clamp(18px, 5vw, 24px);
+            font-weight: 500;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 1px;
+            color: #1A1A1A;
+        }
+        
+        .emotion-name {
+            font-size: clamp(28px, 10vw, 48px);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: clamp(3px, 1.5vw, 6px);
+            background: linear-gradient(135deg, #B22234 0%, #1A1A1A 50%, #CD7F32 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            word-break: break-word;
+        }
+        
+        .emotion-description {
+            font-size: clamp(12px, 3.5vw, 14px);
+            line-height: 1.7;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 25px;
+            opacity: 0.8;
+            color: #1A1A1A;
+            padding: 0 10px;
+        }
+
+        .ai-disclaimer {
+            font-size: clamp(11px, 3vw, 13px);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: rgba(178, 34, 52, 0.08);
+            border-radius: 8px;
+            border-left: 3px solid #B22234;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: rgba(178, 34, 52, 0.1);
+            color: #1A1A1A;
+            border: 2px solid #B22234;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: clamp(14px, 4vw, 16px);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(178, 34, 52, 0.15);
+            flex-shrink: 0;
+            margin-bottom: 40px;
+        }
+        
+        .start-button:hover {
+            background-color: rgba(178, 34, 52, 0.15);
+            transform: scale(1.02);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+            background-color: rgba(178, 34, 52, 0.2);
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .guilt-resonance {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 12px 16px;
+            max-width: min(280px, calc(100vw - 40px));
+            font-size: clamp(11px, 3vw, 13px);
+            line-height: 1.5;
+            color: #333;
+            box-shadow: 0 8px 25px rgba(178, 34, 52, 0.2);
+            transform: translateY(20px) scale(0.9);
+            opacity: 0;
+            transition: opacity 0.4s, transform 0.4s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 4px solid #B22234;
+        }
+        
+        .guilt-resonance.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .control-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-button:active {
+            transform: scale(0.95);
+        }
+        
+        .control-button svg {
+            width: 22px;
+            height: 22px;
+            stroke: #1A1A1A;
+        }
+        
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 90px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 14px;
+            border-radius: 25px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            color: #1A1A1A;
+            border: 1px solid rgba(178, 34, 52, 0.2);
+            text-align: center;
+        }
+        
+        .weight-meter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: min(120px, 30vw);
+            height: 8px;
+            background-color: rgba(26, 26, 26, 0.2);
+            border-radius: 4px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+            overflow: hidden;
+        }
+        
+        .weight-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #CD7F32, #B22234);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease-out;
+        }
+        
+        .weight-label {
+            position: fixed;
+            top: 32px;
+            right: 20px;
+            font-size: clamp(8px, 2vw, 9px);
+            color: #1A1A1A;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        @media (max-height: 500px) and (orientation: landscape) {
+            .landing-content {
+                padding: 20px 15px 60px 15px;
+            }
+            
+            .landing-title {
+                margin-bottom: 15px;
+            }
+            
+            .emotion-name {
+                margin-bottom: 15px;
+            }
+            
+            .emotion-description {
+                margin-bottom: 15px;
+            }
+            
+            .ai-disclaimer {
+                margin-bottom: 20px;
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .landing-content {
+                padding: 30px 10px 80px 10px;
+            }
+            
+            .ai-disclaimer {
+                padding: 12px 10px;
+            }
+            
+            .start-button {
+                padding: 12px 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-overlay">
+        <div class="landing-content">
+            <h1 class="landing-title">Emotional Collage Experience</h1>
+            <h2 class="emotion-name" id="emotion-title">GUILT</h2>
+            <p class="emotion-description" id="emotion-description">
+                An exploration of guilt as accumulated weight—judgment symbols pressing down upon a hand that remains open, accepting responsibility rather than deflecting blame.
+                <br><b>Analysis by Claude</b>
+            </p>
+
+            <div class="ai-disclaimer">
+                <strong>Note:</strong> This is a simulation of guilt based on my analysis of human descriptions. As an AI, I don't experience emotions—this is my interpretation of a social emotion through the constraint of modulated expression: calibrating response based on contextual elements and the possibility of amends.
+            </div>
+            
+            <button class="start-button" id="start-experience">Touch to Begin</button>
+        </div>
+    </div>
+    
+    <div class="guilt-resonance" id="guilt-resonance"></div>
+    
+    <div class="weight-meter" id="weight-meter">
+        <div class="weight-fill" id="weight-fill"></div>
+    </div>
+    <div class="weight-label" id="weight-label">Weight</div>
+    
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="hint" id="hint">Touch to add weight • Hold to seek amends</div>
+    
+    <script>
+        // ============================================
+        // GUILT VISUALIZATION
+        // Core concept: Accumulated weight, judgment
+        // bearing down, chains binding to past actions,
+        // the open confessional hand, internal witness
+        // ============================================
+        
+        let isAnimating = false;
+        let soundEnabled = true;
+        let guiltSound;
+        let soundLoaded = false;
+        
+        // Color palette from collage analysis
+        const colors = {
+            red: [178, 34, 52],           // Moral violation detection
+            black: [26, 26, 26],          // Weight accumulation
+            copper: [205, 127, 50]        // Reparative possibility
+        };
+        
+        // Guilt resonances - text that appears during interactions
+        const guiltResonances = [
+            "The weight of what cannot be undone",
+            "An internal witness that never looks away",
+            "Bound to actions that live in memory",
+            "The hand opens, offering itself to judgment",
+            "Something broken that waits to be mended",
+            "The accumulation of small betrayals",
+            "A ledger that keeps its own accounts",
+            "What we carry when no one is watching",
+            "The distance between who we are and who we meant to be",
+            "Chains we forged, link by link",
+            "The confession the body makes before words",
+            "A debt that compounds in silence",
+            "The scissors hover—but severing is not the same as repair",
+            "Responsibility that settles in the bones",
+            "What remains when justification fails"
+        ];
+        
+        // ============================================
+        // CORE SYSTEMS
+        // ============================================
+        
+        // Hand outline (confessional, open palm)
+        let handPoints = [];
+        let handVisible = false;
+        let handOpacity = 0;
+        let handBaseOpacity = 200;
+        
+        // Weight system
+        let totalWeight = 0;
+        let maxWeight = 100;
+        let weightParticles = [];
+        let weightPressure = 0;
+        
+        // Judgment symbols (X marks, crossed circles)
+        let judgmentSymbols = [];
+        let fallingJudgments = [];
+        
+        // Chain system (binding to past)
+        let chains = [];
+        let chainAnchors = [];
+        
+        // Scissors (severance impulse)
+        let scissors = {
+            x: 0,
+            y: 0,
+            angle: 0,
+            openAngle: 0.3,
+            isOpen: true,
+            targetOpen: true,
+            opacity: 0
+        };
+        
+        // Internal witness (watching eyes)
+        let witnesses = [];
+        
+        // Glittering fragments (unresolved guilt)
+        let glitterParticles = [];
+        
+        // Pulse and breathing
+        let breathPhase = 0;
+        let breathSpeed = 0.008;
+        let heartbeatPhase = 0;
+        
+        // Amends system (holding interaction)
+        let isSeekingAmends = false;
+        let amendsProgress = 0;
+        let amendsLocation = null;
+        
+        // State tracking
+        let interactionCount = 0;
+        
+        // ============================================
+        // SETUP & INITIALIZATION
+        // ============================================
+        
+        function preload() {
+            soundLoaded = false;
+            guiltSound = loadSound('guilt_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+        
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            createHandOutline();
+            createJudgmentSymbols();
+            createChainAnchors();
+            createWitnesses();
+            initializeScissors();
+            
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            noLoop();
+        }
+        
+        function createHandOutline() {
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            let scale = min(width, height) * 0.32;
+            
+            handPoints = [];
+            
+            // Open palm, fingers spread - accepting posture
+            let palmPoints = [
+                {x: -0.18, y: 0.28},
+                {x: 0.18, y: 0.28},
+                {x: 0.22, y: 0.15},
+                {x: 0.24, y: 0.02},
+                {x: 0.20, y: -0.12},
+                {x: 0.22, y: -0.30},  // Index finger
+                {x: 0.16, y: -0.14},
+                {x: 0.14, y: -0.35},  // Middle finger
+                {x: 0.06, y: -0.16},
+                {x: 0.04, y: -0.38},  // Ring finger
+                {x: -0.04, y: -0.16},
+                {x: -0.08, y: -0.34}, // Pinky
+                {x: -0.14, y: -0.12},
+                {x: -0.28, y: -0.06}, // Thumb
+                {x: -0.22, y: 0.06},
+                {x: -0.22, y: 0.16},
+                {x: -0.18, y: 0.28}
+            ];
+            
+            for (let pt of palmPoints) {
+                handPoints.push({
+                    x: centerX + pt.x * scale,
+                    y: centerY + pt.y * scale,
+                    baseX: centerX + pt.x * scale,
+                    baseY: centerY + pt.y * scale
+                });
+            }
+        }
+        
+        function createJudgmentSymbols() {
+            judgmentSymbols = [];
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            // Create orbiting judgment symbols
+            for (let i = 0; i < 8; i++) {
+                let angle = (TWO_PI / 8) * i + random(-0.2, 0.2);
+                let radius = min(width, height) * random(0.25, 0.4);
+                
+                judgmentSymbols.push({
+                    angle: angle,
+                    radius: radius,
+                    baseRadius: radius,
+                    size: random(15, 30),
+                    type: random() > 0.5 ? 'x' : 'crossedCircle',
+                    rotationSpeed: random(0.001, 0.003) * (random() > 0.5 ? 1 : -1),
+                    pulsePhase: random(TWO_PI),
+                    pulseSpeed: random(0.02, 0.04),
+                    opacity: 0,
+                    targetOpacity: random(120, 200),
+                    descendSpeed: 0,
+                    isDescending: false
+                });
+            }
+        }
+        
+        function createChainAnchors() {
+            chainAnchors = [];
+            chains = [];
+            
+            // Anchors at edges representing past actions
+            let positions = [
+                {x: width * 0.1, y: height * 0.2},
+                {x: width * 0.9, y: height * 0.25},
+                {x: width * 0.15, y: height * 0.8},
+                {x: width * 0.85, y: height * 0.75},
+                {x: width * 0.5, y: height * 0.05}
+            ];
+            
+            for (let pos of positions) {
+                chainAnchors.push({
+                    x: pos.x,
+                    y: pos.y,
+                    tension: 0,
+                    maxTension: 1,
+                    linked: false
+                });
+            }
+        }
+        
+        function createWitnesses() {
+            witnesses = [];
+            
+            // Internal witnesses - watching eyes at periphery
+            for (let i = 0; i < 4; i++) {
+                let angle = (TWO_PI / 4) * i + PI/4;
+                let radius = min(width, height) * 0.42;
+                
+                witnesses.push({
+                    x: width/2 + cos(angle) * radius,
+                    y: height/2 + sin(angle) * radius,
+                    size: random(20, 35),
+                    blinkPhase: random(TWO_PI),
+                    blinkSpeed: random(0.01, 0.02),
+                    lookAtX: width/2,
+                    lookAtY: height/2,
+                    opacity: 0,
+                    targetOpacity: 80
+                });
+            }
+        }
+        
+        function initializeScissors() {
+            // Position scissors near wrist area
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            let scale = min(width, height) * 0.32;
+            
+            scissors.x = centerX - scale * 0.1;
+            scissors.y = centerY + scale * 0.35;
+            scissors.angle = -PI/4;
+        }
+        
+        // ============================================
+        // INTERACTION HANDLERS
+        // ============================================
+        
+        function addWeight(x, y) {
+            let weightAmount = random(5, 15);
+            totalWeight = min(maxWeight, totalWeight + weightAmount);
+            
+            // Create falling judgment
+            createFallingJudgment(x, y);
+            
+            // Add weight particles pressing down
+            createWeightParticles(x, y, weightAmount);
+            
+            // Increase chain tension
+            updateChainTension(weightAmount);
+            
+            // Create glitter (unresolved fragments)
+            createGlitter(x, y);
+            
+            // Update witnesses to look at interaction point
+            for (let w of witnesses) {
+                w.lookAtX = x;
+                w.lookAtY = y;
+            }
+            
+            // Show resonance occasionally
+            if (random() > 0.6) {
+                showGuiltResonance(x, y);
+            }
+            
+            interactionCount++;
+            updateWeightMeter();
+            
+            // Close scissors slightly with each weight added
+            scissors.targetOpen = totalWeight < maxWeight * 0.7;
+        }
+        
+        function createFallingJudgment(x, y) {
+            fallingJudgments.push({
+                x: x + random(-30, 30),
+                y: -50,
+                targetY: y,
+                size: random(20, 35),
+                type: random() > 0.5 ? 'x' : 'crossedCircle',
+                speed: 0,
+                acceleration: 0.15,
+                opacity: 255,
+                rotation: random(TWO_PI),
+                rotationSpeed: random(-0.05, 0.05),
+                settled: false,
+                settleTime: 0
+            });
+        }
+        
+        function createWeightParticles(x, y, amount) {
+            let count = floor(amount);
+            
+            for (let i = 0; i < count; i++) {
+                weightParticles.push({
+                    x: x + random(-40, 40),
+                    y: y + random(-20, 20),
+                    vy: random(0.5, 2),
+                    size: random(3, 8),
+                    opacity: random(150, 255),
+                    color: random() > 0.3 ? colors.black : colors.red,
+                    life: random(100, 200)
+                });
+            }
+        }
+        
+        function createGlitter(x, y) {
+            let count = floor(random(3, 8));
+            
+            for (let i = 0; i < count; i++) {
+                glitterParticles.push({
+                    x: x + random(-50, 50),
+                    y: y + random(-50, 50),
+                    size: random(2, 5),
+                    twinklePhase: random(TWO_PI),
+                    twinkleSpeed: random(0.1, 0.2),
+                    drift: random(-0.3, 0.3),
+                    life: random(150, 300),
+                    maxLife: 300
+                });
+            }
+        }
+        
+        function updateChainTension(amount) {
+            // Find nearest unlinked anchor and increase tension
+            let centerX = width / 2;
+            let centerY = height / 2;
+            
+            for (let anchor of chainAnchors) {
+                if (!anchor.linked) {
+                    anchor.tension = min(anchor.maxTension, anchor.tension + amount * 0.02);
+                    
+                    if (anchor.tension >= anchor.maxTension) {
+                        anchor.linked = true;
+                        createChain(anchor);
+                    }
+                    break;
+                }
+            }
+        }
+        
+        function createChain(anchor) {
+            let centerX = width / 2;
+            let centerY = height / 2;
+            
+            chains.push({
+                startX: anchor.x,
+                startY: anchor.y,
+                endX: centerX,
+                endY: centerY,
+                links: floor(dist(anchor.x, anchor.y, centerX, centerY) / 20),
+                tension: 0,
+                opacity: 0,
+                targetOpacity: 180
+            });
+        }
+        
+        function seekAmends(x, y) {
+            if (!isSeekingAmends) {
+                isSeekingAmends = true;
+                amendsLocation = {x: x, y: y};
+                amendsProgress = 0;
+            }
+            
+            amendsProgress = min(1, amendsProgress + 0.008);
+            
+            if (amendsProgress >= 1) {
+                // Release some weight
+                releaseWeight();
+                isSeekingAmends = false;
+                amendsProgress = 0;
+            }
+        }
+        
+        function releaseWeight() {
+            let releaseAmount = totalWeight * 0.2;
+            totalWeight = max(0, totalWeight - releaseAmount);
+            
+            // Open scissors
+            scissors.targetOpen = true;
+            
+            // Release a chain
+            if (chains.length > 0) {
+                let chain = chains[chains.length - 1];
+                chain.targetOpacity = 0;
+                
+                // Find and unlink anchor
+                for (let anchor of chainAnchors) {
+                    if (anchor.linked && 
+                        dist(anchor.x, anchor.y, chain.startX, chain.startY) < 10) {
+                        anchor.linked = false;
+                        anchor.tension = 0;
+                        break;
+                    }
+                }
+            }
+            
+            // Create copper-colored release particles
+            if (amendsLocation) {
+                for (let i = 0; i < 20; i++) {
+                    let angle = random(TWO_PI);
+                    let speed = random(2, 5);
+                    weightParticles.push({
+                        x: amendsLocation.x,
+                        y: amendsLocation.y,
+                        vx: cos(angle) * speed,
+                        vy: sin(angle) * speed - 2,
+                        size: random(4, 8),
+                        opacity: 255,
+                        color: colors.copper,
+                        life: random(60, 120),
+                        isRelease: true
+                    });
+                }
+            }
+            
+            updateWeightMeter();
+            showGuiltResonance(width/2, height/2);
+        }
+        
+        // ============================================
+        // UPDATE SYSTEMS
+        // ============================================
+        
+        function updateAll() {
+            breathPhase += breathSpeed;
+            heartbeatPhase += 0.03;
+            
+            updateHandPosition();
+            updateJudgmentSymbols();
+            updateFallingJudgments();
+            updateWeightParticles();
+            updateChains();
+            updateWitnesses();
+            updateScissors();
+            updateGlitter();
+            
+            // Gradual weight decay (time doesn't erase but softens)
+            if (totalWeight > 0 && !isSeekingAmends) {
+                totalWeight = max(0, totalWeight - 0.01);
+                updateWeightMeter();
+            }
+        }
+        
+        function updateHandPosition() {
+            let pressureEffect = map(totalWeight, 0, maxWeight, 0, 15);
+            let breathEffect = sin(breathPhase) * 3;
+            
+            for (let i = 0; i < handPoints.length; i++) {
+                let pt = handPoints[i];
+                // Hand sinks under weight
+                pt.y = pt.baseY + pressureEffect + breathEffect;
+                // Slight inward curl under pressure
+                let curl = map(totalWeight, 0, maxWeight, 0, 0.03);
+                let centerX = width / 2;
+                pt.x = lerp(pt.x, lerp(pt.baseX, centerX, curl), 0.05);
+            }
+            
+            handOpacity = handBaseOpacity + sin(breathPhase * 2) * 20;
+        }
+        
+        function updateJudgmentSymbols() {
+            let centerX = width / 2;
+            let centerY = height / 2;
+            
+            for (let symbol of judgmentSymbols) {
+                symbol.angle += symbol.rotationSpeed;
+                symbol.pulsePhase += symbol.pulseSpeed;
+                
+                // Symbols press closer as weight increases
+                let pressureFactor = map(totalWeight, 0, maxWeight, 1, 0.6);
+                symbol.radius = symbol.baseRadius * pressureFactor;
+                
+                // Fade in
+                symbol.opacity = lerp(symbol.opacity, symbol.targetOpacity, 0.02);
+            }
+        }
+        
+        function updateFallingJudgments() {
+            for (let i = fallingJudgments.length - 1; i >= 0; i--) {
+                let j = fallingJudgments[i];
+                
+                if (!j.settled) {
+                    j.speed += j.acceleration;
+                    j.y += j.speed;
+                    j.rotation += j.rotationSpeed;
+                    
+                    if (j.y >= j.targetY) {
+                        j.y = j.targetY;
+                        j.settled = true;
+                        j.settleTime = millis();
+                        
+                        // Impact effect
+                        weightPressure = min(1, weightPressure + 0.2);
+                    }
+                } else {
+                    // Fade out after settling
+                    let timeSinceSettle = millis() - j.settleTime;
+                    if (timeSinceSettle > 2000) {
+                        j.opacity = max(0, j.opacity - 2);
+                        if (j.opacity <= 0) {
+                            fallingJudgments.splice(i, 1);
+                        }
+                    }
+                }
+            }
+            
+            // Decay pressure effect
+            weightPressure *= 0.95;
+        }
+        
+        function updateWeightParticles() {
+            for (let i = weightParticles.length - 1; i >= 0; i--) {
+                let p = weightParticles[i];
+                
+                if (p.isRelease) {
+                    // Release particles float up
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.05; // Slight gravity
+                    p.vx *= 0.98;
+                } else {
+                    // Weight particles drift down slowly
+                    p.y += p.vy;
+                    p.vy = min(p.vy + 0.01, 2);
+                }
+                
+                p.life--;
+                p.opacity = map(p.life, 0, 100, 0, p.opacity);
+                
+                if (p.life <= 0 || p.y > height + 50) {
+                    weightParticles.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateChains() {
+            for (let i = chains.length - 1; i >= 0; i--) {
+                let chain = chains[i];
+                chain.opacity = lerp(chain.opacity, chain.targetOpacity, 0.03);
+                chain.tension = lerp(chain.tension, 1, 0.02);
+                
+                // Remove faded chains
+                if (chain.targetOpacity === 0 && chain.opacity < 5) {
+                    chains.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateWitnesses() {
+            for (let w of witnesses) {
+                w.blinkPhase += w.blinkSpeed;
+                w.opacity = lerp(w.opacity, w.targetOpacity, 0.01);
+                
+                // Smoothly follow look target
+                w.lookAtX = lerp(w.lookAtX, width/2, 0.02);
+                w.lookAtY = lerp(w.lookAtY, height/2, 0.02);
+            }
+        }
+        
+        function updateScissors() {
+            let targetAngle = scissors.targetOpen ? scissors.openAngle : 0.05;
+            scissors.openAngle = lerp(scissors.openAngle, targetAngle, 0.05);
+            
+            // Fade in scissors as weight accumulates
+            scissors.opacity = lerp(scissors.opacity, map(totalWeight, 20, 50, 0, 200), 0.02);
+        }
+        
+        function updateGlitter() {
+            for (let i = glitterParticles.length - 1; i >= 0; i--) {
+                let g = glitterParticles[i];
+                
+                g.twinklePhase += g.twinkleSpeed;
+                g.x += g.drift;
+                g.y += 0.2;
+                g.life--;
+                
+                if (g.life <= 0) {
+                    glitterParticles.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateWeightMeter() {
+            let fill = document.getElementById('weight-fill');
+            if (fill) {
+                fill.style.width = (totalWeight / maxWeight * 100) + '%';
+            }
+        }
+        
+        // ============================================
+        // DRAWING SYSTEMS
+        // ============================================
+        
+        function draw() {
+            // Background darkens slightly with weight
+            let bgDarken = map(totalWeight, 0, maxWeight, 0, 20);
+            background(249 - bgDarken, 242 - bgDarken, 226 - bgDarken);
+            
+            updateAll();
+            
+            drawChains();
+            drawWitnesses();
+            drawJudgmentSymbols();
+            drawFallingJudgments();
+            drawHand();
+            drawWeightParticles();
+            drawGlitter();
+            drawScissors();
+            drawAmendsProgress();
+        }
+        
+        function drawHand() {
+            if (handPoints.length < 3) return;
+            
+            let centerX = width / 2;
+            let centerY = height / 2;
+            
+            // Shadow under hand (weight effect)
+            let shadowOffset = map(totalWeight, 0, maxWeight, 5, 20);
+            noStroke();
+            fill(0, 0, 0, 30);
+            beginShape();
+            for (let pt of handPoints) {
+                vertex(pt.x + shadowOffset * 0.3, pt.y + shadowOffset);
+            }
+            endShape(CLOSE);
+            
+            // Hand outline - multiple layers
+            for (let g = 3; g > 0; g--) {
+                stroke(colors.black[0], colors.black[1], colors.black[2], handOpacity * 0.2 * (4-g)/3);
+                strokeWeight(g * 4);
+                noFill();
+                beginShape();
+                for (let pt of handPoints) {
+                    vertex(pt.x, pt.y);
+                }
+                endShape(CLOSE);
+            }
+            
+            // Main hand outline
+            stroke(colors.black[0], colors.black[1], colors.black[2], handOpacity);
+            strokeWeight(2.5);
+            noFill();
+            beginShape();
+            for (let pt of handPoints) {
+                vertex(pt.x, pt.y);
+            }
+            endShape(CLOSE);
+            
+            // Palm lines (life lines, fate lines - carrying history)
+            stroke(colors.black[0], colors.black[1], colors.black[2], handOpacity * 0.5);
+            strokeWeight(1.5);
+            
+            // Heart line
+            let heartLineY = centerY - min(width, height) * 0.05;
+            beginShape();
+            noFill();
+            curveVertex(centerX - 60, heartLineY + 10);
+            curveVertex(centerX - 40, heartLineY);
+            curveVertex(centerX, heartLineY + 5);
+            curveVertex(centerX + 30, heartLineY - 5);
+            curveVertex(centerX + 50, heartLineY);
+            endShape();
+            
+            // Life line
+            beginShape();
+            curveVertex(centerX - 50, heartLineY - 30);
+            curveVertex(centerX - 30, heartLineY + 20);
+            curveVertex(centerX - 20, heartLineY + 50);
+            curveVertex(centerX - 25, heartLineY + 80);
+            curveVertex(centerX - 35, heartLineY + 100);
+            endShape();
+            
+            // Center point - vulnerable exposure
+            noStroke();
+            fill(colors.red[0], colors.red[1], colors.red[2], 40 + sin(breathPhase) * 20);
+            ellipse(centerX, centerY, 60);
+            
+            fill(colors.black[0], colors.black[1], colors.black[2], handOpacity);
+            ellipse(centerX, centerY, 6);
+        }
+        
+        function drawJudgmentSymbols() {
+            let centerX = width / 2;
+            let centerY = height / 2;
+            
+            for (let symbol of judgmentSymbols) {
+                let x = centerX + cos(symbol.angle) * symbol.radius;
+                let y = centerY + sin(symbol.angle) * symbol.radius;
+                let pulse = (sin(symbol.pulsePhase) + 1) / 2;
+                let size = symbol.size * (0.9 + pulse * 0.2);
+                
+                push();
+                translate(x, y);
+                
+                if (symbol.type === 'x') {
+                    drawXMark(0, 0, size, symbol.opacity);
+                } else {
+                    drawCrossedCircle(0, 0, size, symbol.opacity);
+                }
+                
+                pop();
+            }
+        }
+        
+        function drawXMark(x, y, size, opacity) {
+            stroke(colors.red[0], colors.red[1], colors.red[2], opacity);
+            strokeWeight(3);
+            noFill();
+            
+            line(x - size/2, y - size/2, x + size/2, y + size/2);
+            line(x + size/2, y - size/2, x - size/2, y + size/2);
+        }
+        
+        function drawCrossedCircle(x, y, size, opacity) {
+            stroke(colors.red[0], colors.red[1], colors.red[2], opacity);
+            strokeWeight(2);
+            noFill();
+            
+            ellipse(x, y, size);
+            
+            // Diagonal cross through
+            let offset = size * 0.35;
+            line(x - offset, y - offset, x + offset, y + offset);
+        }
+        
+        function drawFallingJudgments() {
+            for (let j of fallingJudgments) {
+                push();
+                translate(j.x, j.y);
+                rotate(j.rotation);
+                
+                if (j.type === 'x') {
+                    drawXMark(0, 0, j.size, j.opacity);
+                } else {
+                    drawCrossedCircle(0, 0, j.size, j.opacity);
+                }
+                
+                // Impact ripple when settled
+                if (j.settled) {
+                    let timeSinceSettle = millis() - j.settleTime;
+                    if (timeSinceSettle < 500) {
+                        let rippleSize = map(timeSinceSettle, 0, 500, 0, 80);
+                        let rippleOpacity = map(timeSinceSettle, 0, 500, 100, 0);
+                        noFill();
+                        stroke(colors.red[0], colors.red[1], colors.red[2], rippleOpacity);
+                        strokeWeight(2);
+                        ellipse(0, 0, rippleSize);
+                    }
+                }
+                
+                pop();
+            }
+        }
+        
+        function drawChains() {
+            for (let chain of chains) {
+                if (chain.opacity < 5) continue;
+                
+                let dx = chain.endX - chain.startX;
+                let dy = chain.endY - chain.startY;
+                let totalDist = dist(chain.startX, chain.startY, chain.endX, chain.endY);
+                
+                // Draw chain links
+                stroke(colors.black[0], colors.black[1], colors.black[2], chain.opacity);
+                strokeWeight(2);
+                noFill();
+                
+                let linkSize = 12;
+                let numLinks = floor(totalDist / linkSize);
+                
+                for (let i = 0; i < numLinks; i++) {
+                    let t = i / numLinks;
+                    let x = lerp(chain.startX, chain.endX, t);
+                    let y = lerp(chain.startY, chain.endY, t);
+                    
+                    // Add sag to chain
+                    let sag = sin(t * PI) * 20 * (1 - chain.tension);
+                    y += sag;
+                    
+                    // Alternate link orientation
+                    push();
+                    translate(x, y);
+                    rotate(atan2(dy, dx) + (i % 2 === 0 ? 0 : HALF_PI));
+                    ellipse(0, 0, linkSize, linkSize * 0.5);
+                    pop();
+                }
+                
+                // Anchor point
+                fill(colors.black[0], colors.black[1], colors.black[2], chain.opacity);
+                noStroke();
+                ellipse(chain.startX, chain.startY, 10);
+            }
+        }
+        
+        function drawWitnesses() {
+            for (let w of witnesses) {
+                if (w.opacity < 5) continue;
+                
+                let blinkValue = (sin(w.blinkPhase) + 1) / 2;
+                let isBlinking = blinkValue < 0.1;
+                
+                push();
+                translate(w.x, w.y);
+                
+                // Eye outer
+                noStroke();
+                fill(colors.black[0], colors.black[1], colors.black[2], w.opacity * 0.3);
+                ellipse(0, 0, w.size * 1.5, w.size);
+                
+                // Eye white
+                fill(255, 255, 255, w.opacity);
+                ellipse(0, 0, w.size, w.size * 0.7);
+                
+                if (!isBlinking) {
+                    // Iris - looks toward center/interaction
+                    let lookAngle = atan2(w.lookAtY - w.y, w.lookAtX - w.x);
+                    let irisOffset = w.size * 0.15;
+                    let irisX = cos(lookAngle) * irisOffset;
+                    let irisY = sin(lookAngle) * irisOffset * 0.5;
+                    
+                    fill(colors.black[0], colors.black[1], colors.black[2], w.opacity);
+                    ellipse(irisX, irisY, w.size * 0.4, w.size * 0.35);
+                    
+                    // Pupil
+                    fill(0, 0, 0, w.opacity);
+                    ellipse(irisX, irisY, w.size * 0.2, w.size * 0.18);
+                    
+                    // Highlight
+                    fill(255, 255, 255, w.opacity * 0.8);
+                    ellipse(irisX - 2, irisY - 2, w.size * 0.08);
+                } else {
+                    // Closed eye line
+                    stroke(colors.black[0], colors.black[1], colors.black[2], w.opacity);
+                    strokeWeight(2);
+                    line(-w.size * 0.4, 0, w.size * 0.4, 0);
+                }
+                
+                pop();
+            }
+        }
+        
+        function drawWeightParticles() {
+            noStroke();
+            
+            for (let p of weightParticles) {
+                fill(p.color[0], p.color[1], p.color[2], p.opacity);
+                ellipse(p.x, p.y, p.size);
+                
+                // Glow for release particles
+                if (p.isRelease) {
+                    fill(p.color[0], p.color[1], p.color[2], p.opacity * 0.3);
+                    ellipse(p.x, p.y, p.size * 2);
+                }
+            }
+        }
+        
+        function drawGlitter() {
+            for (let g of glitterParticles) {
+                let twinkle = (sin(g.twinklePhase) + 1) / 2;
+                let opacity = map(g.life, 0, g.maxLife, 0, 255) * twinkle;
+                
+                // Copper glitter
+                fill(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
+                noStroke();
+                
+                push();
+                translate(g.x, g.y);
+                rotate(g.twinklePhase);
+                
+                // Diamond shape
+                beginShape();
+                vertex(0, -g.size);
+                vertex(g.size * 0.5, 0);
+                vertex(0, g.size);
+                vertex(-g.size * 0.5, 0);
+                endShape(CLOSE);
+                
+                pop();
+            }
+        }
+        
+        function drawScissors() {
+            if (scissors.opacity < 5) return;
+            
+            push();
+            translate(scissors.x, scissors.y);
+            rotate(scissors.angle);
+            
+            let bladeLength = 40;
+            let handleLength = 25;
+            
+            stroke(colors.black[0], colors.black[1], colors.black[2], scissors.opacity);
+            strokeWeight(3);
+            fill(colors.black[0], colors.black[1], colors.black[2], scissors.opacity * 0.3);
+            
+            // First blade
+            push();
+            rotate(scissors.openAngle);
+            beginShape();
+            vertex(0, 0);
+            vertex(bladeLength, -4);
+            vertex(bladeLength + 5, 0);
+            vertex(bladeLength, 4);
+            endShape(CLOSE);
+            // Handle
+            ellipse(-handleLength/2, 0, handleLength, 15);
+            pop();
+            
+            // Second blade
+            push();
+            rotate(-scissors.openAngle);
+            beginShape();
+            vertex(0, 0);
+            vertex(bladeLength, -4);
+            vertex(bladeLength + 5, 0);
+            vertex(bladeLength, 4);
+            endShape(CLOSE);
+            // Handle
+            ellipse(-handleLength/2, 0, handleLength, 15);
+            pop();
+            
+            // Pivot point
+            fill(colors.black[0], colors.black[1], colors.black[2], scissors.opacity);
+            noStroke();
+            ellipse(0, 0, 8);
+            
+            pop();
+        }
+        
+        function drawAmendsProgress() {
+            if (!isSeekingAmends || !amendsLocation) return;
+            
+            // Growing copper circle representing amends
+            let size = amendsProgress * 100;
+            
+            noFill();
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], 200);
+            strokeWeight(3);
+            ellipse(amendsLocation.x, amendsLocation.y, size);
+            
+            // Inner glow
+            fill(colors.copper[0], colors.copper[1], colors.copper[2], 50);
+            noStroke();
+            ellipse(amendsLocation.x, amendsLocation.y, size * 0.8);
+            
+            // Progress arc
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], 255);
+            strokeWeight(4);
+            noFill();
+            arc(amendsLocation.x, amendsLocation.y, size + 20, size + 20, 
+                -HALF_PI, -HALF_PI + amendsProgress * TWO_PI);
+        }
+        
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+        
+        function showGuiltResonance(x, y) {
+            const resonance = document.getElementById('guilt-resonance');
+            let message = guiltResonances[floor(random(guiltResonances.length))];
+            
+            resonance.innerHTML = message;
+            
+            let posX = x + 30;
+            let posY = y - 30;
+            
+            let maxX = window.innerWidth - resonance.offsetWidth - 20;
+            let maxY = window.innerHeight - 100;
+            
+            if (posX > maxX) posX = Math.max(20, x - resonance.offsetWidth - 30);
+            if (posX < 20) posX = 20;
+            if (posY < 20) posY = y + 30;
+            if (posY > maxY) posY = maxY;
+            
+            resonance.style.left = posX + 'px';
+            resonance.style.top = posY + 'px';
+            resonance.classList.add('active');
+            
+            setTimeout(() => {
+                resonance.classList.remove('active');
+            }, 3500);
+        }
+        
+        function startExperience() {
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                document.body.style.overflow = 'hidden';
+                
+                isAnimating = true;
+                handVisible = true;
+                handOpacity = handBaseOpacity;
+                
+                // Fade in judgment symbols
+                for (let symbol of judgmentSymbols) {
+                    symbol.targetOpacity = random(120, 200);
+                }
+                
+                // Fade in witnesses
+                for (let w of witnesses) {
+                    w.targetOpacity = 80;
+                }
+                
+                loop();
+                
+                document.getElementById('controls').style.opacity = '1';
+                document.getElementById('hint').style.opacity = '1';
+                document.getElementById('weight-meter').style.opacity = '1';
+                document.getElementById('weight-label').style.opacity = '1';
+                
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        guiltSound.loop();
+                        guiltSound.setVolume(0);
+                        guiltSound.setVolume(0.35, 2);
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('hint').style.opacity = '0';
+                }, 5000);
+                
+            }, 800);
+        }
+        
+        function resetExperience() {
+            totalWeight = 0;
+            weightParticles = [];
+            fallingJudgments = [];
+            glitterParticles = [];
+            interactionCount = 0;
+            isSeekingAmends = false;
+            amendsProgress = 0;
+            
+            // Reset chains
+            chains = [];
+            for (let anchor of chainAnchors) {
+                anchor.linked = false;
+                anchor.tension = 0;
+            }
+            
+            // Reset scissors
+            scissors.targetOpen = true;
+            scissors.opacity = 0;
+            
+            // Reset hand position
+            createHandOutline();
+            
+            updateWeightMeter();
+        }
+        
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && guiltSound && !guiltSound.isPlaying()) {
+                guiltSound.loop();
+                guiltSound.setVolume(0.35, 1);
+            } else if (!soundEnabled && guiltSound && guiltSound.isPlaying()) {
+                guiltSound.setVolume(0, 0.5);
+                setTimeout(() => guiltSound.pause(), 500);
+            }
+        });
+        
+        document.getElementById('reset-button').addEventListener('click', resetExperience);
+        
+        // Track touch/mouse hold for amends seeking
+        let touchStartTime = 0;
+        let isHolding = false;
+        
+        function mousePressed() {
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                touchStartTime = millis();
+                isHolding = true;
+                addWeight(mouseX, mouseY);
+            }
+            return false;
+        }
+        
+        function mouseDragged() {
+            if (isHolding && millis() - touchStartTime > 800) {
+                seekAmends(mouseX, mouseY);
+            }
+            return false;
+        }
+        
+        function mouseReleased() {
+            isHolding = false;
+            isSeekingAmends = false;
+            amendsProgress = 0;
+            return false;
+        }
+        
+        function touchStarted() {
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                if (touches.length > 0) {
+                    touchStartTime = millis();
+                    isHolding = true;
+                    addWeight(touches[0].x, touches[0].y);
+                }
+            }
+            return false;
+        }
+        
+        function touchMoved() {
+            if (isHolding && touches.length > 0 && millis() - touchStartTime > 800) {
+                seekAmends(touches[0].x, touches[0].y);
+            }
+            return false;
+        }
+        
+        function touchEnded() {
+            isHolding = false;
+            isSeekingAmends = false;
+            amendsProgress = 0;
+            return false;
+        }
+        
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            createHandOutline();
+            createJudgmentSymbols();
+            createChainAnchors();
+            createWitnesses();
+            initializeScissors();
+        }
+    </script>
+</body>
+</html>

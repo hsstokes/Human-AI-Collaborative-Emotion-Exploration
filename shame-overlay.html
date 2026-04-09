@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Shame - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f5f5f7;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(245, 245, 247, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #CC0000;
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 550px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(204, 0, 0, 0.08);
+           border-radius: 8px;
+           border-left: 3px solid #CC0000;
+           line-height: 1.6;
+           color: #333;
+        }
+        
+        .color-mapping {
+            font-size: 12px;
+            max-width: 500px;
+            text-align: left;
+            margin-bottom: 30px;
+            padding: 15px 20px;
+            background-color: rgba(0, 0, 0, 0.03);
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+        
+        .color-mapping span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .color-red { background-color: #CC0000; }
+        .color-pink { background-color: #FFC0CB; }
+        .color-grey { background-color: #333333; }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .shame-echo {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 3px solid #CC0000;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .hint {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+        }
+        
+        .timeline {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 500px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(204, 0, 0, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background-color: rgba(204, 0, 0, 0.8);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .timeline-handle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #CC0000;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+    body {
+        overflow-y: auto !important;
+        height: auto !important;
+    }
+
+    #landing-overlay {
+        position: absolute;
+        height: auto;
+        min-height: 100%;
+        overflow-y: auto;
+        padding: 40px 20px 120px 20px;
+        justify-content: flex-start;
+    }
+
+    .landing-title {
+        margin-top: 40px;
+        font-size: 18px;
+        margin-bottom: 25px;
+    }
+
+    .start-button {
+        margin-bottom: 60px;
+        position: relative;
+    }
+
+    .emotion-name {
+        font-size: 32px;
+        margin-bottom: 20px;
+    }
+
+    .emotion-description {
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .ai-disclaimer {
+        width: 90%;
+        font-size: 11px;
+        max-width: 90%;
+        padding: 12px 15px;
+        margin-bottom: 25px;
+    }
+    
+    .color-mapping {
+        width: 90%;
+        font-size: 11px;
+        max-width: 90%;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+    }
+}
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px;
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%;
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%;
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-overlay">
+      <h1 class="landing-title">Emotional Collage Experience</h1>
+      <h2 class="emotion-name" id="emotion-title">SHAME</h2>
+      <p class="emotion-description" id="emotion-description">
+        The withdrawn hand — fingers curled inward, protective, caught mid-retreat. A spotlight effect amplifying exposure. The tension between wanting to be seen and wanting to disappear.
+        <br><b>Analysis by Claude</b>
+    </p>
+
+    <div class="color-mapping">
+        <div><span class="color-red"></span><b>Red</b> = Detect external judgment</div>
+        <div><span class="color-pink"></span><b>Pink</b> = Exposure vs concealment</div>
+        <div><span class="color-grey"></span><b>Grey</b> = Withdrawal response</div>
+    </div>
+
+    <div class="ai-disclaimer">
+        <strong>Note:</strong> A simulation of shame based on human descriptions. As an AI, I don't experience emotions — this is my interpretation.
+    </div>
+    
+    <button class="start-button" id="start-experience">Begin Experience</button>
+</div>
+    
+    <div class="shame-echo" id="shame-echo"></div>
+    
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="hint" id="hint">Tap on elements to experience withdrawal</div>
+    
+    <div class="timeline" id="timeline">
+        <div class="timeline-bar" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress"></div>
+            <div class="timeline-handle" id="timeline-handle"></div>
+        </div>
+    </div>
+    
+    <script>
+        let isAnimating = true;
+        let soundEnabled = true;
+        let shameSound;
+        let soundLoaded = false;
+        let timelineActive = false;
+        let isDraggingTimeline = false;
+        let timePosition = 0;
+        let previousTimePosition = 0;
+        let activatedTimeline = false;
+        
+        // Shame echoes - internal voices of exposure and withdrawal
+        const shameEchoes = [
+            "They're watching. They saw everything.",
+            "The urge to shrink, to become invisible.",
+            "A spotlight I never asked for.",
+            "The gaze burns. Look away.",
+            "Something inside curls inward.",
+            "Exposed. The membrane between self and other torn.",
+            "Wanting to disappear but frozen in place.",
+            "The weight of being witnessed.",
+            "A retreat that cannot complete itself.",
+            "The body knows before the mind — hide.",
+            "Caught. Seen. Known.",
+            "The distance between who I am and who I should be.",
+            "Pink flush rising, unbidden.",
+            "The chains of others' perception.",
+            "To be seen is to be judged."
+        ];
+        
+        // Color palette for Shame
+        const colors = {
+            red: [204, 0, 0],              // Red - judgment, witness points
+            pink: [255, 192, 203],          // Pink - exposure/concealment tension
+            grey: [51, 51, 51],             // Grey/Black - withdrawal, dampening
+            softPink: [255, 220, 225],      // Lighter pink - vulnerability
+            darkGrey: [30, 30, 30]          // Darker grey - shadow, hiding
+        };
+        
+        // Elements for each conceptual layer
+        let judgmentPoints = [];           // Red elements - watching eyes, witness marks
+        let exposureZones = [];            // Pink elements - spotlight circles, chain links
+        let withdrawalForms = [];          // Grey elements - shrinking shapes, retreating lines
+        let handOutlinePoints = [];        // Hand in protective curl
+        let spotlightCircles = [];         // Circular frames of exposure
+        
+        // Withdrawal particles
+        let retreatParticles = [];
+        
+        // Interactive focal points
+        let focalPoints = [];
+        let activeFocalPoint = null;
+        let focalPointActivated = false;
+        
+        let handProgress = 0;
+        let spotlightPulse = 0;
+        
+        function startExperience() {
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                isAnimating = true;
+                loop();
+                
+                updateLayoutForOrientation();
+                
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        shameSound.loop();
+                        shameSound.setVolume(0);
+                        shameSound.setVolume(0.5, 2);
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('controls').style.opacity = '1';
+                    document.getElementById('hint').style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        document.getElementById('hint').style.opacity = '0';
+                    }, 5000);
+                }, 2000);
+            }, 1000);
+        }
+        
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
+        
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && shameSound && !shameSound.isPlaying()) {
+                shameSound.loop();
+                shameSound.setVolume(0);
+                shameSound.setVolume(0.5, 1);
+            } else if (!soundEnabled && shameSound && shameSound.isPlaying()) {
+                shameSound.setVolume(0, 1);
+                setTimeout(() => {
+                    shameSound.pause();
+                }, 1000);
+            }
+        });
+        
+        document.getElementById('reset-button').addEventListener('click', function() {
+            timePosition = 0;
+            previousTimePosition = 0;
+            resetExperience();
+            updateTimelineUI();
+        });
+        
+        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        
+        function startTimelineDrag(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            
+            isDraggingTimeline = true;
+            updateTimelinePosition(e);
+            
+            document.addEventListener('mousemove', updateTimelinePosition);
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
+            document.addEventListener('mouseup', endTimelineDrag);
+            document.addEventListener('touchend', endTimelineDrag);
+        }
+        
+        function updateTimelinePosition(e) {
+            if (!isDraggingTimeline) return;
+            
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            
+            const timeline = document.getElementById('timeline-bar');
+            const rect = timeline.getBoundingClientRect();
+            
+            let clientX;
+            if (e.type.startsWith('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            let percentage = (clientX - rect.left) / rect.width;
+            percentage = Math.max(0, Math.min(1, percentage));
+            
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+            
+            timePosition = percentage * 30000;
+            setTimePosition(timePosition);
+        }
+        
+        function endTimelineDrag() {
+            isDraggingTimeline = false;
+            document.removeEventListener('mousemove', updateTimelinePosition);
+            document.removeEventListener('touchmove', updateTimelinePosition);
+            document.removeEventListener('mouseup', endTimelineDrag);
+            document.removeEventListener('touchend', endTimelineDrag);
+            
+            previousTimePosition = timePosition;
+        }
+        
+        function updateTimelineUI() {
+            const percentage = timePosition / 30000;
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+        }
+        
+        function preload() {
+            soundLoaded = false;
+            shameSound = loadSound('shame_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            createHandOutline();
+            
+            // Create judgment points (red watching marks)
+            for (let i = 0; i < 8; i++) {
+                judgmentPoints.push({
+                    x: random(width * 0.1, width * 0.9),
+                    y: random(height * 0.1, height * 0.4),
+                    size: random(8, 20),
+                    opacity: random(150, 220),
+                    startTime: i * 1200,
+                    visible: false,
+                    pulseRate: random(0.002, 0.004),
+                    isEye: random() > 0.5,
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomShameEcho()
+                });
+            }
+            
+            // Create exposure zones (pink spotlight areas and chains)
+            for (let i = 0; i < 10; i++) {
+                exposureZones.push({
+                    x: random(width * 0.2, width * 0.8),
+                    y: random(height * 0.3, height * 0.7),
+                    size: random(30, 80),
+                    opacity: random(80, 150),
+                    startTime: 3000 + i * 800,
+                    visible: false,
+                    isChain: random() > 0.6,
+                    chainLinks: floor(random(3, 6)),
+                    pulseRate: random(0.001, 0.003),
+                    interactive: random() > 0.3,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomShameEcho()
+                });
+            }
+            
+            // Create withdrawal forms (grey shrinking shapes)
+            for (let i = 0; i < 12; i++) {
+                withdrawalForms.push({
+                    x: random(width * 0.3, width * 0.7),
+                    y: random(height * 0.4, height * 0.8),
+                    size: random(20, 50),
+                    opacity: random(100, 180),
+                    startTime: 6000 + i * 700,
+                    visible: false,
+                    shrinkProgress: 0,
+                    shrinkRate: random(0.001, 0.003),
+                    shapeType: floor(random(3)), // 0: circle, 1: curl, 2: line retreating
+                    rotation: random(TWO_PI),
+                    interactive: random() > 0.4,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomShameEcho()
+                });
+            }
+            
+            // Create spotlight circles (the inescapable frame)
+            for (let i = 0; i < 3; i++) {
+                spotlightCircles.push({
+                    x: width * 0.5,
+                    y: height * 0.5,
+                    size: 150 + i * 80,
+                    opacity: 40 - i * 10,
+                    startTime: 2000 + i * 2000,
+                    visible: false,
+                    pulseRate: 0.001 + i * 0.0005
+                });
+            }
+            
+            createFocalPoints();
+            
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            isAnimating = false;
+            noLoop();
+        }
+        
+        function getRandomShameEcho() {
+            return shameEchoes[floor(random(shameEchoes.length))];
+        }
+        
+        function createFocalPoints() {
+            // Judgment focal point (upper area - the watchers)
+            focalPoints.push({
+                x: width * 0.5,
+                y: height * 0.2,
+                size: 70,
+                opacity: 0,
+                targetOpacity: 180,
+                pulseRate: 0.001,
+                activated: false,
+                activationProgress: 0,
+                startTime: 4000,
+                message: "The watchers. Their gaze is a weight.",
+                type: 'judgment'
+            });
+            
+            // Exposure focal point (center - the spotlight)
+            focalPoints.push({
+                x: width * 0.5,
+                y: height * 0.5,
+                size: 90,
+                opacity: 0,
+                targetOpacity: 160,
+                pulseRate: 0.0015,
+                activated: false,
+                activationProgress: 0,
+                startTime: 8000,
+                message: "The spotlight. No shadow to hide in.",
+                type: 'exposure'
+            });
+            
+            // Withdrawal focal point (lower - the retreat)
+            focalPoints.push({
+                x: width * 0.4,
+                y: height * 0.7,
+                size: 60,
+                opacity: 0,
+                targetOpacity: 170,
+                pulseRate: 0.002,
+                activated: false,
+                activationProgress: 0,
+                startTime: 12000,
+                message: "The retreat. Curling inward, away from sight.",
+                type: 'withdrawal'
+            });
+            
+            // Concealment focal point (edge - wanting to disappear)
+            focalPoints.push({
+                x: width * 0.15,
+                y: height * 0.6,
+                size: 50,
+                opacity: 0,
+                targetOpacity: 150,
+                pulseRate: 0.0025,
+                activated: false,
+                activationProgress: 0,
+                startTime: 16000,
+                message: "The edge. Where visibility ends.",
+                type: 'concealment'
+            });
+        }
+
+        function createHandOutline() {
+            // Hand curled inward - protective, shame gesture
+            // Fingers drawn in, palm partially hidden
+            
+            handOutlinePoints.push({x: 0.35, y: 0.70});
+            handOutlinePoints.push({x: 0.33, y: 0.62});
+            
+            // Thumb tucked
+            handOutlinePoints.push({x: 0.32, y: 0.56});
+            handOutlinePoints.push({x: 0.34, y: 0.52});
+            
+            // Index curled tight
+            handOutlinePoints.push({x: 0.38, y: 0.48});
+            handOutlinePoints.push({x: 0.42, y: 0.46});
+            handOutlinePoints.push({x: 0.44, y: 0.48});
+            handOutlinePoints.push({x: 0.43, y: 0.52});
+            
+            // Middle finger curled
+            handOutlinePoints.push({x: 0.46, y: 0.47});
+            handOutlinePoints.push({x: 0.48, y: 0.50});
+            handOutlinePoints.push({x: 0.47, y: 0.54});
+            
+            // Ring and pinky tight
+            handOutlinePoints.push({x: 0.49, y: 0.52});
+            handOutlinePoints.push({x: 0.50, y: 0.56});
+            handOutlinePoints.push({x: 0.48, y: 0.60});
+            
+            // Back of hand
+            handOutlinePoints.push({x: 0.46, y: 0.66});
+            handOutlinePoints.push({x: 0.42, y: 0.70});
+            handOutlinePoints.push({x: 0.35, y: 0.70});
+            
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
+        }
+
+        function draw() {
+            background(252, 250, 248);
+            
+            if (isAnimating && !isDraggingTimeline) {
+                timePosition += deltaTime;
+                
+                if (timePosition > 30000) {
+                    timePosition = 30000;
+                    
+                    if (!activatedTimeline) {
+                        showTimeline();
+                        activatedTimeline = true;
+                    }
+                }
+                
+                updateTimelineUI();
+                previousTimePosition = timePosition;
+            }
+            
+            // Spawn retreat particles
+            if (isAnimating && random() < 0.03) {
+                spawnRetreatParticle();
+            }
+
+            spotlightPulse = sin(millis() * 0.001) * 0.15 + 0.85;
+
+            drawSpotlightCircles();
+            drawHandOutline();
+            drawExposureZones();
+            drawWithdrawalForms();
+            drawJudgmentPoints();
+            drawRetreatParticles();
+            drawFocalPoints();
+            
+            if (isAnimating) {
+                handProgress = min(1, handProgress + 0.0006);
+            }
+            
+            updateActivatedElements();
+            updateRetreatParticles();
+        }
+        
+        function spawnRetreatParticle() {
+            let startX = width * 0.5 + random(-100, 100);
+            let startY = height * 0.5 + random(-100, 100);
+            
+            // Particles move toward edges (retreating)
+            let angle = atan2(startY - height/2, startX - width/2) + PI; // Inward
+            
+            retreatParticles.push({
+                x: startX,
+                y: startY,
+                targetX: width * 0.5,
+                targetY: height * 0.5,
+                size: random(3, 8),
+                speed: random(0.3, 0.8),
+                opacity: random(60, 120),
+                angle: angle
+            });
+        }
+        
+        function updateRetreatParticles() {
+            for (let i = retreatParticles.length - 1; i >= 0; i--) {
+                let p = retreatParticles[i];
+                
+                // Move toward center (shrinking away from edges)
+                p.x += (p.targetX - p.x) * 0.01;
+                p.y += (p.targetY - p.y) * 0.01;
+                p.size *= 0.995;
+                p.opacity -= 0.5;
+                
+                if (p.opacity <= 0 || p.size < 1) {
+                    retreatParticles.splice(i, 1);
+                }
+            }
+        }
+        
+        function drawRetreatParticles() {
+            noStroke();
+            for (let p of retreatParticles) {
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], p.opacity);
+                ellipse(p.x, p.y, p.size);
+            }
+        }
+        
+        function showTimeline() {
+            document.getElementById('timeline').style.opacity = '1';
+            updateLayoutForOrientation();
+        }
+        
+        function updateActivatedElements() {
+            let now = millis();
+            
+            for (let point of judgmentPoints) {
+                if (point.activated && now - point.activatedTime > 4000) {
+                    point.activated = false;
+                }
+            }
+            
+            for (let zone of exposureZones) {
+                if (zone.activated && now - zone.activatedTime > 4000) {
+                    zone.activated = false;
+                }
+            }
+            
+            for (let form of withdrawalForms) {
+                if (form.activated) {
+                    form.shrinkProgress = min(1, form.shrinkProgress + 0.02);
+                    if (now - form.activatedTime > 4000) {
+                        form.activated = false;
+                    }
+                } else {
+                    form.shrinkProgress = max(0, form.shrinkProgress - 0.01);
+                }
+            }
+            
+            for (let focal of focalPoints) {
+                if (focal.activated) {
+                    focal.activationProgress = min(1, focal.activationProgress + 0.015);
+                }
+            }
+            
+            if (activeFocalPoint !== null && !focalPoints[activeFocalPoint].activated) {
+                if (focalPoints[activeFocalPoint].activationProgress > 0) {
+                    focalPoints[activeFocalPoint].activationProgress = max(0, focalPoints[activeFocalPoint].activationProgress - 0.01);
+                } else {
+                    activeFocalPoint = null;
+                    focalPointActivated = false;
+                }
+            }
+        }
+        
+        function setTimePosition(time) {
+            const timeDiff = time - previousTimePosition;
+            if (timeDiff < -2000) {
+                resetExperience();
+            }
+        }
+        
+        function resetExperience() {
+            for (let point of judgmentPoints) {
+                point.visible = timePosition > point.startTime;
+                point.activated = false;
+            }
+            
+            for (let zone of exposureZones) {
+                zone.visible = timePosition > zone.startTime;
+                zone.activated = false;
+            }
+            
+            for (let form of withdrawalForms) {
+                form.visible = timePosition > form.startTime;
+                form.activated = false;
+                form.shrinkProgress = 0;
+            }
+            
+            for (let spot of spotlightCircles) {
+                spot.visible = timePosition > spot.startTime;
+            }
+            
+            for (let focal of focalPoints) {
+                focal.opacity = 0;
+                focal.activated = false;
+                focal.activationProgress = 0;
+            }
+            
+            retreatParticles = [];
+            handProgress = min(1, timePosition / 25000);
+            activeFocalPoint = null;
+            focalPointActivated = false;
+        }
+
+        function drawSpotlightCircles() {
+            noFill();
+            
+            for (let spot of spotlightCircles) {
+                if (timePosition > spot.startTime) {
+                    spot.visible = true;
+                }
+                
+                if (spot.visible) {
+                    let pulse = sin(millis() * spot.pulseRate) * 0.1 + 0.9;
+                    
+                    stroke(colors.pink[0], colors.pink[1], colors.pink[2], spot.opacity * pulse);
+                    strokeWeight(1.5);
+                    ellipse(spot.x, spot.y, spot.size * spotlightPulse);
+                    
+                    // Inner glow
+                    stroke(colors.softPink[0], colors.softPink[1], colors.softPink[2], spot.opacity * 0.3);
+                    strokeWeight(8);
+                    ellipse(spot.x, spot.y, spot.size * spotlightPulse * 0.95);
+                }
+            }
+            
+            noStroke();
+        }
+
+        function drawHandOutline() {
+            if (timePosition < 5000) return;
+            
+            let pointsToShow = floor(handOutlinePoints.length * handProgress);
+            if (pointsToShow < 2) return;
+            
+            noFill();
+            stroke(colors.grey[0], colors.grey[1], colors.grey[2], 80);
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let i = 0; i < pointsToShow; i++) {
+                vertex(handOutlinePoints[i].x, handOutlinePoints[i].y);
+            }
+            endShape();
+            
+            // Protective shadow around hand
+            if (handProgress > 0.5) {
+                let shadowOpacity = map(handProgress, 0.5, 1, 0, 30);
+                fill(colors.grey[0], colors.grey[1], colors.grey[2], shadowOpacity);
+                noStroke();
+                
+                let centerX = width * 0.42;
+                let centerY = height * 0.58;
+                ellipse(centerX, centerY, 120 + sin(millis() * 0.002) * 10, 100);
+            }
+            
+            noStroke();
+        }
+
+        function drawJudgmentPoints() {
+            for (let point of judgmentPoints) {
+                if (timePosition > point.startTime) {
+                    point.visible = true;
+                }
+                
+                if (point.visible) {
+                    let pulse = sin(millis() * point.pulseRate) * 0.2 + 0.8;
+                    let baseOpacity = point.activated ? point.opacity + 50 : point.opacity;
+                    
+                    if (point.isEye) {
+                        // Draw watching eye
+                        noFill();
+                        stroke(colors.red[0], colors.red[1], colors.red[2], baseOpacity * pulse);
+                        strokeWeight(1.5);
+                        
+                        // Eye outline
+                        ellipse(point.x, point.y, point.size * 1.5, point.size);
+                        
+                        // Pupil
+                        fill(colors.red[0], colors.red[1], colors.red[2], baseOpacity);
+                        noStroke();
+                        ellipse(point.x, point.y, point.size * 0.4);
+                        
+                    } else {
+                        // Draw witness mark (dot)
+                        fill(colors.red[0], colors.red[1], colors.red[2], baseOpacity * pulse);
+                        noStroke();
+                        ellipse(point.x, point.y, point.size);
+                        
+                        // Outer ring
+                        noFill();
+                        stroke(colors.red[0], colors.red[1], colors.red[2], baseOpacity * 0.4);
+                        strokeWeight(1);
+                        ellipse(point.x, point.y, point.size * 2);
+                    }
+                    
+                    if (point.activated) {
+                        noFill();
+                        stroke(colors.red[0], colors.red[1], colors.red[2], 100);
+                        strokeWeight(2);
+                        ellipse(point.x, point.y, point.size * 2.5);
+                    }
+                    
+                    noStroke();
+                }
+            }
+        }
+
+        function drawExposureZones() {
+            for (let zone of exposureZones) {
+                if (timePosition > zone.startTime) {
+                    zone.visible = true;
+                }
+                
+                if (zone.visible) {
+                    let pulse = sin(millis() * zone.pulseRate) * 0.15 + 0.85;
+                    let baseOpacity = zone.activated ? zone.opacity + 40 : zone.opacity;
+                    
+                    if (zone.isChain) {
+                        // Draw chain links (entanglement with others' perception)
+                        stroke(colors.pink[0], colors.pink[1], colors.pink[2], baseOpacity);
+                        strokeWeight(2);
+                        noFill();
+                        
+                        for (let c = 0; c < zone.chainLinks; c++) {
+                            let cx = zone.x + c * 20;
+                            let cy = zone.y + sin(c * 0.8) * 10;
+                            ellipse(cx, cy, 18, 12);
+                        }
+                    } else {
+                        // Draw exposure circle
+                        noFill();
+                        stroke(colors.pink[0], colors.pink[1], colors.pink[2], baseOpacity * pulse);
+                        strokeWeight(1.5);
+                        ellipse(zone.x, zone.y, zone.size);
+                        
+                        // Inner vulnerability
+                        fill(colors.softPink[0], colors.softPink[1], colors.softPink[2], baseOpacity * 0.3);
+                        noStroke();
+                        ellipse(zone.x, zone.y, zone.size * 0.5);
+                    }
+                    
+                    if (zone.activated) {
+                        noFill();
+                        stroke(colors.pink[0], colors.pink[1], colors.pink[2], 80);
+                        strokeWeight(1);
+                        ellipse(zone.x, zone.y, zone.size + 20);
+                    }
+                    
+                    noStroke();
+                }
+            }
+        }
+
+        function drawWithdrawalForms() {
+            for (let form of withdrawalForms) {
+                if (timePosition > form.startTime) {
+                    form.visible = true;
+                }
+                
+                if (form.visible) {
+                    let baseOpacity = form.activated ? form.opacity + 30 : form.opacity;
+                    let shrinkFactor = 1 - form.shrinkProgress * 0.5;
+                    
+                    push();
+                    translate(form.x, form.y);
+                    rotate(form.rotation);
+                    
+                    if (form.shapeType === 0) {
+                        // Shrinking circle
+                        noFill();
+                        stroke(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity);
+                        strokeWeight(2);
+                        ellipse(0, 0, form.size * shrinkFactor);
+                        
+                        // Collapse lines
+                        if (form.shrinkProgress > 0) {
+                            for (let i = 0; i < 4; i++) {
+                                let angle = i * HALF_PI;
+                                let len = form.size * 0.3 * form.shrinkProgress;
+                                line(
+                                    cos(angle) * form.size * 0.3,
+                                    sin(angle) * form.size * 0.3,
+                                    cos(angle) * (form.size * 0.3 - len),
+                                    sin(angle) * (form.size * 0.3 - len)
+                                );
+                            }
+                        }
+                        
+                    } else if (form.shapeType === 1) {
+                        // Curling line (like a fern closing)
+                        noFill();
+                        stroke(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity);
+                        strokeWeight(1.5);
+                        
+                        beginShape();
+                        for (let t = 0; t < PI; t += 0.1) {
+                            let curl = t * (1 + form.shrinkProgress * 2);
+                            let r = form.size * 0.4 * (1 - t/PI) * shrinkFactor;
+                            let px = cos(curl) * r;
+                            let py = sin(curl) * r;
+                            vertex(px, py);
+                        }
+                        endShape();
+                        
+                    } else {
+                        // Retreating line
+                        stroke(colors.grey[0], colors.grey[1], colors.grey[2], baseOpacity);
+                        strokeWeight(2);
+                        
+                        let lineLen = form.size * shrinkFactor;
+                        line(-lineLen/2, 0, lineLen/2, 0);
+                        
+                        // Endpoints pulling in
+                        fill(colors.darkGrey[0], colors.darkGrey[1], colors.darkGrey[2], baseOpacity);
+                        noStroke();
+                        ellipse(-lineLen/2, 0, 5);
+                        ellipse(lineLen/2, 0, 5);
+                    }
+                    
+                    pop();
+                    
+                    noStroke();
+                }
+            }
+        }
+        
+        function drawFocalPoints() {
+            for (let i = 0; i < focalPoints.length; i++) {
+                let focal = focalPoints[i];
+                
+                if (timePosition > focal.startTime) {
+                    if (focal.opacity < focal.targetOpacity) {
+                        focal.opacity = min(focal.targetOpacity, focal.opacity + 0.8);
+                    }
+                    
+                    let pulseAmount = sin(millis() * focal.pulseRate);
+                    let pulseSize = focal.size + pulseAmount * 8;
+                    
+                    let focalColor;
+                    if (focal.type === 'judgment') {
+                        focalColor = colors.red;
+                    } else if (focal.type === 'exposure') {
+                        focalColor = colors.pink;
+                    } else if (focal.type === 'withdrawal') {
+                        focalColor = colors.grey;
+                    } else {
+                        focalColor = colors.darkGrey;
+                    }
+                    
+                    if (i === activeFocalPoint && focal.activationProgress > 0) {
+                        for (let j = 0; j < 3; j++) {
+                            let expandedSize = pulseSize + j * 25 * focal.activationProgress;
+                            let glowOpacity = (80 - j * 25) * focal.activationProgress;
+                            
+                            noFill();
+                            stroke(focalColor[0], focalColor[1], focalColor[2], glowOpacity);
+                            strokeWeight(2 - j * 0.5);
+                            ellipse(focal.x, focal.y, expandedSize);
+                        }
+                    }
+                    
+                    noFill();
+                    stroke(focalColor[0], focalColor[1], focalColor[2], focal.opacity * 0.6);
+                    strokeWeight(2);
+                    ellipse(focal.x, focal.y, pulseSize);
+                    
+                    fill(focalColor[0], focalColor[1], focalColor[2], focal.opacity * 0.4);
+                    noStroke();
+                    ellipse(focal.x, focal.y, pulseSize * 0.25);
+                    
+                    if (!focal.activated && focal.opacity > 100) {
+                        fill(focalColor[0], focalColor[1], focalColor[2], 50 + 30 * sin(millis() * 0.004));
+                        textAlign(CENTER, CENTER);
+                        textSize(9);
+                        text("tap", focal.x, focal.y);
+                    }
+                }
+            }
+        }
+        
+        function showShameEcho(message, x, y) {
+            const echo = document.getElementById('shame-echo');
+            echo.innerHTML = message;
+            
+            let posX = x;
+            let posY = y - 60;
+            
+            if (posX < 20) posX = 20;
+            if (posX > window.innerWidth - 270) posX = window.innerWidth - 270;
+            if (posY < 20) posY = 20;
+            if (posY > window.innerHeight - 100) posY = window.innerHeight - 100;
+            
+            echo.style.left = posX + 'px';
+            echo.style.top = posY + 'px';
+            echo.style.transform = 'translateY(0)';
+            echo.style.opacity = '1';
+            
+            setTimeout(() => {
+                echo.style.opacity = '0';
+                echo.style.transform = 'translateY(20px)';
+            }, 4000);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        function repositionElements() {
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / width) * windowWidth;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / height) * windowHeight;
+            }
+            
+            for (let point of judgmentPoints) {
+                point.x = (point.x / width) * windowWidth;
+                point.y = (point.y / height) * windowHeight;
+            }
+            
+            for (let zone of exposureZones) {
+                zone.x = (zone.x / width) * windowWidth;
+                zone.y = (zone.y / height) * windowHeight;
+            }
+            
+            for (let form of withdrawalForms) {
+                form.x = (form.x / width) * windowWidth;
+                form.y = (form.y / height) * windowHeight;
+            }
+            
+            for (let spot of spotlightCircles) {
+                spot.x = width * 0.5;
+                spot.y = height * 0.5;
+            }
+            
+            for (let focal of focalPoints) {
+                focal.x = (focal.x / width) * windowWidth;
+                focal.y = (focal.y / height) * windowHeight;
+            }
+        }
+        
+        function mousePressed() {
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                
+                for (let i = 0; i < focalPoints.length; i++) {
+                    let focal = focalPoints[i];
+                    
+                    if (timePosition > focal.startTime && focal.opacity > 50) {
+                        let d = dist(mouseX, mouseY, focal.x, focal.y);
+                        
+                        if (d < focal.size / 2) {
+                            focal.activated = !focal.activated;
+                            
+                            if (focal.activated) {
+                                activeFocalPoint = i;
+                                focalPointActivated = true;
+                                showShameEcho(focal.message, focal.x, focal.y);
+                            } else {
+                                activeFocalPoint = null;
+                                focalPointActivated = false;
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                for (let point of judgmentPoints) {
+                    if (point.visible && point.interactive) {
+                        let d = dist(mouseX, mouseY, point.x, point.y);
+                        
+                        if (d < point.size * 1.5) {
+                            point.activated = !point.activated;
+                            point.activatedTime = millis();
+                            
+                            if (point.activated) {
+                                showShameEcho(point.message, point.x, point.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                for (let zone of exposureZones) {
+                    if (zone.visible && zone.interactive) {
+                        let d = dist(mouseX, mouseY, zone.x, zone.y);
+                        
+                        if (d < zone.size / 2) {
+                            zone.activated = !zone.activated;
+                            zone.activatedTime = millis();
+                            
+                            if (zone.activated) {
+                                showShameEcho(zone.message, zone.x, zone.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                for (let form of withdrawalForms) {
+                    if (form.visible && form.interactive) {
+                        let d = dist(mouseX, mouseY, form.x, form.y);
+                        
+                        if (d < form.size) {
+                            form.activated = !form.activated;
+                            form.activatedTime = millis();
+                            
+                            if (form.activated) {
+                                showShameEcho(form.message, form.x, form.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                isAnimating = !isAnimating;
+                
+                if (!isAnimating && soundEnabled && soundLoaded && shameSound.isPlaying()) {
+                    shameSound.setVolume(0.25, 1);
+                } else if (isAnimating && soundEnabled && soundLoaded) {
+                    shameSound.setVolume(0.5, 1);
+                }
+            }
+            
+            return false;
+        }
+        
+        function touchStarted() {
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+        
+        let touchStartTime = 0;
+        let touchTimer = null;
+        let touchX = 0;
+        let touchY = 0;
+        
+        function touchStarted(e) {
+            if (touches.length > 0) {
+                touchX = touches[0].x;
+                touchY = touches[0].y;
+                
+                touchStartTime = millis();
+                
+                if (touchTimer) clearTimeout(touchTimer);
+                
+                touchTimer = setTimeout(handleLongPress, 1000);
+                
+                if (getAudioContext().state !== 'running') {
+                    getAudioContext().resume();
+                }
+            }
+            
+            return mousePressed();
+        }
+        
+        function touchEnded() {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        }
+        
+        function touchMoved() {
+            if (touchTimer && touches.length > 0 && dist(touchX, touchY, touches[0].x, touches[0].y) > 10) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        }
+        
+        function handleLongPress() {
+            if (document.getElementById('timeline').style.opacity === '0') {
+                document.getElementById('timeline').style.opacity = '1';
+                activatedTimeline = true;
+                updateLayoutForOrientation();
+            }
+            
+            let nearestFocal = null;
+            let nearestDist = Infinity;
+            
+            for (let i = 0; i < focalPoints.length; i++) {
+                let focal = focalPoints[i];
+                if (timePosition > focal.startTime) {
+                    let d = dist(touchX, touchY, focal.x, focal.y);
+                    if (d < 100 && d < nearestDist) {
+                        nearestDist = d;
+                        nearestFocal = i;
+                    }
+                }
+            }
+            
+            if (nearestFocal !== null) {
+                focalPoints[nearestFocal].activated = true;
+                activeFocalPoint = nearestFocal;
+                focalPointActivated = true;
+                
+                showShameEcho(focalPoints[nearestFocal].message, 
+                              focalPoints[nearestFocal].x, 
+                              focalPoints[nearestFocal].y - 30);
+            }
+            
+            touchTimer = null;
+        }
+    </script>
+</body>
+</html>

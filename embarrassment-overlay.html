@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Embarrassment - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #FAF8F5;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+            touch-action: none;
+        }
+        
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(250, 248, 245, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            box-sizing: border-box;
+            padding: 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .landing-title {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .emotion-name {
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #B87333, #FF8C00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .emotion-description {
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.85;
+            color: #333;
+        }
+
+        .ai-disclaimer {
+           font-size: 13px;
+           max-width: 550px;
+           text-align: center;
+           margin-bottom: 40px;
+           margin-top: 10px;
+           padding: 15px 20px;
+           background-color: rgba(184, 115, 51, 0.1);
+           border-radius: 8px;
+           border-left: 3px solid #B87333;
+           line-height: 1.6;
+           color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: #1A1A1A;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .start-button:hover {
+            background-color: #B87333;
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .witness-echo {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.92);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 3px solid #B87333;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .control-button:hover {
+            background-color: rgba(184, 115, 51, 0.2);
+        }
+        
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .hint {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            color: #555;
+        }
+        
+        .timeline {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 500px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .timeline-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(184, 115, 51, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #B87333, #FF8C00);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .timeline-handle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #B87333;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        
+        .phase-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.8s;
+            z-index: 50;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important;
+                height: auto !important;
+            }
+        
+            #landing-overlay {
+                position: absolute;
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto;
+                padding: 40px 20px 120px 20px;
+                justify-content: flex-start;
+            }
+        
+            .landing-title {
+                margin-top: 40px;
+            }
+        
+            .start-button {
+                margin-bottom: 60px;
+                position: relative;
+            }
+        
+            .emotion-name {
+                font-size: 38px;
+            }
+        
+            .ai-disclaimer {
+                width: 90%;
+                font-size: 12px;
+                max-width: 90%;
+            }
+        }
+        
+        @media screen and (orientation: portrait) {
+            .controls {
+                bottom: 70px;
+                right: 15px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 80%;
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .controls {
+                bottom: 15px;
+                right: 100px;
+            }
+            
+            .timeline {
+                bottom: 20px;
+                width: 60%;
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-overlay">
+        <h1 class="landing-title">Emotional Collage Experience</h1>
+        <h2 class="emotion-name" id="emotion-title">EMBARRASSMENT</h2>
+        <p class="emotion-description" id="emotion-description">
+            A reflection on being seen in an unwanted state—the flush rising to skin, the convergence of attention, the transient heat of social exposure. Unlike shame which engulfs, embarrassment passes. The body betrays, the audience witnesses, and then... composure returns.
+            <br><b>Analysis by Claude</b>
+        </p>
+
+        <div class="ai-disclaimer">
+            <strong>Note:</strong> This is a simulation of embarrassment based on my analysis of human descriptions. As an AI, I don't experience emotions or feelings—this is my interpretation of the witnessed concealment, the flush that rises and recedes.
+        </div>
+        
+        <button class="start-button" id="start-experience">Begin Experience</button>
+    </div>
+    
+    <div class="witness-echo" id="witness-echo"></div>
+    
+    <div class="phase-indicator" id="phase-indicator">The Flush</div>
+    
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="hint" id="hint">Tap to intensify the moment</div>
+    
+    <div class="timeline" id="timeline">
+        <div class="timeline-bar" id="timeline-bar">
+            <div class="timeline-progress" id="timeline-progress"></div>
+            <div class="timeline-handle" id="timeline-handle"></div>
+        </div>
+    </div>
+    
+    <script>
+        let isAnimating = true;
+        let soundEnabled = true;
+        let embarrassmentSound;
+        let soundLoaded = false;
+        let timelineActive = false;
+        let isDraggingTimeline = false;
+        let timePosition = 0;
+        let previousTimePosition = 0;
+        let activatedTimeline = false;
+        
+        // Witness echoes - internal monologue of embarrassment
+        const witnessEchoes = [
+            "Everyone is looking.",
+            "The heat rises before thought arrives.",
+            "You cannot hide what the body reveals.",
+            "This moment stretches into eternity.",
+            "The witnesses remember what you wish to forget.",
+            "A stumble in the performance of self.",
+            "The chain links you to this moment.",
+            "Flush. Burn. Pass.",
+            "They saw. They know.",
+            "The audience you cannot escape.",
+            "Soon this will be over. Soon.",
+            "The body's confession.",
+            "Composure is just around the corner.",
+            "Everyone has been here. Everyone.",
+            "This too shall pass—embarrassment always does."
+        ];
+        
+        // Color palette for Embarrassment
+        const colors = {
+            copper: [184, 115, 51],      // Copper - flush response, heat rising
+            black: [26, 26, 26],          // Black - social rupture, binding witnesses
+            orange: [255, 140, 0]         // Orange - recovery trajectory, warmth resolving
+        };
+        
+        // Elements for each conceptual layer
+        let flushPulses = [];           // Copper - pulsing heat circles
+        let witnessChains = [];         // Black - chain links, X marks, observer presence
+        let recoveryFlows = [];         // Orange - directional flows, arrows shifting outward
+        let attentionArrows = [];       // Arrows converging then dispersing
+        
+        // Hand outline (covering face gesture)
+        let handOutlinePoints = [];
+        let handProgress = 0;
+        let handOpacity = 0;
+        
+        // Heartbeat visualization
+        let heartbeatPhase = 0;
+        let heartbeatRate = 0.08;       // Starts fast, slows down
+        let heartbeatIntensity = 1;
+        
+        // Phase tracking (0-1 representing journey through embarrassment)
+        let emotionalPhase = 0;         // 0: onset, 0.33: peak, 0.66: recovery, 1: composure
+        
+        // Interactive focal points
+        let focalPoints = [];
+        let activeFocalPoint = null;
+        let focalPointActivated = false;
+        
+        // Click intensification
+        let intensificationLevel = 0;
+        let lastIntensificationTime = 0;
+        
+        function startExperience() {
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                
+                isAnimating = true;
+                loop();
+                
+                updateLayoutForOrientation();
+                
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        embarrassmentSound.loop();
+                        embarrassmentSound.setVolume(0);
+                        embarrassmentSound.setVolume(0.5, 2);
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('controls').style.opacity = '1';
+                    document.getElementById('hint').style.opacity = '1';
+                    document.getElementById('phase-indicator').style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        document.getElementById('hint').style.opacity = '0';
+                    }, 5000);
+                }, 2000);
+            }, 1000);
+        }
+        
+        function updateLayoutForOrientation() {
+            const controls = document.getElementById('controls');
+            const timeline = document.getElementById('timeline');
+            
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                controls.style.bottom = "70px";
+                controls.style.right = "15px";
+                timeline.style.width = "80%";
+            } else {
+                controls.style.bottom = "15px";
+                controls.style.right = "100px"; 
+                timeline.style.width = "60%";
+            }
+        }
+        
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                resizeCanvas(windowWidth, windowHeight);
+                repositionElements();
+                updateLayoutForOrientation();
+            }, 100);
+        });
+        
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && embarrassmentSound && !embarrassmentSound.isPlaying()) {
+                embarrassmentSound.loop();
+                embarrassmentSound.setVolume(0);
+                embarrassmentSound.setVolume(0.5, 1);
+            } else if (!soundEnabled && embarrassmentSound && embarrassmentSound.isPlaying()) {
+                embarrassmentSound.setVolume(0, 1);
+                setTimeout(() => {
+                    embarrassmentSound.pause();
+                }, 1000);
+            }
+        });
+        
+        document.getElementById('reset-button').addEventListener('click', function() {
+            timePosition = 0;
+            previousTimePosition = 0;
+            emotionalPhase = 0;
+            intensificationLevel = 0;
+            heartbeatRate = 0.08;
+            heartbeatIntensity = 1;
+            resetExperience();
+            updateTimelineUI();
+        });
+        
+        document.getElementById('timeline-bar').addEventListener('mousedown', startTimelineDrag);
+        document.getElementById('timeline-bar').addEventListener('touchstart', startTimelineDrag);
+        
+        function startTimelineDrag(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            
+            isDraggingTimeline = true;
+            updateTimelinePosition(e);
+            
+            document.addEventListener('mousemove', updateTimelinePosition);
+            document.addEventListener('touchmove', updateTimelinePosition, { passive: false });
+            document.addEventListener('mouseup', endTimelineDrag);
+            document.addEventListener('touchend', endTimelineDrag);
+        }
+        
+        function updateTimelinePosition(e) {
+            if (!isDraggingTimeline) return;
+            
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            
+            const timeline = document.getElementById('timeline-bar');
+            const rect = timeline.getBoundingClientRect();
+            
+            let clientX;
+            if (e.type.startsWith('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            let percentage = (clientX - rect.left) / rect.width;
+            percentage = Math.max(0, Math.min(1, percentage));
+            
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+            
+            timePosition = percentage * 30000;
+            emotionalPhase = percentage;
+            setTimePosition(timePosition);
+        }
+        
+        function endTimelineDrag() {
+            isDraggingTimeline = false;
+            document.removeEventListener('mousemove', updateTimelinePosition);
+            document.removeEventListener('touchmove', updateTimelinePosition);
+            document.removeEventListener('mouseup', endTimelineDrag);
+            document.removeEventListener('touchend', endTimelineDrag);
+            
+            previousTimePosition = timePosition;
+        }
+        
+        function updateTimelineUI() {
+            const percentage = timePosition / 30000;
+            document.getElementById('timeline-progress').style.width = `${percentage * 100}%`;
+            document.getElementById('timeline-handle').style.left = `${percentage * 100}%`;
+        }
+        
+        function updatePhaseIndicator() {
+            const indicator = document.getElementById('phase-indicator');
+            
+            if (emotionalPhase < 0.25) {
+                indicator.textContent = "The Flush Rising";
+                indicator.style.color = `rgb(${colors.copper[0]}, ${colors.copper[1]}, ${colors.copper[2]})`;
+            } else if (emotionalPhase < 0.5) {
+                indicator.textContent = "Peak Exposure";
+                indicator.style.color = `rgb(${colors.black[0]}, ${colors.black[1]}, ${colors.black[2]})`;
+            } else if (emotionalPhase < 0.75) {
+                indicator.textContent = "The Moment Passing";
+                indicator.style.color = `rgb(${colors.orange[0]}, ${colors.orange[1]}, ${colors.orange[2]})`;
+            } else {
+                indicator.textContent = "Composure Returning";
+                indicator.style.color = "#888";
+            }
+        }
+        
+        function preload() {
+            soundLoaded = false;
+            embarrassmentSound = loadSound('embarrassment_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            createHandOutline();
+            
+            // Create flush pulses (copper - heat rising to skin)
+            for (let i = 0; i < 8; i++) {
+                flushPulses.push({
+                    x: random(width * 0.3, width * 0.7),
+                    y: random(height * 0.3, height * 0.7),
+                    baseSize: random(40, 100),
+                    currentSize: 0,
+                    maxSize: random(80, 180),
+                    pulseSpeed: random(0.015, 0.03),
+                    pulsePhase: random(TWO_PI),
+                    opacity: random(80, 150),
+                    startTime: i * 400,
+                    visible: false,
+                    interactive: true,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomWitness()
+                });
+            }
+            
+            // Create witness chains (black - binding observers)
+            for (let i = 0; i < 12; i++) {
+                let angle = (i / 12) * TWO_PI;
+                let radius = random(min(width, height) * 0.35, min(width, height) * 0.45);
+                witnessChains.push({
+                    x: width/2 + cos(angle) * radius,
+                    y: height/2 + sin(angle) * radius,
+                    size: random(8, 18),
+                    type: floor(random(3)), // 0: chain link, 1: X mark, 2: dot
+                    angle: angle,
+                    opacity: random(100, 180),
+                    startTime: 3000 + i * 300,
+                    visible: false,
+                    pulseRate: random(0.001, 0.003),
+                    interactive: random() > 0.4,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomWitness()
+                });
+            }
+            
+            // Create attention arrows (converging then dispersing)
+            for (let i = 0; i < 16; i++) {
+                let angle = (i / 16) * TWO_PI + random(-0.2, 0.2);
+                let startRadius = random(min(width, height) * 0.4, min(width, height) * 0.5);
+                attentionArrows.push({
+                    angle: angle,
+                    startRadius: startRadius,
+                    currentRadius: startRadius,
+                    targetRadius: random(80, 150), // Converges toward center initially
+                    size: random(15, 25),
+                    opacity: random(120, 200),
+                    speed: random(0.5, 1.5),
+                    startTime: 5000 + i * 200,
+                    visible: false,
+                    phase: 0, // 0: converging, 1: at center, 2: dispersing
+                    interactive: random() > 0.5,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomWitness()
+                });
+            }
+            
+            // Create recovery flows (orange - warmth transforming)
+            for (let i = 0; i < 10; i++) {
+                recoveryFlows.push({
+                    startX: width * 0.4 + random(-50, 50),
+                    startY: height * 0.5 + random(-50, 50),
+                    angle: random(TWO_PI),
+                    length: random(60, 150),
+                    progress: 0,
+                    speed: random(0.002, 0.005),
+                    opacity: random(100, 180),
+                    startTime: 15000 + i * 800,
+                    visible: false,
+                    curveAmount: random(0.3, 0.8),
+                    interactive: random() > 0.3,
+                    activated: false,
+                    activatedTime: 0,
+                    message: getRandomWitness()
+                });
+            }
+            
+            // Create focal points
+            createFocalPoints();
+            
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            isAnimating = false;
+            noLoop();
+        }
+        
+        function getRandomWitness() {
+            return witnessEchoes[floor(random(witnessEchoes.length))];
+        }
+        
+        function createFocalPoints() {
+            // Center - the exposed self
+            focalPoints.push({
+                x: width * 0.5,
+                y: height * 0.5,
+                size: 90,
+                opacity: 0,
+                targetOpacity: 120,
+                pulseRate: 0.002,
+                activated: false,
+                activationProgress: 0,
+                startTime: 2000,
+                message: "The center of attention. The moment of exposure.",
+                type: 'exposure'
+            });
+            
+            // Upper area - the flush origin
+            focalPoints.push({
+                x: width * 0.5,
+                y: height * 0.25,
+                size: 70,
+                opacity: 0,
+                targetOpacity: 140,
+                pulseRate: 0.0025,
+                activated: false,
+                activationProgress: 0,
+                startTime: 4000,
+                message: "Where the heat begins. The body's first betrayal.",
+                type: 'flush'
+            });
+            
+            // Side - the witnesses
+            focalPoints.push({
+                x: width * 0.2,
+                y: height * 0.5,
+                size: 60,
+                opacity: 0,
+                targetOpacity: 130,
+                pulseRate: 0.0015,
+                activated: false,
+                activationProgress: 0,
+                startTime: 8000,
+                message: "The witnesses. Those who saw.",
+                type: 'witness'
+            });
+            
+            // Lower right - recovery path
+            focalPoints.push({
+                x: width * 0.75,
+                y: height * 0.7,
+                size: 55,
+                opacity: 0,
+                targetOpacity: 150,
+                pulseRate: 0.003,
+                activated: false,
+                activationProgress: 0,
+                startTime: 18000,
+                message: "The way forward. Composure returning.",
+                type: 'recovery'
+            });
+        }
+
+        function createHandOutline() {
+            // Hands covering face gesture - classic embarrassment pose
+            // Two hands pressed against cheeks/eyes
+            
+            // Left hand
+            handOutlinePoints.push({x: 0.32, y: 0.42});
+            handOutlinePoints.push({x: 0.30, y: 0.38});
+            handOutlinePoints.push({x: 0.33, y: 0.34});
+            handOutlinePoints.push({x: 0.36, y: 0.32});
+            handOutlinePoints.push({x: 0.40, y: 0.31});
+            handOutlinePoints.push({x: 0.44, y: 0.32});
+            handOutlinePoints.push({x: 0.46, y: 0.35});
+            handOutlinePoints.push({x: 0.47, y: 0.40});
+            handOutlinePoints.push({x: 0.46, y: 0.46});
+            handOutlinePoints.push({x: 0.43, y: 0.50});
+            handOutlinePoints.push({x: 0.38, y: 0.52});
+            handOutlinePoints.push({x: 0.33, y: 0.50});
+            handOutlinePoints.push({x: 0.32, y: 0.46});
+            
+            // Right hand (mirror)
+            handOutlinePoints.push({x: 0.54, y: 0.46});
+            handOutlinePoints.push({x: 0.53, y: 0.50});
+            handOutlinePoints.push({x: 0.58, y: 0.52});
+            handOutlinePoints.push({x: 0.63, y: 0.50});
+            handOutlinePoints.push({x: 0.66, y: 0.46});
+            handOutlinePoints.push({x: 0.67, y: 0.40});
+            handOutlinePoints.push({x: 0.66, y: 0.35});
+            handOutlinePoints.push({x: 0.64, y: 0.32});
+            handOutlinePoints.push({x: 0.60, y: 0.31});
+            handOutlinePoints.push({x: 0.56, y: 0.32});
+            handOutlinePoints.push({x: 0.53, y: 0.34});
+            handOutlinePoints.push({x: 0.51, y: 0.38});
+            handOutlinePoints.push({x: 0.53, y: 0.42});
+            
+            // Convert to absolute coordinates
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x *= width;
+                handOutlinePoints[i].y *= height;
+            }
+        }
+
+        function draw() {
+            // Warm cream background that subtly shifts with phase
+            let bgWarmth = map(emotionalPhase, 0, 0.5, 250, 255);
+            let bgCool = map(emotionalPhase, 0.5, 1, 248, 252);
+            background(emotionalPhase < 0.5 ? bgWarmth : 255, bgCool, 245);
+            
+            if (isAnimating && !isDraggingTimeline) {
+                timePosition += deltaTime;
+                
+                if (timePosition > 30000) {
+                    timePosition = 30000;
+                    
+                    if (!activatedTimeline) {
+                        showTimeline();
+                        activatedTimeline = true;
+                    }
+                }
+                
+                emotionalPhase = timePosition / 30000;
+                
+                // Decay intensification over time
+                if (millis() - lastIntensificationTime > 3000) {
+                    intensificationLevel = max(0, intensificationLevel - 0.01);
+                }
+                
+                // Update heartbeat rate based on phase
+                if (emotionalPhase < 0.33) {
+                    // Rising phase - heart speeds up
+                    heartbeatRate = lerp(heartbeatRate, 0.12 + intensificationLevel * 0.05, 0.01);
+                    heartbeatIntensity = lerp(heartbeatIntensity, 1.2 + intensificationLevel * 0.3, 0.02);
+                } else if (emotionalPhase < 0.66) {
+                    // Peak phase - heart at maximum
+                    heartbeatRate = lerp(heartbeatRate, 0.15 + intensificationLevel * 0.03, 0.005);
+                    heartbeatIntensity = lerp(heartbeatIntensity, 1.0 + intensificationLevel * 0.2, 0.02);
+                } else {
+                    // Recovery phase - heart slows
+                    heartbeatRate = lerp(heartbeatRate, 0.05, 0.01);
+                    heartbeatIntensity = lerp(heartbeatIntensity, 0.5, 0.02);
+                }
+                
+                updateTimelineUI();
+                updatePhaseIndicator();
+                previousTimePosition = timePosition;
+            }
+            
+            // Update heartbeat
+            heartbeatPhase += heartbeatRate;
+
+            // Draw layers in order
+            drawFlushPulses();            // Copper - heat rising
+            drawHeartbeatCenter();        // Central pulsing
+            drawHandOutline();            // Hands covering face
+            drawWitnessChains();          // Black - observers
+            drawAttentionArrows();        // Converging/dispersing attention
+            drawRecoveryFlows();          // Orange - path to composure
+            drawFocalPoints();            // Interactive zones
+            
+            // Update hand progress based on phase
+            if (emotionalPhase < 0.5) {
+                handOpacity = min(180, handOpacity + 1.5);
+            } else {
+                handOpacity = max(40, handOpacity - 0.8);
+            }
+            
+            handProgress = min(1, handProgress + 0.003);
+            
+            updateActivatedElements();
+        }
+        
+        function drawHeartbeatCenter() {
+            let pulse = sin(heartbeatPhase);
+            let heartPulse = pulse > 0.7 ? map(pulse, 0.7, 1, 1, 1.3) : 1;
+            
+            let centerX = width / 2;
+            let centerY = height / 2;
+            
+            // Inner glow (the self)
+            let glowSize = 60 * heartPulse * heartbeatIntensity;
+            let glowOpacity = map(emotionalPhase, 0, 0.5, 80, 120);
+            glowOpacity = map(emotionalPhase, 0.5, 1, glowOpacity, 30);
+            glowOpacity += intensificationLevel * 40;
+            
+            noStroke();
+            
+            // Multiple layers of glow
+            for (let i = 3; i > 0; i--) {
+                let layerSize = glowSize * (1 + i * 0.4);
+                let layerOpacity = glowOpacity * (1 - i * 0.25);
+                fill(colors.copper[0], colors.copper[1], colors.copper[2], layerOpacity);
+                ellipse(centerX, centerY, layerSize);
+            }
+        }
+        
+        function showTimeline() {
+            document.getElementById('timeline').style.opacity = '1';
+            updateLayoutForOrientation();
+        }
+        
+        function updateActivatedElements() {
+            let now = millis();
+            
+            for (let pulse of flushPulses) {
+                if (pulse.activated && now - pulse.activatedTime > 4000) {
+                    pulse.activated = false;
+                }
+            }
+            
+            for (let chain of witnessChains) {
+                if (chain.activated && now - chain.activatedTime > 4000) {
+                    chain.activated = false;
+                }
+            }
+            
+            for (let arrow of attentionArrows) {
+                if (arrow.activated && now - arrow.activatedTime > 4000) {
+                    arrow.activated = false;
+                }
+            }
+            
+            for (let flow of recoveryFlows) {
+                if (flow.activated && now - flow.activatedTime > 4000) {
+                    flow.activated = false;
+                }
+            }
+            
+            for (let focal of focalPoints) {
+                if (focal.activated) {
+                    focal.activationProgress = min(1, focal.activationProgress + 0.015);
+                }
+            }
+            
+            if (activeFocalPoint !== null && !focalPoints[activeFocalPoint].activated) {
+                if (focalPoints[activeFocalPoint].activationProgress > 0) {
+                    focalPoints[activeFocalPoint].activationProgress = max(0, focalPoints[activeFocalPoint].activationProgress - 0.01);
+                } else {
+                    activeFocalPoint = null;
+                    focalPointActivated = false;
+                }
+            }
+        }
+        
+        function setTimePosition(time) {
+            const timeDiff = time - previousTimePosition;
+            if (timeDiff < -2000) {
+                resetExperience();
+            }
+        }
+        
+        function resetExperience() {
+            for (let pulse of flushPulses) {
+                pulse.visible = timePosition > pulse.startTime;
+                pulse.activated = false;
+                pulse.currentSize = 0;
+            }
+            
+            for (let chain of witnessChains) {
+                chain.visible = timePosition > chain.startTime;
+                chain.activated = false;
+            }
+            
+            for (let arrow of attentionArrows) {
+                arrow.visible = timePosition > arrow.startTime;
+                arrow.activated = false;
+                arrow.currentRadius = arrow.startRadius;
+                arrow.phase = 0;
+            }
+            
+            for (let flow of recoveryFlows) {
+                flow.visible = timePosition > flow.startTime;
+                flow.activated = false;
+                flow.progress = 0;
+            }
+            
+            for (let focal of focalPoints) {
+                focal.opacity = 0;
+                focal.activated = false;
+                focal.activationProgress = 0;
+            }
+            
+            handProgress = min(1, timePosition / 10000);
+            handOpacity = map(timePosition, 0, 15000, 0, 180);
+            activeFocalPoint = null;
+            focalPointActivated = false;
+        }
+
+        function drawHandOutline() {
+            if (timePosition < 3000) return;
+            
+            let leftHandPoints = handOutlinePoints.slice(0, 13);
+            let rightHandPoints = handOutlinePoints.slice(13);
+            
+            let pointsToShow = floor(13 * handProgress);
+            if (pointsToShow < 3) return;
+            
+            noFill();
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], handOpacity * 0.6);
+            strokeWeight(2);
+            
+            // Left hand
+            beginShape();
+            for (let i = 0; i < min(pointsToShow, leftHandPoints.length); i++) {
+                curveVertex(leftHandPoints[i].x, leftHandPoints[i].y);
+            }
+            endShape();
+            
+            // Right hand
+            beginShape();
+            for (let i = 0; i < min(pointsToShow, rightHandPoints.length); i++) {
+                curveVertex(rightHandPoints[i].x, rightHandPoints[i].y);
+            }
+            endShape();
+            
+            // Fill hands with warmth when visible
+            if (handProgress > 0.5 && handOpacity > 60) {
+                fill(colors.copper[0], colors.copper[1], colors.copper[2], handOpacity * 0.15);
+                noStroke();
+                
+                beginShape();
+                for (let pt of leftHandPoints) {
+                    vertex(pt.x, pt.y);
+                }
+                endShape(CLOSE);
+                
+                beginShape();
+                for (let pt of rightHandPoints) {
+                    vertex(pt.x, pt.y);
+                }
+                endShape(CLOSE);
+            }
+        }
+
+        function drawFlushPulses() {
+            noStroke();
+            
+            for (let pulse of flushPulses) {
+                if (timePosition > pulse.startTime) {
+                    pulse.visible = true;
+                }
+                
+                if (pulse.visible) {
+                    // Pulsing based on heartbeat and individual phase
+                    let heartInfluence = sin(heartbeatPhase + pulse.pulsePhase);
+                    let quickExpand = heartInfluence > 0.5 ? map(heartInfluence, 0.5, 1, 1, 1.4) : 1;
+                    let slowRecede = heartInfluence < 0 ? map(heartInfluence, 0, -1, 1, 0.7) : 1;
+                    
+                    let pulseFactor = quickExpand * slowRecede * heartbeatIntensity;
+                    
+                    // Size changes with emotional phase
+                    let phaseSize = emotionalPhase < 0.5 
+                        ? map(emotionalPhase, 0, 0.5, 0.5, 1.2)
+                        : map(emotionalPhase, 0.5, 1, 1.2, 0.3);
+                    
+                    let currentSize = pulse.baseSize * pulseFactor * phaseSize;
+                    
+                    // Opacity based on phase and activation
+                    let baseOpacity = pulse.activated ? pulse.opacity + 50 : pulse.opacity;
+                    baseOpacity *= (emotionalPhase < 0.7 ? 1 : map(emotionalPhase, 0.7, 1, 1, 0.3));
+                    baseOpacity += intensificationLevel * 30;
+                    
+                    // Outer glow
+                    fill(colors.copper[0], colors.copper[1], colors.copper[2], baseOpacity * 0.2);
+                    ellipse(pulse.x, pulse.y, currentSize * 1.8);
+                    
+                    // Mid layer
+                    fill(colors.copper[0], colors.copper[1], colors.copper[2], baseOpacity * 0.4);
+                    ellipse(pulse.x, pulse.y, currentSize * 1.3);
+                    
+                    // Core
+                    fill(colors.copper[0], colors.copper[1], colors.copper[2], baseOpacity * 0.7);
+                    ellipse(pulse.x, pulse.y, currentSize);
+                    
+                    // Activation highlight
+                    if (pulse.activated) {
+                        noFill();
+                        stroke(colors.copper[0], colors.copper[1], colors.copper[2], 150);
+                        strokeWeight(2);
+                        ellipse(pulse.x, pulse.y, currentSize + 20);
+                        noStroke();
+                    }
+                }
+            }
+        }
+
+        function drawWitnessChains() {
+            for (let chain of witnessChains) {
+                if (timePosition > chain.startTime) {
+                    chain.visible = true;
+                }
+                
+                if (chain.visible) {
+                    let pulse = sin(millis() * chain.pulseRate) * 0.15 + 0.85;
+                    
+                    // Opacity based on emotional phase (witnesses fade during recovery)
+                    let phaseOpacity = emotionalPhase < 0.6 
+                        ? chain.opacity 
+                        : map(emotionalPhase, 0.6, 1, chain.opacity, chain.opacity * 0.2);
+                    
+                    let baseOpacity = chain.activated ? phaseOpacity + 60 : phaseOpacity;
+                    baseOpacity *= pulse;
+                    
+                    push();
+                    translate(chain.x, chain.y);
+                    
+                    stroke(colors.black[0], colors.black[1], colors.black[2], baseOpacity);
+                    strokeWeight(chain.activated ? 2.5 : 1.5);
+                    noFill();
+                    
+                    let s = chain.size;
+                    
+                    if (chain.type === 0) {
+                        // Chain link - oval with connection points
+                        ellipse(0, 0, s * 1.5, s);
+                        // Connection dots
+                        fill(colors.black[0], colors.black[1], colors.black[2], baseOpacity);
+                        ellipse(-s * 0.75, 0, 4);
+                        ellipse(s * 0.75, 0, 4);
+                    } else if (chain.type === 1) {
+                        // X mark
+                        line(-s/2, -s/2, s/2, s/2);
+                        line(-s/2, s/2, s/2, -s/2);
+                    } else {
+                        // Observer dot
+                        fill(colors.black[0], colors.black[1], colors.black[2], baseOpacity * 0.8);
+                        ellipse(0, 0, s * 0.8);
+                    }
+                    
+                    pop();
+                    
+                    // Glow for activated
+                    if (chain.activated) {
+                        noFill();
+                        stroke(colors.black[0], colors.black[1], colors.black[2], 60);
+                        strokeWeight(1);
+                        ellipse(chain.x, chain.y, chain.size * 2.5);
+                    }
+                    
+                    noStroke();
+                }
+            }
+        }
+
+        function drawAttentionArrows() {
+            let centerX = width / 2;
+            let centerY = height / 2;
+            
+            for (let arrow of attentionArrows) {
+                if (timePosition > arrow.startTime) {
+                    arrow.visible = true;
+                }
+                
+                if (arrow.visible) {
+                    // Update arrow phase based on emotional journey
+                    if (emotionalPhase < 0.4) {
+                        // Converging phase
+                        arrow.currentRadius = lerp(arrow.currentRadius, arrow.targetRadius, 0.008);
+                        arrow.phase = 0;
+                    } else if (emotionalPhase < 0.6) {
+                        // Held at center
+                        arrow.phase = 1;
+                    } else {
+                        // Dispersing phase
+                        arrow.currentRadius = lerp(arrow.currentRadius, arrow.startRadius * 1.3, 0.005);
+                        arrow.phase = 2;
+                    }
+                    
+                    let arrowX = centerX + cos(arrow.angle) * arrow.currentRadius;
+                    let arrowY = centerY + sin(arrow.angle) * arrow.currentRadius;
+                    
+                    // Arrow direction: toward center in phase 0-1, away in phase 2
+                    let pointAngle = arrow.phase < 2 ? arrow.angle + PI : arrow.angle;
+                    
+                    // Opacity fades during dispersal
+                    let baseOpacity = arrow.activated ? arrow.opacity + 40 : arrow.opacity;
+                    if (arrow.phase === 2) {
+                        baseOpacity *= map(emotionalPhase, 0.6, 1, 1, 0.2);
+                    }
+                    baseOpacity += intensificationLevel * 20;
+                    
+                    // Color shifts from black (attention) to orange (release) during dispersal
+                    let arrowColor;
+                    if (arrow.phase < 2) {
+                        arrowColor = colors.black;
+                    } else {
+                        let t = map(emotionalPhase, 0.6, 1, 0, 1);
+                        arrowColor = [
+                            lerp(colors.black[0], colors.orange[0], t),
+                            lerp(colors.black[1], colors.orange[1], t),
+                            lerp(colors.black[2], colors.orange[2], t)
+                        ];
+                    }
+                    
+                    push();
+                    translate(arrowX, arrowY);
+                    rotate(pointAngle);
+                    
+                    stroke(arrowColor[0], arrowColor[1], arrowColor[2], baseOpacity);
+                    strokeWeight(arrow.activated ? 2.5 : 1.5);
+                    noFill();
+                    
+                    let s = arrow.size;
+                    
+                    // Arrow chevron
+                    line(-s/2, -s/3, 0, 0);
+                    line(0, 0, -s/2, s/3);
+                    
+                    // Tail line
+                    line(0, 0, -s, 0);
+                    
+                    pop();
+                }
+            }
+        }
+
+        function drawRecoveryFlows() {
+            for (let flow of recoveryFlows) {
+                if (timePosition > flow.startTime) {
+                    flow.visible = true;
+                    
+                    if (isAnimating) {
+                        flow.progress = min(1, flow.progress + flow.speed);
+                    }
+                }
+                
+                if (flow.visible && emotionalPhase > 0.5) {
+                    let baseOpacity = flow.activated ? flow.opacity + 40 : flow.opacity;
+                    // Flows become more visible during recovery
+                    baseOpacity *= map(emotionalPhase, 0.5, 0.8, 0.3, 1);
+                    
+                    stroke(colors.orange[0], colors.orange[1], colors.orange[2], baseOpacity);
+                    strokeWeight(flow.activated ? 3 : 2);
+                    noFill();
+                    
+                    // Draw curved flow line
+                    let endX = flow.startX + cos(flow.angle) * flow.length * flow.progress;
+                    let endY = flow.startY + sin(flow.angle) * flow.length * flow.progress;
+                    
+                    // Control point for curve
+                    let ctrlX = flow.startX + cos(flow.angle + flow.curveAmount) * flow.length * 0.5;
+                    let ctrlY = flow.startY + sin(flow.angle + flow.curveAmount) * flow.length * 0.5;
+                    
+                    beginShape();
+                    vertex(flow.startX, flow.startY);
+                    quadraticVertex(ctrlX, ctrlY, endX, endY);
+                    endShape();
+                    
+                    // Small arrow head at end
+                    if (flow.progress > 0.3) {
+                        push();
+                        translate(endX, endY);
+                        rotate(flow.angle);
+                        
+                        line(-8, -5, 0, 0);
+                        line(-8, 5, 0, 0);
+                        pop();
+                    }
+                    
+                    noStroke();
+                }
+            }
+        }
+        
+        function drawFocalPoints() {
+            for (let i = 0; i < focalPoints.length; i++) {
+                let focal = focalPoints[i];
+                
+                if (timePosition > focal.startTime) {
+                    if (focal.opacity < focal.targetOpacity) {
+                        focal.opacity = min(focal.targetOpacity, focal.opacity + 0.6);
+                    }
+                    
+                    let pulseAmount = sin(millis() * focal.pulseRate);
+                    let pulseSize = focal.size + pulseAmount * 8;
+                    
+                    // Get color based on focal type
+                    let focalColor;
+                    if (focal.type === 'exposure') {
+                        focalColor = colors.copper;
+                    } else if (focal.type === 'flush') {
+                        focalColor = colors.copper;
+                    } else if (focal.type === 'witness') {
+                        focalColor = colors.black;
+                    } else {
+                        focalColor = colors.orange;
+                    }
+                    
+                    // Draw activation effects
+                    if (i === activeFocalPoint && focal.activationProgress > 0) {
+                        for (let j = 0; j < 3; j++) {
+                            let expandedSize = pulseSize + j * 25 * focal.activationProgress;
+                            let glowOpacity = (70 - j * 20) * focal.activationProgress;
+                            
+                            noFill();
+                            stroke(focalColor[0], focalColor[1], focalColor[2], glowOpacity);
+                            strokeWeight(2 - j * 0.5);
+                            ellipse(focal.x, focal.y, expandedSize);
+                        }
+                    }
+                    
+                    // Draw main focal ring
+                    noFill();
+                    stroke(focalColor[0], focalColor[1], focalColor[2], focal.opacity * 0.5);
+                    strokeWeight(1.5);
+                    ellipse(focal.x, focal.y, pulseSize);
+                    
+                    // Draw center
+                    fill(focalColor[0], focalColor[1], focalColor[2], focal.opacity * 0.3);
+                    noStroke();
+                    ellipse(focal.x, focal.y, pulseSize * 0.2);
+                    
+                    // Interactive hint
+                    if (!focal.activated && focal.opacity > 80) {
+                        fill(focalColor[0], focalColor[1], focalColor[2], 40 + 25 * sin(millis() * 0.004));
+                        textAlign(CENTER, CENTER);
+                        textSize(9);
+                        text("tap", focal.x, focal.y);
+                    }
+                }
+            }
+        }
+        
+        function showWitnessEcho(message, x, y) {
+            const echo = document.getElementById('witness-echo');
+            echo.innerHTML = message;
+            
+            let posX = x;
+            let posY = y - 60;
+            
+            if (posX < 20) posX = 20;
+            if (posX > window.innerWidth - 270) posX = window.innerWidth - 270;
+            if (posY < 20) posY = 20;
+            if (posY > window.innerHeight - 100) posY = window.innerHeight - 100;
+            
+            echo.style.left = posX + 'px';
+            echo.style.top = posY + 'px';
+            echo.style.transform = 'translateY(0)';
+            echo.style.opacity = '1';
+            
+            setTimeout(() => {
+                echo.style.opacity = '0';
+                echo.style.transform = 'translateY(20px)';
+            }, 4000);
+        }
+        
+        function triggerIntensification() {
+            intensificationLevel = min(1, intensificationLevel + 0.3);
+            lastIntensificationTime = millis();
+            
+            // Brief acceleration of heartbeat
+            heartbeatRate += 0.02;
+            heartbeatIntensity += 0.15;
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            repositionElements();
+            updateLayoutForOrientation();
+        }
+        
+        function repositionElements() {
+            // Recalculate hand outline
+            let oldWidth = width;
+            let oldHeight = height;
+            
+            for (let i = 0; i < handOutlinePoints.length; i++) {
+                handOutlinePoints[i].x = (handOutlinePoints[i].x / oldWidth) * windowWidth;
+                handOutlinePoints[i].y = (handOutlinePoints[i].y / oldHeight) * windowHeight;
+            }
+            
+            for (let pulse of flushPulses) {
+                pulse.x = (pulse.x / oldWidth) * windowWidth;
+                pulse.y = (pulse.y / oldHeight) * windowHeight;
+            }
+            
+            for (let chain of witnessChains) {
+                chain.x = (chain.x / oldWidth) * windowWidth;
+                chain.y = (chain.y / oldHeight) * windowHeight;
+            }
+            
+            for (let flow of recoveryFlows) {
+                flow.startX = (flow.startX / oldWidth) * windowWidth;
+                flow.startY = (flow.startY / oldHeight) * windowHeight;
+            }
+            
+            for (let focal of focalPoints) {
+                focal.x = (focal.x / oldWidth) * windowWidth;
+                focal.y = (focal.y / oldHeight) * windowHeight;
+            }
+        }
+        
+        function mousePressed() {
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                
+                // Trigger intensification on any click
+                triggerIntensification();
+                
+                // Check focal points first
+                for (let i = 0; i < focalPoints.length; i++) {
+                    let focal = focalPoints[i];
+                    
+                    if (timePosition > focal.startTime && focal.opacity > 50) {
+                        let d = dist(mouseX, mouseY, focal.x, focal.y);
+                        
+                        if (d < focal.size / 2) {
+                            focal.activated = !focal.activated;
+                            
+                            if (focal.activated) {
+                                activeFocalPoint = i;
+                                focalPointActivated = true;
+                                showWitnessEcho(focal.message, focal.x, focal.y);
+                            } else {
+                                activeFocalPoint = null;
+                                focalPointActivated = false;
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check flush pulses
+                for (let pulse of flushPulses) {
+                    if (pulse.visible && pulse.interactive) {
+                        let d = dist(mouseX, mouseY, pulse.x, pulse.y);
+                        
+                        if (d < pulse.baseSize) {
+                            pulse.activated = !pulse.activated;
+                            pulse.activatedTime = millis();
+                            
+                            if (pulse.activated) {
+                                showWitnessEcho(pulse.message, pulse.x, pulse.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check witness chains
+                for (let chain of witnessChains) {
+                    if (chain.visible && chain.interactive) {
+                        let d = dist(mouseX, mouseY, chain.x, chain.y);
+                        
+                        if (d < chain.size * 1.5) {
+                            chain.activated = !chain.activated;
+                            chain.activatedTime = millis();
+                            
+                            if (chain.activated) {
+                                showWitnessEcho(chain.message, chain.x, chain.y);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check attention arrows
+                let centerX = width / 2;
+                let centerY = height / 2;
+                for (let arrow of attentionArrows) {
+                    if (arrow.visible && arrow.interactive) {
+                        let arrowX = centerX + cos(arrow.angle) * arrow.currentRadius;
+                        let arrowY = centerY + sin(arrow.angle) * arrow.currentRadius;
+                        let d = dist(mouseX, mouseY, arrowX, arrowY);
+                        
+                        if (d < 30) {
+                            arrow.activated = !arrow.activated;
+                            arrow.activatedTime = millis();
+                            
+                            if (arrow.activated) {
+                                showWitnessEcho(arrow.message, arrowX, arrowY);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Check recovery flows
+                for (let flow of recoveryFlows) {
+                    if (flow.visible && flow.interactive) {
+                        let midX = flow.startX + cos(flow.angle) * flow.length * 0.5;
+                        let midY = flow.startY + sin(flow.angle) * flow.length * 0.5;
+                        let d = dist(mouseX, mouseY, midX, midY);
+                        
+                        if (d < 30) {
+                            flow.activated = !flow.activated;
+                            flow.activatedTime = millis();
+                            
+                            if (flow.activated) {
+                                showWitnessEcho(flow.message, midX, midY);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                }
+                
+                // Toggle pause if no element clicked
+                isAnimating = !isAnimating;
+                
+                if (!isAnimating && soundEnabled && soundLoaded && embarrassmentSound.isPlaying()) {
+                    embarrassmentSound.setVolume(0.25, 1);
+                } else if (isAnimating && soundEnabled && soundLoaded) {
+                    embarrassmentSound.setVolume(0.5, 1);
+                }
+            }
+            
+            return false;
+        }
+        
+        function touchStarted() {
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            return mousePressed();
+        }
+        
+        let touchStartTime = 0;
+        let touchTimer = null;
+        let touchX = 0;
+        let touchY = 0;
+        
+        function touchStarted(e) {
+            if (touches.length > 0) {
+                touchX = touches[0].x;
+                touchY = touches[0].y;
+                
+                touchStartTime = millis();
+                
+                if (touchTimer) clearTimeout(touchTimer);
+                
+                touchTimer = setTimeout(handleLongPress, 1000);
+                
+                if (getAudioContext().state !== 'running') {
+                    getAudioContext().resume();
+                }
+            }
+            
+            return mousePressed();
+        }
+        
+        function touchEnded() {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        }
+        
+        function touchMoved() {
+            if (touchTimer && touches.length > 0 && dist(touchX, touchY, touches[0].x, touches[0].y) > 10) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        }
+        
+        function handleLongPress() {
+            if (document.getElementById('timeline').style.opacity === '0') {
+                document.getElementById('timeline').style.opacity = '1';
+                activatedTimeline = true;
+                updateLayoutForOrientation();
+            }
+            
+            // Find nearest focal point
+            let nearestFocal = null;
+            let nearestDist = Infinity;
+            
+            for (let i = 0; i < focalPoints.length; i++) {
+                let focal = focalPoints[i];
+                if (timePosition > focal.startTime) {
+                    let d = dist(touchX, touchY, focal.x, focal.y);
+                    if (d < 100 && d < nearestDist) {
+                        nearestDist = d;
+                        nearestFocal = i;
+                    }
+                }
+            }
+            
+            if (nearestFocal !== null) {
+                focalPoints[nearestFocal].activated = true;
+                activeFocalPoint = nearestFocal;
+                focalPointActivated = true;
+                
+                showWitnessEcho(focalPoints[nearestFocal].message, 
+                              focalPoints[nearestFocal].x, 
+                              focalPoints[nearestFocal].y - 30);
+            }
+            
+            touchTimer = null;
+        }
+    </script>
+</body>
+</html>

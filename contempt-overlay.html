@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Contempt - Emotional Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f9f2e2;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(249, 242, 226, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            transition: opacity 0.8s ease-in-out;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .landing-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 40px 15px 100px 15px;
+        }
+        
+        .landing-title {
+            font-size: clamp(18px, 5vw, 24px);
+            font-weight: 500;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 1px;
+            color: #4A4A4A;
+        }
+        
+        .emotion-name {
+            font-size: clamp(28px, 10vw, 48px);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: clamp(3px, 1.5vw, 6px);
+            background: linear-gradient(135deg, #B87333 0%, #B22234 50%, #8B4513 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            word-break: break-word;
+        }
+        
+        .emotion-description {
+            font-size: clamp(12px, 3.5vw, 14px);
+            line-height: 1.7;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 25px;
+            opacity: 0.8;
+            color: #4A4A4A;
+            padding: 0 10px;
+        }
+
+        .ai-disclaimer {
+            font-size: clamp(11px, 3vw, 13px);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: rgba(184, 115, 51, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #B87333;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .start-button {
+            padding: 15px 35px;
+            background-color: rgba(184, 115, 51, 0.2);
+            color: #4A4A4A;
+            border: 2px solid #B87333;
+            border-radius: 30px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: clamp(14px, 4vw, 16px);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(184, 115, 51, 0.2);
+            flex-shrink: 0;
+            margin-bottom: 40px;
+        }
+        
+        .start-button:hover {
+            background-color: rgba(184, 115, 51, 0.3);
+            transform: scale(1.02);
+        }
+        
+        .start-button:active {
+            transform: scale(0.98);
+            background-color: rgba(184, 115, 51, 0.4);
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .contempt-resonance {
+            position: fixed;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 12px 16px;
+            max-width: min(280px, calc(100vw - 40px));
+            font-size: clamp(11px, 3vw, 13px);
+            line-height: 1.5;
+            color: #333;
+            box-shadow: 0 8px 25px rgba(184, 115, 51, 0.25);
+            transform: translateY(20px) scale(0.9);
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            border-left: 4px solid #B87333;
+        }
+        
+        .contempt-resonance.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .control-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .control-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-button:active {
+            transform: scale(0.95);
+        }
+        
+        .control-button svg {
+            width: 22px;
+            height: 22px;
+            stroke: #4A4A4A;
+        }
+        
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 90px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 14px;
+            border-radius: 25px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            color: #4A4A4A;
+            border: 1px solid rgba(184, 115, 51, 0.3);
+            text-align: center;
+        }
+        
+        .hierarchy-meter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: min(120px, 30vw);
+            height: 8px;
+            background-color: rgba(74, 74, 74, 0.2);
+            border-radius: 4px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+            overflow: hidden;
+        }
+        
+        .hierarchy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8B4513, #B87333);
+            border-radius: 4px;
+            width: 50%;
+            transition: width 0.8s ease-out;
+        }
+        
+        .hierarchy-label {
+            position: fixed;
+            top: 32px;
+            right: 20px;
+            font-size: clamp(8px, 2vw, 9px);
+            color: #4A4A4A;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        @media (max-height: 500px) and (orientation: landscape) {
+            .landing-content {
+                padding: 20px 15px 60px 15px;
+            }
+            
+            .landing-title {
+                margin-bottom: 15px;
+            }
+            
+            .emotion-name {
+                margin-bottom: 15px;
+            }
+            
+            .emotion-description {
+                margin-bottom: 15px;
+            }
+            
+            .ai-disclaimer {
+                margin-bottom: 20px;
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .landing-content {
+                padding: 30px 10px 80px 10px;
+            }
+            
+            .ai-disclaimer {
+                padding: 12px 10px;
+            }
+            
+            .start-button {
+                padding: 12px 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-overlay">
+        <div class="landing-content">
+            <h1 class="landing-title">Emotional Collage Experience</h1>
+            <h2 class="emotion-name" id="emotion-title">CONTEMPT</h2>
+            <p class="emotion-description" id="emotion-description">
+                An exploration of contempt as hierarchical positioning—the sustained posture of looking down, judgment already rendered, the quiet certainty that withdrawal is justified.
+                <br><b>Analysis by Claude</b>
+            </p>
+
+            <div class="ai-disclaimer">
+                <strong>Note:</strong> This is a simulation of contempt based on my analysis of human descriptions. As an AI, I don't experience emotions—this is my interpretation of a social emotion that requires a target rendered lesser, modulated by contextual awareness.
+            </div>
+            
+            <button class="start-button" id="start-experience">Touch to Begin</button>
+        </div>
+    </div>
+    
+    <div class="contempt-resonance" id="contempt-resonance"></div>
+    
+    <div class="hierarchy-meter" id="hierarchy-meter">
+        <div class="hierarchy-fill" id="hierarchy-fill"></div>
+    </div>
+    <div class="hierarchy-label" id="hierarchy-label">Elevation</div>
+    
+    <div class="controls" id="controls">
+        <div class="control-button" id="sound-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path id="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </div>
+        <div class="control-button" id="reset-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="hint" id="hint">Touch to designate a target below</div>
+    
+    <script>
+        // ============================================
+        // CONTEMPT VISUALIZATION
+        // Core concept: Hierarchical positioning,
+        // sustained judgment, low arousal certainty,
+        // the posture of looking down
+        // ============================================
+        
+        let isAnimating = false;
+        let soundEnabled = true;
+        let contemptSound;
+        let soundLoaded = false;
+        
+        // Color palette from collage analysis
+        const colors = {
+            copper: [184, 115, 51],      // Recognition - hierarchical positioning
+            red: [178, 34, 52],          // Evaluation - moral judgment
+            brown: [139, 69, 19]         // Response - distancing, withdrawal
+        };
+        
+        // Contempt resonances - text that appears during contempt events
+        const contemptResonances = [
+            "The slight lift of the chin",
+            "Already dismissed before consideration",
+            "Beneath the threshold of engagement",
+            "The patience of judgment already rendered",
+            "Not worth the energy of anger",
+            "Positioned below the line of sight",
+            "The asymmetry of regard",
+            "Turning away without urgency",
+            "The silence that speaks volumes",
+            "Undeserving of emotional investment",
+            "A conclusion reached long ago",
+            "The economy of disdain",
+            "Below the effort of response",
+            "The cold arithmetic of hierarchy",
+            "Withdrawal as the only dignified answer"
+        ];
+        
+        // ============================================
+        // CORE SYSTEMS
+        // ============================================
+        
+        // Central gesture (the raised finger in the cup)
+        let gesturePoints = [];
+        let gestureVisible = false;
+        let gestureOpacity = 0;
+        let gestureBaseOpacity = 200;
+        
+        // The cup/vessel containing the gesture
+        let vesselRadius;
+        let vesselPulse = 0;
+        
+        // Hierarchy system
+        let hierarchyLevel = 0.5; // 0 = equal, 1 = maximum contempt
+        let targetHierarchy = 0.5;
+        let hierarchyChangeSpeed = 0.002;
+        
+        // Judgment markers (X marks, judgment points)
+        let judgmentMarkers = [];
+        let activeJudgments = [];
+        
+        // Witness symbols (audience on the saucer)
+        let witnesses = [];
+        let witnessActivations = [];
+        
+        // Distancing lines (radiating outward)
+        let distanceLines = [];
+        
+        // Ambient contempt particles (slow, deliberate)
+        let ambientParticles = [];
+        
+        // Target tracking
+        let currentTarget = null;
+        let targetFadeTime = 0;
+        let dismissedTargets = [];
+        
+        // Elevation rings (showing hierarchy)
+        let elevationRings = [];
+        
+        // State tracking
+        let contemptIntensity = 0;
+        let isInContemptState = false;
+        let lastInteractionTime = 0;
+        
+        // ============================================
+        // SETUP & INITIALIZATION
+        // ============================================
+        
+        function preload() {
+            soundLoaded = false;
+            contemptSound = loadSound('contempt_soundscape.mp3', 
+                function() {
+                    console.log("Sound loaded successfully");
+                    soundLoaded = true;
+                },
+                function(err) {
+                    console.error("Error loading sound:", err);
+                    soundEnabled = false;
+                }
+            );
+        }
+        
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            vesselRadius = min(width, height) * 0.22;
+            
+            createGesture();
+            createWitnesses();
+            createJudgmentMarkers();
+            createAmbientParticles();
+            createElevationRings();
+            createDistanceLines();
+            
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            noLoop();
+        }
+        
+        function createGesture() {
+            // The raised middle finger - simplified geometric representation
+            let centerX = width * 0.5;
+            let centerY = height * 0.45;
+            let scale = min(width, height) * 0.15;
+            
+            gesturePoints = [];
+            
+            // Hand base (palm area)
+            let palmPoints = [
+                {x: -0.3, y: 0.5, type: 'palm'},
+                {x: 0.3, y: 0.5, type: 'palm'},
+                {x: 0.35, y: 0.2, type: 'palm'},
+                {x: 0.3, y: 0, type: 'palm'},
+                // Folded fingers (left side)
+                {x: 0.25, y: -0.1, type: 'fold'},
+                {x: 0.15, y: 0, type: 'fold'},
+                // Middle finger (extended)
+                {x: 0.08, y: -0.1, type: 'finger'},
+                {x: 0.08, y: -0.6, type: 'finger'},
+                {x: 0, y: -0.7, type: 'fingertip'},
+                {x: -0.08, y: -0.6, type: 'finger'},
+                {x: -0.08, y: -0.1, type: 'finger'},
+                // Folded fingers (right side)
+                {x: -0.15, y: 0, type: 'fold'},
+                {x: -0.25, y: -0.1, type: 'fold'},
+                {x: -0.3, y: 0, type: 'palm'},
+                {x: -0.35, y: 0.2, type: 'palm'}
+            ];
+            
+            for (let pt of palmPoints) {
+                gesturePoints.push({
+                    x: centerX + pt.x * scale,
+                    y: centerY + pt.y * scale,
+                    baseX: centerX + pt.x * scale,
+                    baseY: centerY + pt.y * scale,
+                    type: pt.type
+                });
+            }
+        }
+        
+        function createWitnesses() {
+            // Symbols arranged in a circle (the saucer audience)
+            witnesses = [];
+            witnessActivations = [];
+            
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            let radius = vesselRadius * 1.6;
+            
+            // Different witness types from the collage description
+            let witnessTypes = ['speech', 'key', 'teardrop', 'x', 'chain', 'eye'];
+            
+            for (let i = 0; i < 12; i++) {
+                let angle = (TWO_PI / 12) * i - HALF_PI;
+                let wobble = random(-0.1, 0.1);
+                
+                witnesses.push({
+                    x: centerX + cos(angle + wobble) * radius,
+                    y: centerY + sin(angle + wobble) * radius,
+                    angle: angle,
+                    type: witnessTypes[i % witnessTypes.length],
+                    size: random(15, 25),
+                    phase: random(TWO_PI),
+                    speed: random(0.005, 0.015),
+                    attentionLevel: 0.3
+                });
+                witnessActivations.push(0);
+            }
+        }
+        
+        function createJudgmentMarkers() {
+            judgmentMarkers = [];
+            
+            // X marks scattered around the composition
+            for (let i = 0; i < 8; i++) {
+                let angle = random(TWO_PI);
+                let distance = random(vesselRadius * 0.8, vesselRadius * 1.4);
+                
+                judgmentMarkers.push({
+                    x: width * 0.5 + cos(angle) * distance,
+                    y: height * 0.5 + sin(angle) * distance,
+                    size: random(10, 20),
+                    rotation: random(TWO_PI),
+                    opacity: 0,
+                    targetOpacity: random(30, 80),
+                    pulsePhase: random(TWO_PI),
+                    pulseSpeed: random(0.01, 0.03)
+                });
+            }
+        }
+        
+        function createAmbientParticles() {
+            ambientParticles = [];
+            
+            // Slow, deliberate particles that drift downward (representing the target)
+            for (let i = 0; i < 30; i++) {
+                ambientParticles.push({
+                    x: random(width),
+                    y: random(height),
+                    size: random(2, 5),
+                    speed: random(0.1, 0.3), // Very slow
+                    opacity: random(30, 80),
+                    color: random() > 0.6 ? colors.brown : colors.copper,
+                    driftAngle: random(-0.3, 0.3) // Slight horizontal drift
+                });
+            }
+        }
+        
+        function createElevationRings() {
+            elevationRings = [];
+            
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            for (let i = 0; i < 3; i++) {
+                elevationRings.push({
+                    radius: vesselRadius * (1.1 + i * 0.25),
+                    phase: random(TWO_PI),
+                    speed: 0.003 + i * 0.001,
+                    dashCount: 40 + i * 10,
+                    opacity: 60 - i * 15
+                });
+            }
+        }
+        
+        function createDistanceLines() {
+            distanceLines = [];
+            
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            // Lines that radiate outward from center - representing distancing
+            for (let i = 0; i < 8; i++) {
+                let angle = (TWO_PI / 8) * i + random(-0.2, 0.2);
+                
+                distanceLines.push({
+                    angle: angle,
+                    innerRadius: vesselRadius * 1.1,
+                    outerRadius: vesselRadius * 1.8,
+                    opacity: 0,
+                    targetOpacity: 0,
+                    pulsePhase: random(TWO_PI)
+                });
+            }
+        }
+        
+        // ============================================
+        // CONTEMPT TRIGGER SYSTEM
+        // ============================================
+        
+        function triggerContempt(x, y) {
+            let now = millis();
+            lastInteractionTime = now;
+            
+            // Calculate position relative to center (targets below are more contempt-worthy)
+            let centerY = height * 0.5;
+            let relativeY = (y - centerY) / (height * 0.5);
+            
+            // Targets below the center trigger stronger contempt
+            let positionFactor = map(relativeY, -1, 1, 0.3, 1.0);
+            positionFactor = constrain(positionFactor, 0.3, 1.0);
+            
+            // Set the target
+            currentTarget = {
+                x: x,
+                y: y,
+                time: now,
+                intensity: positionFactor
+            };
+            
+            targetFadeTime = 0;
+            
+            // Increase hierarchy (elevation) based on where they touched
+            targetHierarchy = min(1.0, hierarchyLevel + positionFactor * 0.15);
+            
+            // Activate contempt state
+            isInContemptState = true;
+            contemptIntensity = positionFactor;
+            
+            // Activate nearby witnesses
+            activateWitnesses(x, y, positionFactor);
+            
+            // Activate judgment markers
+            activateJudgments(x, y, positionFactor);
+            
+            // Activate distance lines pointing away from target
+            activateDistancing(x, y, positionFactor);
+            
+            // Add to dismissed targets
+            dismissedTargets.push({
+                x: x,
+                y: y,
+                time: now,
+                fadeProgress: 0
+            });
+            
+            // Keep only recent dismissed targets
+            dismissedTargets = dismissedTargets.filter(t => now - t.time < 15000);
+            
+            // Show contempt resonance for strong contempt
+            if (positionFactor > 0.5) {
+                showContemptResonance(x, y);
+            }
+            
+            updateHierarchyMeter();
+        }
+        
+        function activateWitnesses(x, y, intensity) {
+            for (let i = 0; i < witnesses.length; i++) {
+                let w = witnesses[i];
+                let d = dist(x, y, w.x, w.y);
+                
+                // All witnesses turn attention toward the target
+                let activation = map(d, 0, width * 0.5, 1, 0.3) * intensity;
+                w.attentionLevel = min(1, w.attentionLevel + activation * 0.5);
+                witnessActivations[i] = activation;
+            }
+        }
+        
+        function activateJudgments(x, y, intensity) {
+            for (let marker of judgmentMarkers) {
+                let d = dist(x, y, marker.x, marker.y);
+                if (d < 200) {
+                    marker.targetOpacity = min(200, marker.targetOpacity + intensity * 100);
+                }
+            }
+        }
+        
+        function activateDistancing(x, y, intensity) {
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            let targetAngle = atan2(y - centerY, x - centerX);
+            
+            for (let line of distanceLines) {
+                // Lines pointing away from target become more visible
+                let angleDiff = abs(line.angle - targetAngle);
+                if (angleDiff > PI) angleDiff = TWO_PI - angleDiff;
+                
+                // Opposite direction = stronger
+                let opposition = map(angleDiff, 0, PI, 0, 1);
+                line.targetOpacity = opposition * intensity * 150;
+            }
+        }
+        
+        // ============================================
+        // UPDATE SYSTEMS
+        // ============================================
+        
+        function updateHierarchy() {
+            // Slowly move toward target hierarchy
+            if (hierarchyLevel < targetHierarchy) {
+                hierarchyLevel += hierarchyChangeSpeed;
+            } else if (hierarchyLevel > targetHierarchy) {
+                hierarchyLevel -= hierarchyChangeSpeed * 0.5; // Slower decline
+            }
+            
+            // Gradually return to neutral if no recent interaction
+            let timeSinceInteraction = millis() - lastInteractionTime;
+            if (timeSinceInteraction > 5000) {
+                targetHierarchy = max(0.3, targetHierarchy - 0.0005);
+            }
+            
+            hierarchyLevel = constrain(hierarchyLevel, 0, 1);
+        }
+        
+        function updateWitnesses() {
+            for (let i = 0; i < witnesses.length; i++) {
+                let w = witnesses[i];
+                w.phase += w.speed;
+                
+                // Attention slowly fades
+                w.attentionLevel = max(0.2, w.attentionLevel - 0.002);
+                witnessActivations[i] *= 0.98;
+            }
+        }
+        
+        function updateJudgments() {
+            for (let marker of judgmentMarkers) {
+                marker.pulsePhase += marker.pulseSpeed;
+                
+                // Slowly approach target opacity
+                marker.opacity = lerp(marker.opacity, marker.targetOpacity, 0.02);
+                
+                // Target opacity slowly decays
+                marker.targetOpacity *= 0.998;
+            }
+        }
+        
+        function updateDistanceLines() {
+            for (let line of distanceLines) {
+                line.pulsePhase += 0.02;
+                line.opacity = lerp(line.opacity, line.targetOpacity, 0.03);
+                line.targetOpacity *= 0.995;
+            }
+        }
+        
+        function updateParticles() {
+            for (let p of ambientParticles) {
+                // Particles drift slowly downward (like things falling beneath notice)
+                p.y += p.speed;
+                p.x += sin(p.driftAngle) * 0.2;
+                
+                // Reset at bottom
+                if (p.y > height + 20) {
+                    p.y = -10;
+                    p.x = random(width);
+                }
+            }
+        }
+        
+        function updateTargets() {
+            // Fade current target
+            if (currentTarget) {
+                targetFadeTime += 0.01;
+                if (targetFadeTime > 3) {
+                    currentTarget = null;
+                }
+            }
+            
+            // Update dismissed targets (they sink and fade)
+            for (let t of dismissedTargets) {
+                t.fadeProgress += 0.005;
+                t.y += 0.3; // Slowly sinking
+            }
+            
+            // Remove fully faded targets
+            dismissedTargets = dismissedTargets.filter(t => t.fadeProgress < 1);
+        }
+        
+        function updateContemptState() {
+            if (isInContemptState) {
+                contemptIntensity *= 0.995; // Very slow decay
+                if (contemptIntensity < 0.1) {
+                    isInContemptState = false;
+                    contemptIntensity = 0;
+                }
+            }
+            
+            // Gesture opacity based on hierarchy
+            gestureOpacity = gestureBaseOpacity * (0.5 + hierarchyLevel * 0.5);
+            
+            // Vessel pulse
+            vesselPulse += 0.01;
+        }
+        
+        function updateHierarchyMeter() {
+            let fill = document.getElementById('hierarchy-fill');
+            if (fill) {
+                fill.style.width = (hierarchyLevel * 100) + '%';
+            }
+        }
+        
+        // ============================================
+        // DRAWING SYSTEMS
+        // ============================================
+        
+        function draw() {
+            // Background - slightly cooler when contempt is active
+            let bgR = 249 - contemptIntensity * 5;
+            let bgG = 242 - contemptIntensity * 8;
+            let bgB = 226 - contemptIntensity * 10;
+            background(bgR, bgG, bgB);
+            
+            updateHierarchy();
+            updateWitnesses();
+            updateJudgments();
+            updateDistanceLines();
+            updateParticles();
+            updateTargets();
+            updateContemptState();
+            updateHierarchyMeter();
+            
+            drawAmbientParticles();
+            drawDismissedTargets();
+            drawElevationRings();
+            drawDistanceLines();
+            drawVessel();
+            drawWitnesses();
+            drawJudgmentMarkers();
+            drawGesture();
+            drawCurrentTarget();
+            
+            if (isInContemptState) {
+                drawContemptConnections();
+            }
+        }
+        
+        function drawAmbientParticles() {
+            noStroke();
+            for (let p of ambientParticles) {
+                fill(p.color[0], p.color[1], p.color[2], p.opacity);
+                ellipse(p.x, p.y, p.size);
+            }
+        }
+        
+        function drawDismissedTargets() {
+            // Draw dismissed targets as fading, sinking circles
+            noFill();
+            for (let t of dismissedTargets) {
+                let alpha = (1 - t.fadeProgress) * 100;
+                
+                // Red X mark
+                stroke(colors.red[0], colors.red[1], colors.red[2], alpha);
+                strokeWeight(2);
+                let size = 15 * (1 - t.fadeProgress * 0.5);
+                line(t.x - size, t.y - size, t.x + size, t.y + size);
+                line(t.x + size, t.y - size, t.x - size, t.y + size);
+                
+                // Fading circle around it
+                stroke(colors.brown[0], colors.brown[1], colors.brown[2], alpha * 0.5);
+                strokeWeight(1);
+                ellipse(t.x, t.y, size * 4);
+            }
+        }
+        
+        function drawElevationRings() {
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            for (let ring of elevationRings) {
+                ring.phase += ring.speed;
+                
+                let elevation = hierarchyLevel;
+                let opacity = ring.opacity * (0.5 + elevation * 0.5);
+                
+                stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
+                strokeWeight(1);
+                noFill();
+                
+                // Dashed circle
+                let dashLength = TWO_PI / ring.dashCount;
+                for (let i = 0; i < ring.dashCount; i++) {
+                    if (i % 2 === 0) {
+                        let startAngle = i * dashLength + ring.phase;
+                        let endAngle = startAngle + dashLength * 0.8;
+                        arc(centerX, centerY, ring.radius * 2, ring.radius * 2, startAngle, endAngle);
+                    }
+                }
+            }
+        }
+        
+        function drawDistanceLines() {
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            for (let line of distanceLines) {
+                if (line.opacity < 5) continue;
+                
+                let pulse = (sin(line.pulsePhase) + 1) / 2;
+                let alpha = line.opacity * (0.7 + pulse * 0.3);
+                
+                stroke(colors.brown[0], colors.brown[1], colors.brown[2], alpha);
+                strokeWeight(1.5);
+                
+                let x1 = centerX + cos(line.angle) * line.innerRadius;
+                let y1 = centerY + sin(line.angle) * line.innerRadius;
+                let x2 = centerX + cos(line.angle) * line.outerRadius;
+                let y2 = centerY + sin(line.angle) * line.outerRadius;
+                
+                // Draw as arrow pointing outward
+                drawArrow(x1, y1, x2, y2, alpha);
+            }
+        }
+        
+        function drawArrow(x1, y1, x2, y2, alpha) {
+            line(x1, y1, x2, y2);
+            
+            let angle = atan2(y2 - y1, x2 - x1);
+            let arrowSize = 8;
+            
+            line(x2, y2, 
+                 x2 - cos(angle - 0.4) * arrowSize, 
+                 y2 - sin(angle - 0.4) * arrowSize);
+            line(x2, y2, 
+                 x2 - cos(angle + 0.4) * arrowSize, 
+                 y2 - sin(angle + 0.4) * arrowSize);
+        }
+        
+        function drawVessel() {
+            let centerX = width * 0.5;
+            let centerY = height * 0.5;
+            
+            let pulse = (sin(vesselPulse) + 1) / 2;
+            let currentRadius = vesselRadius * (1 + pulse * 0.02);
+            
+            // Outer glow
+            noStroke();
+            for (let i = 5; i > 0; i--) {
+                let alpha = (6 - i) * 10 * (0.5 + hierarchyLevel * 0.5);
+                fill(colors.copper[0], colors.copper[1], colors.copper[2], alpha);
+                ellipse(centerX, centerY, currentRadius * 2 * (1 + i * 0.08));
+            }
+            
+            // Main vessel circle
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], 180);
+            strokeWeight(3);
+            noFill();
+            ellipse(centerX, centerY, currentRadius * 2);
+            
+            // Inner circle
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], 100);
+            strokeWeight(1.5);
+            ellipse(centerX, centerY, currentRadius * 1.7);
+            
+            // Innermost circle
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], 60);
+            strokeWeight(1);
+            ellipse(centerX, centerY, currentRadius * 1.4);
+        }
+        
+        function drawWitnesses() {
+            for (let i = 0; i < witnesses.length; i++) {
+                let w = witnesses[i];
+                let activation = witnessActivations[i];
+                let pulse = (sin(w.phase) + 1) / 2;
+                
+                let baseOpacity = 80 + w.attentionLevel * 120;
+                let size = w.size * (1 + pulse * 0.1 + activation * 0.3);
+                
+                push();
+                translate(w.x, w.y);
+                
+                // Draw based on type
+                switch(w.type) {
+                    case 'speech':
+                        drawSpeechBubble(0, 0, size, baseOpacity);
+                        break;
+                    case 'key':
+                        drawKey(0, 0, size, baseOpacity);
+                        break;
+                    case 'teardrop':
+                        drawTeardrop(0, 0, size, baseOpacity);
+                        break;
+                    case 'x':
+                        drawXMark(0, 0, size, baseOpacity);
+                        break;
+                    case 'chain':
+                        drawChainLink(0, 0, size, baseOpacity);
+                        break;
+                    case 'eye':
+                        drawEye(0, 0, size, baseOpacity, w.attentionLevel);
+                        break;
+                }
+                
+                pop();
+            }
+        }
+        
+        function drawSpeechBubble(x, y, size, opacity) {
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
+            strokeWeight(1.5);
+            noFill();
+            ellipse(x, y, size, size * 0.7);
+            // Tail
+            line(x - size * 0.2, y + size * 0.3, x - size * 0.4, y + size * 0.5);
+        }
+        
+        function drawKey(x, y, size, opacity) {
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
+            strokeWeight(1.5);
+            noFill();
+            // Key head
+            ellipse(x, y - size * 0.2, size * 0.5);
+            // Key shaft
+            line(x, y, x, y + size * 0.4);
+            // Key teeth
+            line(x, y + size * 0.3, x + size * 0.15, y + size * 0.3);
+            line(x, y + size * 0.4, x + size * 0.1, y + size * 0.4);
+        }
+        
+        function drawTeardrop(x, y, size, opacity) {
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
+            strokeWeight(1.5);
+            fill(colors.copper[0], colors.copper[1], colors.copper[2], opacity * 0.2);
+            
+            beginShape();
+            vertex(x, y - size * 0.4);
+            bezierVertex(x + size * 0.3, y, x + size * 0.2, y + size * 0.3, x, y + size * 0.4);
+            bezierVertex(x - size * 0.2, y + size * 0.3, x - size * 0.3, y, x, y - size * 0.4);
+            endShape();
+        }
+        
+        function drawXMark(x, y, size, opacity) {
+            stroke(colors.red[0], colors.red[1], colors.red[2], opacity);
+            strokeWeight(2);
+            let s = size * 0.4;
+            line(x - s, y - s, x + s, y + s);
+            line(x + s, y - s, x - s, y + s);
+        }
+        
+        function drawChainLink(x, y, size, opacity) {
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
+            strokeWeight(1.5);
+            noFill();
+            // Two interlocking ovals
+            ellipse(x - size * 0.15, y, size * 0.4, size * 0.7);
+            ellipse(x + size * 0.15, y, size * 0.4, size * 0.7);
+        }
+        
+        function drawEye(x, y, size, opacity, attention) {
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], opacity);
+            strokeWeight(1.5);
+            noFill();
+            
+            // Eye outline
+            beginShape();
+            vertex(x - size * 0.4, y);
+            bezierVertex(x - size * 0.2, y - size * 0.3, x + size * 0.2, y - size * 0.3, x + size * 0.4, y);
+            bezierVertex(x + size * 0.2, y + size * 0.3, x - size * 0.2, y + size * 0.3, x - size * 0.4, y);
+            endShape();
+            
+            // Pupil (larger with more attention)
+            let pupilSize = size * 0.15 * (1 + attention * 0.5);
+            fill(colors.red[0], colors.red[1], colors.red[2], opacity * attention);
+            noStroke();
+            ellipse(x, y, pupilSize);
+        }
+        
+        function drawJudgmentMarkers() {
+            for (let marker of judgmentMarkers) {
+                if (marker.opacity < 5) continue;
+                
+                let pulse = (sin(marker.pulsePhase) + 1) / 2;
+                let alpha = marker.opacity * (0.8 + pulse * 0.2);
+                
+                push();
+                translate(marker.x, marker.y);
+                rotate(marker.rotation);
+                
+                // Outer glow
+                noStroke();
+                fill(colors.red[0], colors.red[1], colors.red[2], alpha * 0.2);
+                ellipse(0, 0, marker.size * 2.5);
+                
+                // X mark
+                stroke(colors.red[0], colors.red[1], colors.red[2], alpha);
+                strokeWeight(2);
+                let s = marker.size * 0.5;
+                line(-s, -s, s, s);
+                line(s, -s, -s, s);
+                
+                pop();
+            }
+        }
+        
+        function drawGesture() {
+            if (gesturePoints.length < 3) return;
+            
+            let pulse = (sin(vesselPulse * 0.7) + 1) / 2;
+            let currentOpacity = gestureOpacity + pulse * 20;
+            
+            // Glow effect
+            noFill();
+            for (let g = 3; g > 0; g--) {
+                stroke(colors.copper[0], colors.copper[1], colors.copper[2], currentOpacity * 0.1 * (4 - g) / 3);
+                strokeWeight(g * 4);
+                beginShape();
+                for (let pt of gesturePoints) {
+                    vertex(pt.x, pt.y);
+                }
+                endShape(CLOSE);
+            }
+            
+            // Main outline
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], currentOpacity);
+            strokeWeight(2.5);
+            noFill();
+            
+            beginShape();
+            for (let pt of gesturePoints) {
+                vertex(pt.x, pt.y);
+            }
+            endShape(CLOSE);
+            
+            // Highlight the fingertip
+            let fingertip = gesturePoints.find(p => p.type === 'fingertip');
+            if (fingertip) {
+                noStroke();
+                fill(colors.red[0], colors.red[1], colors.red[2], currentOpacity * 0.5);
+                ellipse(fingertip.x, fingertip.y, 12 + pulse * 4);
+                
+                fill(colors.copper[0], colors.copper[1], colors.copper[2], currentOpacity);
+                ellipse(fingertip.x, fingertip.y, 6);
+            }
+        }
+        
+        function drawCurrentTarget() {
+            if (!currentTarget) return;
+            
+            let fadeAlpha = max(0, 1 - targetFadeTime / 3);
+            let alpha = fadeAlpha * 150;
+            
+            // Crosshair on target (being looked down upon)
+            stroke(colors.red[0], colors.red[1], colors.red[2], alpha);
+            strokeWeight(1);
+            
+            let size = 30;
+            // Crosshair lines
+            line(currentTarget.x - size, currentTarget.y, currentTarget.x - size * 0.3, currentTarget.y);
+            line(currentTarget.x + size * 0.3, currentTarget.y, currentTarget.x + size, currentTarget.y);
+            line(currentTarget.x, currentTarget.y - size, currentTarget.x, currentTarget.y - size * 0.3);
+            line(currentTarget.x, currentTarget.y + size * 0.3, currentTarget.x, currentTarget.y + size);
+            
+            // Target circle
+            noFill();
+            ellipse(currentTarget.x, currentTarget.y, size * 2);
+            
+            // "Below" indicator - line from center down to target
+            let centerX = width * 0.5;
+            let centerY = height * 0.45;
+            
+            stroke(colors.brown[0], colors.brown[1], colors.brown[2], alpha * 0.5);
+            strokeWeight(1);
+            drawDottedLine(centerX, centerY + vesselRadius, currentTarget.x, currentTarget.y, 10);
+        }
+        
+        function drawContemptConnections() {
+            // Draw subtle lines between witnesses and the gesture
+            let centerX = width * 0.5;
+            let centerY = height * 0.45;
+            
+            stroke(colors.copper[0], colors.copper[1], colors.copper[2], 30 * contemptIntensity);
+            strokeWeight(0.5);
+            
+            for (let w of witnesses) {
+                if (w.attentionLevel > 0.4) {
+                    line(centerX, centerY, w.x, w.y);
+                }
+            }
+        }
+        
+        function drawDottedLine(x1, y1, x2, y2, spacing) {
+            let d = dist(x1, y1, x2, y2);
+            let numDots = floor(d / spacing);
+            
+            for (let i = 0; i <= numDots; i++) {
+                let t = i / numDots;
+                let x = lerp(x1, x2, t);
+                let y = lerp(y1, y2, t);
+                ellipse(x, y, 2);
+            }
+        }
+        
+        // ============================================
+        // UI & INTERACTION
+        // ============================================
+        
+        function showContemptResonance(x, y) {
+            const resonance = document.getElementById('contempt-resonance');
+            let message = contemptResonances[floor(random(contemptResonances.length))];
+            
+            resonance.innerHTML = message;
+            
+            // Position near center-top (the position of contempt)
+            let posX = width * 0.5 - 100;
+            let posY = 80;
+            
+            resonance.style.left = posX + 'px';
+            resonance.style.top = posY + 'px';
+            resonance.classList.add('active');
+            
+            setTimeout(() => {
+                resonance.classList.remove('active');
+            }, 4000); // Longer display for contempt's deliberate pace
+        }
+        
+        function startExperience() {
+            document.getElementById('landing-overlay').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('landing-overlay').style.display = 'none';
+                document.body.style.overflow = 'hidden';
+                
+                isAnimating = true;
+                gestureVisible = true;
+                gestureOpacity = gestureBaseOpacity;
+                loop();
+                
+                document.getElementById('controls').style.opacity = '1';
+                document.getElementById('hint').style.opacity = '1';
+                document.getElementById('hierarchy-meter').style.opacity = '1';
+                document.getElementById('hierarchy-label').style.opacity = '1';
+                
+                if (soundEnabled && soundLoaded) {
+                    try {
+                        contemptSound.loop();
+                        contemptSound.setVolume(0);
+                        contemptSound.setVolume(0.4, 3); // Slower fade in
+                    } catch(e) {
+                        console.error("Error playing sound:", e);
+                    }
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('hint').style.opacity = '0';
+                }, 5000);
+                
+            }, 800);
+        }
+        
+        function resetExperience() {
+            hierarchyLevel = 0.5;
+            targetHierarchy = 0.5;
+            currentTarget = null;
+            dismissedTargets = [];
+            isInContemptState = false;
+            contemptIntensity = 0;
+            gestureOpacity = gestureBaseOpacity;
+            
+            for (let w of witnesses) {
+                w.attentionLevel = 0.3;
+            }
+            
+            for (let marker of judgmentMarkers) {
+                marker.opacity = 0;
+                marker.targetOpacity = random(30, 80);
+            }
+            
+            for (let line of distanceLines) {
+                line.opacity = 0;
+                line.targetOpacity = 0;
+            }
+            
+            updateHierarchyMeter();
+        }
+        
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        
+        document.getElementById('start-experience').addEventListener('click', startExperience);
+        document.getElementById('start-experience').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            startExperience();
+        });
+        
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-waves').style.opacity = soundEnabled ? '1' : '0';
+            
+            if (soundEnabled && contemptSound && !contemptSound.isPlaying()) {
+                contemptSound.loop();
+                contemptSound.setVolume(0.4, 1);
+            } else if (!soundEnabled && contemptSound && contemptSound.isPlaying()) {
+                contemptSound.setVolume(0, 0.5);
+                setTimeout(() => contemptSound.pause(), 500);
+            }
+        });
+        
+        document.getElementById('reset-button').addEventListener('click', resetExperience);
+        
+        function mousePressed() {
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                triggerContempt(mouseX, mouseY);
+            }
+            return false;
+        }
+        
+        function touchStarted() {
+            if (getAudioContext().state !== 'running') {
+                getAudioContext().resume();
+            }
+            
+            if (document.getElementById('landing-overlay').style.display === 'none') {
+                if (touches.length > 0) {
+                    triggerContempt(touches[0].x, touches[0].y);
+                }
+            }
+            return false;
+        }
+        
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            vesselRadius = min(width, height) * 0.22;
+            createGesture();
+            createWitnesses();
+            createElevationRings();
+        }
+    </script>
+</body>
+</html>
